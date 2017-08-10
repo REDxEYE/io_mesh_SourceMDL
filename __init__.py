@@ -6,7 +6,7 @@ bl_info = {
     "blender": (2, 78, 0),
     "location": "File > Import-Export > SourceEngine MDL (.mdl, .vvd, .vtx) ",
     "description": "Addon allows to import Source Engine models",
-    "warning": "",
+    'warning': 'May crash blender',
     #"wiki_url": "http://www.barneyparker.com/blender-json-import-export-plugin",
     #"tracker_url": "http://www.barneyparker.com/blender-json-import-export-plugin",
     "category": "Import-Export"}
