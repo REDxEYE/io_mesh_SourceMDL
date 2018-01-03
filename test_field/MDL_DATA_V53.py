@@ -23,24 +23,12 @@ class SourceMdlFileData:
         self.nameCopyOffset = 0
         self.name = []
         self.fileSize = 0
-        self.eyePositionX = 0.1
-        self.eyePositionY = 0.1
-        self.eyePositionZ = 0.1
-        self.illuminationPositionX = 0
-        self.illuminationPositionY = 0
-        self.illuminationPositionZ = 0
-        self.hullMinPositionX = 0
-        self.hullMinPositionY = 0
-        self.hullMinPositionZ = 0
-        self.hullMaxPositionX = 0
-        self.hullMaxPositionY = 0
-        self.hullMaxPositionZ = 0
-        self.viewBoundingBoxMinPositionX = 0
-        self.viewBoundingBoxMinPositionY = 0
-        self.viewBoundingBoxMinPositionZ = 0
-        self.viewBoundingBoxMaxPositionX = 0
-        self.viewBoundingBoxMaxPositionY = 0
-        self.viewBoundingBoxMaxPositionZ = 0
+        self.eyePosition = SourceVector()
+        self.illuminationPosition = SourceVector()
+        self.hullMinPosition = SourceVector()
+        self.hullMaxPosition = SourceVector()
+        self.viewBoundingBoxMinPosition = SourceVector()
+        self.viewBoundingBoxMaxPosition = SourceVector()
         self.flags = 0
         self.boneCount = 0
         self.boneOffset = 0
@@ -225,11 +213,9 @@ class SourceMdlBodyPart:
         self.theName = ""
         self.theModels = []
 
-    def __str__(self):
-        return pformat(self.__dict__)
-
     def __repr__(self):
-        return pformat(self.__dict__)
+        return "<BodyPart name:{} model count:{} actual:{} models:{}>".format(self.theName, self.modelCount,len(self.theModels), self.theModels)
+
 class SourceMdlHitboxSet:
     def __init__(self):
         self.nameOffset = 0
@@ -248,11 +234,11 @@ class SourceMdlHitbox:
     def __init__(self):
         self.boneIndex = 0
         self.groupIndex = 0
-        self.boundingBoxMin = SourceVector
-        self.boundingBoxMax = SourceVector
+        self.boundingBoxMin = SourceVector()
+        self.boundingBoxMax = SourceVector()
         self.nameOffset = 0
         self.unused = []
-        self.boundingBoxPitchYawRoll = SourceVector
+        self.boundingBoxPitchYawRoll = SourceVector()
         self.unused_VERSION49 = 0
         self.theName = ""
 
@@ -365,17 +351,17 @@ class SourceMdlBone:
         self.parentBoneIndex = 0
         self.boneControllerIndex = []
         self.scale = 0
-        self.position = SourceVector
-        self.quat = SourceQuaternion
+        self.position = SourceVector()
+        self.quat = SourceQuaternion()
         self.animChannels = 0
-        self.rotation = SourceVector
-        self.positionScale = SourceVector
-        self.rotationScale = SourceVector
-        self.poseToBoneColumn0 = SourceVector
-        self.poseToBoneColumn1 = SourceVector
-        self.poseToBoneColumn2 = SourceVector
-        self.poseToBoneColumn3 = SourceVector
-        self.qAlignment = SourceQuaternion
+        self.rotation = SourceVector()
+        self.positionScale = SourceVector()
+        self.rotationScale = SourceVector()
+        self.poseToBoneColumn0 = SourceVector()
+        self.poseToBoneColumn1 = SourceVector()
+        self.poseToBoneColumn2 = SourceVector()
+        self.poseToBoneColumn3 = SourceVector()
+        self.qAlignment = SourceQuaternion()
         self.flags = 0
         self.proceduralRuleType = 0
         self.proceduralRuleOffset = 0
@@ -393,11 +379,8 @@ class SourceMdlBone:
         self.STUDIO_PROC_AIMATBONE = 3
         self.STUDIO_PROC_AIMATATTACH = 4
         self.STUDIO_PROC_JIGGLE = 5
-    def __str__(self):
-        return pformat(self.__dict__)
-
     def __repr__(self):
-        return pformat(self.__dict__)
+        return "<Bone {} pos:{} rot: {}>".format(self.name, self.position.as_string, self.rotation.as_string)
 
 class SourceMdlAnimBlock:
     """FROM: SourceEngineXXXX_source\public\studio.h
@@ -483,7 +466,7 @@ class SourceMdlQuatInterpBoneInfo:
     def __init__(self):
         self.inverseToleranceAngle = 0
         self.trigger = SourceQuaternion
-        self.pos = SourceVector
+        self.pos = SourceVector()
         self.quat = SourceQuaternion
 
 
@@ -492,7 +475,7 @@ class SourceMdlAttachment:
         self.name = ""
         self.type = 0
         self.bone = 0
-        self.attachmentPoint = SourceVector
+        self.attachmentPoint = SourceVector()
         self.vectors = []
         self.nameOffset = 0
         self.flags = 0
@@ -538,21 +521,21 @@ class SourceMdlModel:
         self.theMeshes = []
         self.theEyeballs = []
 
-    def __str__(self):
-        return pformat(self.__dict__)
-
     def __repr__(self):
-        return pformat(self.__dict__)
+        return "<Model name:{} type:{} mesh count:{} actual:{} meshes:{} eyeballs:{}>".format(self.name, self.type,
+                                                                                    self.meshCount,len(self.theMeshes),
+                                                                                    self.theMeshes, self.theEyeballs)
+
 
 class SourceMdlEyeball:
     def __init__(self):
         self.nameOffset = 0
         self.boneIndex = 0
-        self.org = SourceVector
+        self.org = SourceVector()
         self.zOffset = 0.0
         self.radius = 0.0
-        self.up = SourceVector
-        self.forward = SourceVector
+        self.up = SourceVector()
+        self.forward = SourceVector()
         self.texture = 0
 
         self.unused1 = 0
@@ -597,11 +580,11 @@ class SourceMdlMesh:
         self.unused = []  # 8
         self.theFlexes = []
 
-    def __str__(self):
-        return pformat(self.__dict__)
-
     def __repr__(self):
-        return pformat(self.__dict__)
+        return "<Mesh material index:{} vertex count:{} flex count:{} flexes:{}>".format(self.materialIndex,
+                                                                                         self.vertexCount,
+                                                                                         self.flexCount, self.theFlexes)
+
 
 class SourceMdlFlex:
     def __init__(self):
@@ -825,7 +808,7 @@ class BoneFrameDataInfo:
     def __init__(self):
         self.theAnimPosition = SourceVector48bits()
         self.theAnimRotation = SourceQuaternion48bits()
-        self.theFullAnimPosition = SourceVector
+        self.theFullAnimPosition = SourceVector()
         self.theFullAnimUnknown01 = 0
         self.theFullAnimUnknown02 = SourceQuaternion64bits()
 
@@ -868,8 +851,8 @@ class SourceMdlMovement:
         self.v0 = 0.0
         self.v1 = 0.0
         self.angle = 0.0
-        self.vector = SourceVector
-        self.position = SourceVector
+        self.vector = SourceVector()
+        self.position = SourceVector()
 
     def __str__(self):
         return pformat(self.__dict__)
@@ -1011,8 +994,8 @@ class SourceMdlSequenceDesc:
         self.activityWeight = 0
         self.eventCount = 0
         self.eventOffset = 0
-        self.bbMin = SourceVector
-        self.bbMax = SourceVector
+        self.bbMin = SourceVector()
+        self.bbMax = SourceVector()
         self.blendCount = 0
         self.animIndexOffset = 0
         self.movementIndex = 0

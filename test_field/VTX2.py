@@ -98,7 +98,7 @@ class SourceVtxFile49:
         if self.theVtxFileData.bodyPartCount > 0:
             self.data.seek(self.theVtxFileData.bodyPartOffset, 0)
             for i in range(self.theVtxFileData.bodyPartCount):
-                print('BodyPart N{}'.format(i))
+                #print('BodyPart N{}'.format(i))
                 bodyPartInputFileStreamPosition = self.data.tell()
                 aBodyPart = SourceVtxBodyPart()
                 aBodyPart.modelCount = self.readInt32()

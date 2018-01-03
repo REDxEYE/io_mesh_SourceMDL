@@ -9,8 +9,8 @@ try:
     from .VVD_DATA import *
     from .GLOBALS import *
 except:
-    from VVD_DATA import *
-    from GLOBALS import *
+    from test_field.VVD_DATA import *
+    from test_field.GLOBALS import *
 
 
 class SourceVvdFile49:
@@ -126,7 +126,7 @@ class SourceVvdFile49:
     def SetupFixedVertexes(self,lodIndex:int):
         for fixupIndex in range(len(self.theVvdFileData.theFixups)):
             aFixup = self.theVvdFileData.theFixups[fixupIndex]
-            print(aFixup)
+            #print(aFixup)
             if aFixup.lodIndex >= lodIndex:
                 for j in range(aFixup.vertexCount):
                     aStudioVertex = self.theVvdFileData.theVertexes[aFixup.vertexIndex+j]

@@ -216,7 +216,7 @@ class mesh:
                 # print('vert index',vertexIndex,'total vertex',len(self.VVD.theVvdFileData.theVertexes))
                 Vertex = self.VVD.theVvdFileData.theVertexes[vertexIndex]  # type: GLOBALS.SourceVertex
             else:
-                Vertex = self.VVD.theVvdFileData.theFixedVertexesByLod[lodIndex][vertexIndex]
+                Vertex = self.VVD.theVvdFileData.theFixedVertexesByLod[0][vertexIndex]
                 #Vertex = self.VVD.theVvdFileData.theFixedVertexesByLod[0][vertexIndex]  # type: GLOBALS.SourceVertex
             return vertexIndex, Vertex
 
@@ -233,32 +233,31 @@ class mesh:
         def CustomNorms(vertex: GLOBALS.SourceVertex):
             return (vertex.normalX, vertex.normalY, vertex.normalZ)
 
-        def WriteMesh_fallback(VtxModel: VTX_DATA.SourceVtxModel, lodIndex, Model: MDL_DATA.SourceMdlModel,
+
+        def WriteMesh_fallback(VtxModel: VTX_DATA.SourceVtxModel, lodIndex, aModel: MDL_DATA.SourceMdlModel,
                                bodyPartVertexIndexStart, mat_indexes, VVD):
-            VtxLod = VtxModel.theVtxModelLods[lodIndex]  # type: VTX_DATA.SourceVtxModelLod
+            aVtxLod = VtxModel.theVtxModelLods[lodIndex]  # type: VTX_DATA.SourceVtxModelLod
             indexes = []
             vertex_idexes = []
-            for meshIndex, VtxMesh in enumerate(VtxLod.theVtxMeshes):  # type: VTX_DATA.SourceVtxMesh
-                print('meshIndex',meshIndex,len(Model.theMeshes))
-
-                materialIndex = Model.theMeshes[meshIndex].materialIndex
-                meshVertexIndexStart = Model.theMeshes[meshIndex].vertexIndexStart
+            for meshIndex, aVtxMesh in enumerate(aVtxLod.theVtxMeshes):  # type: VTX_DATA.SourceVtxMesh
+                # print('meshIndex',meshIndex,len(Model.theMeshes))
+                materialIndex = aModel.theMeshes[meshIndex].materialIndex
+                meshVertexIndexStart = aModel.theMeshes[meshIndex].vertexIndexStart
                 # print('stripGroupCount',VtxMesh.stripGroupCount)
-                if VtxMesh.stripGroupCount > 0:
-                    for groupIndex, StripGroup in enumerate(
-                            VtxMesh.theVtxStripGroups):  # type: VTX_DATA.SourceVtxStripGroup
+                if aVtxMesh.theVtxStripGroups.__len__() > 0:
+                    for groupIndex, aStripGroup in enumerate(aVtxMesh.theVtxStripGroups):  # type: VTX_DATA.SourceVtxStripGroup
                         # print('StripGroup.stripCount',StripGroup.stripCount,'StripGroup.indexCount',StripGroup.indexCount,'StripGroup.vertexCount',StripGroup.vertexCount)
-                        if StripGroup.stripCount > 0 and StripGroup.indexCount > 0 and StripGroup.vertexCount > 0:
-                            field = progressBar.Progress_bar('Generating mesh',StripGroup.theVtxIndexes.__len__(),20)
+                        if aStripGroup.theVtxStrips.__len__() > 0 and aStripGroup.theVtxIndexes.__len__() > 0 and aStripGroup.theVtxVertexes.__len__() > 0:
+                            field = progressBar.Progress_bar('Generating mesh',aStripGroup.theVtxIndexes.__len__(),20)
 
-                            for vtxIndexIndex in range(0, StripGroup.theVtxIndexes.__len__(), 3):
+                            for vtxIndexIndex in range(0, aStripGroup.theVtxIndexes.__len__(), 3):
                                 field.increment(3)
                                 field.draw()
-                                f, fv = getPoly(StripGroup, vtxIndexIndex, lodIndex, meshVertexIndexStart,
+                                f, fv = getPoly(aStripGroup, vtxIndexIndex, lodIndex, meshVertexIndexStart,
                                                 bodyPartVertexIndexStart, VVD)
-                                s, sv = getPoly(StripGroup, vtxIndexIndex + 2, lodIndex, meshVertexIndexStart,
+                                s, sv = getPoly(aStripGroup, vtxIndexIndex + 2, lodIndex, meshVertexIndexStart,
                                                 bodyPartVertexIndexStart, VVD)
-                                t, tv = getPoly(StripGroup, vtxIndexIndex + 1, lodIndex, meshVertexIndexStart,
+                                t, tv = getPoly(aStripGroup, vtxIndexIndex + 1, lodIndex, meshVertexIndexStart,
                                                 bodyPartVertexIndexStart, VVD)
                                 mat_indexes.append(materialIndex)
                                 if vtxIndexIndex not in vertex_idexes:
@@ -268,43 +267,33 @@ class mesh:
                                 if vtxIndexIndex + 1 not in vertex_idexes:
                                     vertex_idexes.append(vtxIndexIndex + 1)
                                 indexes.append((f, s, t))
+                        else:
+                            print('ERROR in getPoly')
+                else:
+                    print('ERROR in theVtxStripGroups')
             return indexes, mat_indexes, vertex_idexes
 
         bodyPartVertexIndexStart = 0
-        for bodypart_index, vtxbodypart in enumerate(self.VTX.theVtxFileData.theVtxBodyParts):  # type: VTX_DATA.SourceVtxBodyPart
-            if vtxbodypart.modelCount > 0:
-                for model_index, vtxmodel in enumerate(vtxbodypart.theVtxModels):  # type: VTX_DATA.SourceVtxModel
-                    if vtxmodel.lodCount > 0:
+        for bodypart_index, aBodyPart in enumerate(self.VTX.theVtxFileData.theVtxBodyParts):  # type: VTX_DATA.SourceVtxBodyPart
+            if aBodyPart.modelCount > 0:
+                for model_index, aVtxModel in enumerate(aBodyPart.theVtxModels):  # type: VTX_DATA.SourceVtxModel
+                    if aVtxModel.lodCount > 0:
                         if self.MDL.theMdlFileData.theBodyParts[bodypart_index].modelCount < 1:
                             print('No models here bp{} md{}'.format(bodypart_index, model_index))
                             continue
-                        try:
-                            mdlmodel = self.MDL.theMdlFileData.theBodyParts[bodypart_index].theModels[
-                                model_index]  # type: MDL_DATA.SourceMdlModel
-                            name = mdlmodel.name
-                            print(mdlmodel.name)
-                            if vtxmodel.theVtxModelLods[0].theVtxMeshes.__len__() < 1:
-                                continue
-                        except IndexError:
-                            print('bodypart_index ', bodypart_index, 'out of ', self.VTX.theVtxFileData.bodyPartCount,
-                                  'model_index ', model_index, 'out of ', vtxbodypart.modelCount)
-                            try:
-                                print('MDL bodypart count', self.MDL.theMdlFileData.theBodyParts.__len__(),
-                                      'MDL model count for BP num {} - {}'.format(bodypart_index,
-                                                                                  self.MDL.theMdlFileData.theBodyParts[
-                                                                                      bodypart_index].theModels.__len__()))
-                            except:
-                                print('ANOTHER ERROR')
+                        # try:
+                        print("Trying to get bodypart N{}/{} and model N{}".format(bodypart_index,model_index,len(self.MDL.theMdlFileData.theBodyParts)))
+                        aModel = self.MDL.theMdlFileData.theBodyParts[bodypart_index].theModels[model_index]  # type: MDL_DATA.SourceMdlModel
+                        name = aModel.name
+                        # print(aModel.name)
+                        if aVtxModel.theVtxModelLods[0].theVtxMeshes.__len__() < 1:
                             continue
-                            raise Exception('WRONG MODEL INDEX OR BODYPART INDEX')
-
                         model_mesh = bpy.data.objects.new(name, bpy.data.meshes.new(name))
                         self.MODEL = model_mesh
                         model_mesh.parent = self.armature_object
                         bpy.context.scene.objects.link(model_mesh)
                         modifier = model_mesh.modifiers.new(type="ARMATURE", name="Armature")
                         modifier.object = self.armature_object
-
                         md = model_mesh.data
                         # Vertex values
                         mat_indexes = []
@@ -318,41 +307,46 @@ class mesh:
                         faceVerts = []
                         for bone in self.MDL.theMdlFileData.theBones:
                             weightsGroups[bone.name] = model_mesh.vertex_groups.new(bone.name)
-                        vtxmodellod = vtxmodel.theVtxModelLods[0]  # type: VTX_DATA.SourceVtxModelLod
+                        vtxmodellod = aVtxModel.theVtxModelLods[0]  # type: VTX_DATA.SourceVtxModelLod
                         # print('mesh count',vtxmodellod.meshCount)
-                        print('Generating {} mesh'.format(mdlmodel.name))
+                        print('Generating {} mesh'.format(aModel.name))
                         if vtxmodellod.meshCount > 0:
                             t = time.time()
-                            polys, polys_mat_indexes, vertex_indexes = WriteMesh_fallback(vtxmodel, 0, mdlmodel,
-                                                                                 bodyPartVertexIndexStart, mat_indexes,
-                                                                                 self.VVD)
+                            polys, polys_mat_indexes, vertex_indexes = WriteMesh_fallback(aVtxModel, 0, aModel,
+                                                                                          bodyPartVertexIndexStart, mat_indexes,
+                                                                                          self.VVD)
                             print('Mesh generation took {}ms'.format(time.time() - t))
-
                             # print('polys',polys)
                             # print('polys_mat_indexes',polys_mat_indexes)
                             # print('vertex_indexes',vertex_indexes)
                         else:
                             continue
+                        bodyPartVertexIndexStart += aModel.vertexCount
+                        print('Generating UV')
                         for vert in self.VVD.theVvdFileData.theVertexes:
                             faceVerts = addVertex(vert, faceVerts)
                             uvs = addUv(vert, uvs)
+                        print('Generating custom normals')
                         norms = []
                         for vert in self.VVD.theVvdFileData.theVertexes:
                             norms.append(CustomNorms(vert))
-
-
                         # print(polys)
+                        print(len(faceVerts),len(polys))
                         md.from_pydata(faceVerts, [], polys)
+                        # md.from_pydata(faceVerts, [],[])
                         md.update()
-                        self.addFlexes(mdlmodel)
-                        bodyPartVertexIndexStart += mdlmodel.vertexCount
+                        self.addFlexes(aModel)
                         for n, vertex in enumerate(self.VVD.theVvdFileData.theVertexes):
                             for bone_, weight in zip(vertex.boneWeight.bone, vertex.boneWeight.weight):
+                                # print("Adding weight to ",self.MDL.theMdlFileData.theBones[bone_].name)
                                 weightsGroups[self.MDL.theMdlFileData.theBones[bone_].name].add([n], weight, 'REPLACE')
                         md.uv_textures.new()
                         uv_data = md.uv_layers[0].data
+                        # print("UV LOOPS on model",len(md.loops), "UV loops on mesh",len(uvs))
                         for i in range(len(uv_data)):
-                            uv_data[i].uv = uvs[md.loops[i].vertex_index]
+                            # print('UV LOOP n',i)
+                            u = uvs[md.loops[i].vertex_index]
+                            uv_data[i].uv = u
                         for poly, mat_index in zip(model_mesh.data.polygons, polys_mat_indexes):
                             poly.material_index = mat_index
                         bpy.ops.object.select_all(action="DESELECT")
@@ -369,15 +363,12 @@ class mesh:
                         with redirect_stdout(stdout):
                             md.validate()
                             md.validate()
-
-
                             model_mesh.data.validate()
                             model_mesh.data.validate()
                             bpy.ops.object.mode_set(mode='EDIT')
                             model_mesh.data.validate()
                             model_mesh.data.validate()
                             bpy.ops.mesh.delete_loose()
-
                             bpy.ops.mesh.normals_make_consistent(inside=False)
                             bpy.ops.mesh.delete_loose()
                             bpy.ops.mesh.remove_doubles(threshold=0.0001)
@@ -386,7 +377,19 @@ class mesh:
                             model_mesh.data.validate()
                             model_mesh.data.validate()
                             bpy.ops.object.shade_smooth()
-
+                        print('test9')
+                        # except IndexError:
+                        #     print('bodypart_index ', bodypart_index, 'out of ', self.VTX.theVtxFileData.bodyPartCount,
+                        #           'model_index ', model_index, 'out of ', aBodyPart.modelCount)
+                        #     try:
+                        #         print('MDL bodypart count', self.MDL.theMdlFileData.theBodyParts.__len__(),
+                        #               'MDL model count for BP num {} - {}'.format(bodypart_index,
+                        #                                                           self.MDL.theMdlFileData.theBodyParts[
+                        #                                                               bodypart_index].theModels.__len__()))
+                        #     except:
+                        #         print('ANOTHER ERROR')
+                        #     continue
+                        #     raise Exception('WRONG MODEL INDEX OR BODYPART INDEX')
     def addFlexes(self,mdlmodel:MDL_DATA.SourceMdlModel):
         self.MODEL.shape_key_add(name='BASE')
         for mesh in mdlmodel.theMeshes: #type: MDL_DATA.SourceMdlMesh

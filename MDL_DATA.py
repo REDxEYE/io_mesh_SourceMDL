@@ -361,7 +361,6 @@ class SourceMdlBone:
         self.name = []
         self.nameOffset = 0
         self.parentBoneIndex = 0
-
         self.scale = 0
         self.position = SourceVector
         self.quat = SourceQuaternion

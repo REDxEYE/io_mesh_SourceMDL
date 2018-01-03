@@ -15,26 +15,27 @@ class SourceVtxFileData:
         self.bodyPartOffset = 0
         self.theVtxBodyParts = []
 
+    def __repr__(self):
+        return "<FileData version:{} lod count:{} body part count:{} \nbodyparts:{}>\n".format(self.version,
+                                                                                                   self.lodCount,
+                                                                                                   self.bodyPartCount,
+                                                                                                   self.theVtxBodyParts)
+
+
 class SourceVtxBodyPart:
     def __init__(self):
         self.modelCount = 0
         self.modelOffset = 0
         self.theVtxModels = []
-    def __str__(self):
-        return pformat(self.__dict__)
-
     def __repr__(self):
-        return pformat(self.__dict__)
+        return "\n<BodyPart model count:{} models:{}>".format(self.modelCount, self.theVtxModels)
 class SourceVtxModel:
     def __init__(self):
         self.lodCount  = 0
         self.lodOffset = 0
         self.theVtxModelLods = []
-    def __str__(self):
-        return pformat(self.__dict__)
-
     def __repr__(self):
-        return pformat(self.__dict__)
+        return "\n<Model lod count:{} lods:{}>".format(self.lodCount, self.theVtxModelLods)
 class SourceVtxModelLod:
     def __init__(self):
         self.lod = 0
@@ -42,22 +43,18 @@ class SourceVtxModelLod:
         self.meshOffset =0
         self.switchPoint =0
         self.theVtxMeshes = []
-    def __str__(self):
-        return pformat(self.__dict__)
-
     def __repr__(self):
-        return pformat(self.__dict__)
+        return "\n<ModelLod mesh count:{} meshes:{}>".format(self.meshCount, self.theVtxMeshes)
 class SourceVtxMesh:
     def __init__(self):
         self.stripGroupCount = 0
         self.stripGroupOffset = 0
         self.flags = b'\x00'
         self.theVtxStripGroups = []
-    def __str__(self):
-        return pformat(self.__dict__)
-
     def __repr__(self):
-        return pformat(self.__dict__)
+        return "\n<Mesh strip group count:{} stripgroup offset:{} stripgroups:{}>".format(self.stripGroupCount,
+                                                                                          self.stripGroupOffset,
+                                                                                          self.theVtxStripGroups)
 class SourceVtxStripGroup:
     def __init__(self):
         self.vertexCount = 0
@@ -83,7 +80,8 @@ class SourceVtxVertex:
         self.boneCount = b'\x00'
         self.originalMeshVertexIndex = 0
         self.boneId = []
-
+    def __repr__(self):
+        return "<Vertex bone:{} total bone count:{}>".format(self.boneId, self.boneCount)
 class SourceVtxStrip:
     def __init__(self):
         self.indexCount = 0
