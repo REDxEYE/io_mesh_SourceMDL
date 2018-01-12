@@ -9,8 +9,11 @@ except:
 
 
 class SourceVvdFile49:
-    def __init__(self, filepath):
-        self.reader = ByteIO(path = filepath + '.vvd')
+    def __init__(self, path = None,file = None):
+        if path:
+            self.reader = ByteIO(path = path + ".vvd")
+        elif file:
+            self.reader = file
         self.vvd = SourceVvdFileData()
         self.vvd.read(self.reader)
 

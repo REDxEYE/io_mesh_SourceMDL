@@ -100,16 +100,39 @@ class SourceMdlFile49:
 
     def test(self):
 
-        for part in self.mdl.theBodyParts: # type: SourceMdlBodyPart
-            for model in part.theModels: # type: SourceMdlModel
-                for mesh in model.theMeshes: # type: SourceMdlMesh
-                    print(mesh.materialIndex)
+        # for part in self.mdl.theBodyParts: # type: SourceMdlBodyPart
+        #     for model in part.theModels: # type: SourceMdlModel
+        #         for mesh in model.theMeshes: # type: SourceMdlMesh
+        #             print(mesh.materialIndex)
+        for m in self.mdl.theTextures: #type: SourceMdlTexture
+            print(m)
 
+class SourceMdlFile53(SourceMdlFile49):
+
+    def __init__(self, path):
+        self.reader = ByteIO(path = path+'.mdl')
+        self.mdl = SourceMdlFileDataV53()
+        self.mdl.read(self.reader)
+        self.VVD = self.mdl.VVD
+        self.VTX = self.mdl.VTX
+        self.readBones()
+        self.readBoneControllers()
+
+        self.readFlexDescs()
+        self.readFlexControllers()
+        self.readFlexRules()
+
+        self.readAttachments()
+        self.readBoneTableByName()
+
+        self.readBodyParts()
+        self.readTextures()
+        self.readTexturePaths()
 
 if __name__ == '__main__':
     with open('log.log', "w") as f:  # replace filepath & filename
         with f as sys.stdout:
             # MDL_edit('E:\\MDL_reader\\sexy_bonniev2')
-            a = SourceMdlFile49(r'..\test_data\nick_hwm')
+            a = SourceMdlFile53(r'H:\games\Titanfall 2\extr\models\weapons\atpov_titan_sniper_rifle\atpov_titan_sniper_rifle')
             a.test()
             # print(a.mdl)

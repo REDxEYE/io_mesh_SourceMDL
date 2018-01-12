@@ -4,12 +4,19 @@ from pprint import pformat
 import sys
 from typing import List
 
+import io
+
+
+
 try:
     from .ByteIO import ByteIO
     from .GLOBALS import SourceVector, SourceQuaternion, SourceFloat16bits
+    from . import VTX,VVD
+
 except:
     from ByteIO import ByteIO
     from GLOBALS import SourceVector, SourceQuaternion, SourceFloat16bits
+    import VTX,VVD
 
 class SourceMdlAnimationDesc:
     def __init__(self):
@@ -24,24 +31,16 @@ class SourceMdlFileData:
         self.name = []
         self.nameForVtmb = []
         self.fileSize = 0
-        self.eyePositionX = 0.1
-        self.eyePositionY = 0.1
-        self.eyePositionZ = 0.1
-        self.illuminationPositionX = 0
-        self.illuminationPositionY = 0
-        self.illuminationPositionZ = 0
-        self.hullMinPositionX = 0
-        self.hullMinPositionY = 0
-        self.hullMinPositionZ = 0
-        self.hullMaxPositionX = 0
-        self.hullMaxPositionY = 0
-        self.hullMaxPositionZ = 0
-        self.viewBoundingBoxMinPositionX = 0
-        self.viewBoundingBoxMinPositionY = 0
-        self.viewBoundingBoxMinPositionZ = 0
-        self.viewBoundingBoxMaxPositionX = 0
-        self.viewBoundingBoxMaxPositionY = 0
-        self.viewBoundingBoxMaxPositionZ = 0
+        self.eyePosition = SourceVector()
+        self.illuminationPosition = SourceVector()
+        self.hullMinPosition = SourceVector()
+
+        self.hullMaxPosition = SourceVector()
+
+        self.viewBoundingBoxMinPosition = SourceVector()
+
+        self.viewBoundingBoxMaxPosition = SourceVector()
+
         self.flags = 0
         self.boneCount = 0
         self.boneOffset = 0
@@ -178,29 +177,17 @@ class SourceMdlFileData:
         self.fileSize = reader.read_uint32()
 
     def readHeader01(self, reader: ByteIO):
-        self.eyePositionX = reader.read_float()
-        self.eyePositionY = reader.read_float()
-        self.eyePositionZ = reader.read_float()
+        self.eyePosition.read(reader)
 
-        self.illuminationPositionX = reader.read_float()
-        self.illuminationPositionY = reader.read_float()
-        self.illuminationPositionZ = reader.read_float()
+        self.illuminationPosition.read(reader)
 
-        self.hullMinPositionX = reader.read_float()
-        self.hullMinPositionY = reader.read_float()
-        self.hullMinPositionZ = reader.read_float()
+        self.hullMinPosition.read(reader)
 
-        self.hullMaxPositionX = reader.read_float()
-        self.hullMaxPositionY = reader.read_float()
-        self.hullMaxPositionZ = reader.read_float()
+        self.hullMaxPosition.read(reader)
 
-        self.viewBoundingBoxMinPositionX = reader.read_float()
-        self.viewBoundingBoxMinPositionY = reader.read_float()
-        self.viewBoundingBoxMinPositionZ = reader.read_float()
+        self.viewBoundingBoxMinPosition.read(reader)
 
-        self.viewBoundingBoxMaxPositionX = reader.read_float()
-        self.viewBoundingBoxMaxPositionY = reader.read_float()
-        self.viewBoundingBoxMaxPositionZ = reader.read_float()
+        self.viewBoundingBoxMaxPosition.read(reader)
 
         self.flags = reader.read_uint32()
 
@@ -344,6 +331,322 @@ class SourceMdlFileData:
         return pformat(self.__dict__)
 
 
+class SourceMdlFileDataV53:
+    def __init__(self):
+        self.id = []
+        self.version = 0
+        self.checksum = 0
+        self.nameCopyOffset = 0
+        self.name = []
+        self.fileSize = 0
+        self.eyePosition = SourceVector()
+        self.illuminationPosition = SourceVector()
+        self.hullMinPosition = SourceVector()
+        self.hullMaxPosition = SourceVector()
+        self.viewBoundingBoxMinPosition = SourceVector()
+        self.viewBoundingBoxMaxPosition = SourceVector()
+        self.flags = 0
+        self.boneCount = 0
+        self.boneOffset = 0
+        self.boneControllerCount = 0
+        self.boneControllerOffset = 0
+        self.hitboxSetCount = 0
+        self.hitboxSetOffset = 0
+        self.localAnimationCount = 0
+        self.localAnimationOffset = 0
+        self.localSequenceCount = 0
+        self.localSequenceOffset = 0
+        self.sequenceGroupCount = 0
+        self.sequenceGroupOffset = 0
+        self.activityListVersion = 0
+        self.eventsIndexed = 0
+        self.textureCount = 0
+        self.textureOffset = 0
+        self.texturePathCount = 0
+        self.texturePathOffset = 0
+        self.skinReferenceCount = 0
+        self.skinFamilyCount = 0
+        self.skinFamilyOffset = 0
+        self.bodyPartCount = 0
+        self.bodyPartOffset = 0
+        self.localAttachmentCount = 0
+        self.localAttachmentOffset = 0
+        self.soundtable = 0
+        self.soundindex = 0
+        self.soundgroups = 0
+        self.soundgroupindex = 0
+        self.localNodeCount = 0
+        self.localNodeOffset = 0
+        self.localNodeNameOffset = 0
+        self.flexDescCount = 0
+        self.flexDescOffset = 0
+        self.flexControllerCount = 0
+        self.flexControllerOffset = 0
+        self.flexRuleCount = 0
+        self.flexRuleOffset = 0
+        self.ikChainCount = 0
+        self.ikChainOffset = 0
+        self.mouthCount = 0
+        self.mouthOffset = 0
+        self.localPoseParamaterCount = 0
+        self.localPoseParameterOffset = 0
+        self.surfacePropOffset = 0
+        self.keyValueOffset = 0
+        self.keyValueSize = 0
+        self.localIkAutoPlayLockCount = 0
+        self.localIkAutoPlayLockOffset = 0
+        self.mass = 0.0
+        self.contents = 0
+        self.includeModelCount = 0
+        self.includeModelOffset = 0
+        self.virtualModelP = 0
+        self.animBlockNameOffset = 0
+        self.animBlockCount = 0
+        self.animBlockOffset = 0
+        self.animBlockModelP = 0
+        self.boneTableByNameOffset = 0
+        self.vertexBaseP = 0
+        self.indexBaseP = 0
+        self.directionalLightDot = b'\x00'
+        self.rootLod = b'\x00'
+        self.allowedRootLodCount = b'\x00'
+        self.unused = b'\x00'
+        self.zeroframecacheindex_VERSION44_47 = 0
+        self.unused4 = 0
+        self.flexControllerUiCount = 0
+        self.flexControllerUiOffset = 0
+        self.vertAnimFixedPointScale = 0
+        self.surfacePropLookup = 0
+        self.unused3 = []
+        self.studioHeader2Offset = 0
+        self.boneFlexDriverCount = 0
+        self.unused2 = 0
+        self.sourceBoneTransformCount = 0
+        self.sourceBoneTransformOffset = 0
+        self.boneFlexDriverOffset = 0
+        self.illumPositionAttachmentIndex = 0
+        self.maxEyeDeflection = 0
+        self.linearBoneOffset = 0
+        self.reserved = [None]*53
+        self.theID = ""
+        self.theName = ""
+        self.theAnimationDescs = []
+        self.theAnimBlocks = []
+        self.theAnimBlockRelativePathFileName = ""
+        self.theAttachments = []
+        self.theBodyParts = []
+        self.theBones = []
+        self.theBoneControllers = []
+        self.theBoneTableByName = []
+        self.theFlexDescs = []
+        self.theFlexControllers = []
+        self.theFlexControllerUis = []
+        self.theFlexRules = []
+        self.theHitboxSets = []
+        self.theIkChains = []
+        self.theIkLocks = []
+        self.theKeyValuesText = ""
+        self.theLocalNodeNames = []
+        self.theModelGroups = []
+        self.theMouths = []
+        self.thePoseParamDescs = []
+        self.theSequenceDescs = []
+        self.theSkinFamilies = []
+        self.theSurfacePropName = ""
+        self.theTexturePaths = []
+        self.theTextures = []
+        self.theSectionFrameCount = 0
+        self.theSectionFrameMinFrameCount = 0
+        self.theActualFileSize = 0
+        self.theModelCommandIsUsed = False
+        self.theFlexFrames = []
+        self.theEyelidFlexFrameIndexes = []
+        self.theFirstAnimationDesc = None
+        self.theFirstAnimationDescFrameLines = {}
+        self.theMdlFileOnlyHasAnimations = False
+        self.theProceduralBonesCommandIsUsed = False
+        self.theWeightLists = []
+
+    def read(self, reader: ByteIO):
+        self.readHeader00(reader)
+        self.readHeader01(reader)
+        self.ReadHeader02(reader)
+
+    def readHeader00(self, reader: ByteIO):
+        self.id = ''.join(list([chr(reader.read_uint8()) for _ in range(4)]))
+        self.version = reader.read_uint32()
+        self.checksum = reader.read_uint32()
+
+        self.nameCopyOffset = reader.read_uint32()
+
+        self.name = reader.read_ascii_string(64)
+        self.fileSize = reader.read_uint32()
+
+    def readHeader01(self, reader: ByteIO):
+        self.eyePosition.read(reader)
+
+        self.illuminationPosition.read(reader)
+
+        self.hullMinPosition.read(reader)
+
+        self.hullMaxPosition.read(reader)
+
+        self.viewBoundingBoxMinPosition.read(reader)
+
+        self.viewBoundingBoxMaxPosition.read(reader)
+
+        self.flags = reader.read_uint32()
+
+        self.boneCount = reader.read_uint32()
+        self.boneOffset = reader.read_uint32()
+
+        self.boneControllerCount = reader.read_uint32()
+        self.boneControllerOffset = reader.read_uint32()
+
+        self.hitboxSetCount = reader.read_uint32()
+        self.hitboxSetOffset = reader.read_uint32()
+
+        self.localAnimationCount = reader.read_uint32()
+        self.localAnimationOffset = reader.read_uint32()
+
+        self.localSequenceCount = reader.read_uint32()
+        self.localSequenceOffset = reader.read_uint32()
+
+        self.activityListVersion = reader.read_uint32()
+        self.eventsIndexed = reader.read_uint32()
+
+        self.textureCount = reader.read_uint32()
+        self.textureOffset = reader.read_uint32()
+        self.texturePathCount = reader.read_uint32()
+        self.texturePathOffset = reader.read_uint32()
+
+        self.skinReferenceCount = reader.read_uint32()
+        self.skinFamilyCount = reader.read_uint32()
+        self.skinFamilyOffset = reader.read_uint32()
+
+        self.bodyPartCount = reader.read_uint32()
+        self.bodyPartOffset = reader.read_uint32()
+
+        self.localAttachmentCount = reader.read_uint32()
+        self.localAttachmentOffset = reader.read_uint32()
+
+        self.localNodeCount = reader.read_uint32()
+        self.localNodeOffset = reader.read_uint32()
+
+        self.localNodeNameOffset = reader.read_uint32()
+
+        self.flexDescCount = reader.read_uint32()
+        self.flexDescOffset = reader.read_uint32()
+
+        self.flexControllerCount = reader.read_uint32()
+        self.flexControllerOffset = reader.read_uint32()
+
+        self.flexRuleCount = reader.read_uint32()
+        self.flexRuleOffset = reader.read_uint32()
+
+        self.ikChainCount = reader.read_uint32()
+        self.ikChainOffset = reader.read_uint32()
+
+        self.mouthCount = reader.read_uint32()
+        self.mouthOffset = reader.read_uint32()
+
+        self.localPoseParamaterCount = reader.read_uint32()
+        self.localPoseParameterOffset = reader.read_uint32()
+
+        self.surfacePropOffset = reader.read_uint32()
+
+        if self.surfacePropOffset > 0:
+            self.theSurfacePropName = reader.read_from_offset(self.surfacePropOffset,reader.read_ascii_string)
+
+        self.keyValueOffset = reader.read_uint32()
+        self.keyValueSize = reader.read_uint32()
+
+        self.localIkAutoPlayLockOffset = reader.read_uint32()
+        self.localIkAutoPlayLockCount = reader.read_uint32()
+
+        self.mass = reader.read_float()
+        self.contents = reader.read_uint32()
+
+        self.includeModelCount = reader.read_uint32()
+        self.includeModelOffset = reader.read_uint32()
+
+        self.virtualModelP = reader.read_uint32()
+
+        self.animBlockNameOffset = reader.read_uint32()
+        self.animBlockCount = reader.read_uint32()
+        self.animBlockOffset = reader.read_uint32()
+        self.animBlockModelP = reader.read_uint32()
+
+        if self.animBlockCount > 0:
+            if self.animBlockNameOffset > 0:
+                self.theAnimBlockRelativePathFileName = reader.read_from_offset(reader.tell()+self.animBlockNameOffset,reader.read_ascii_string)
+
+        if self.animBlockOffset > 0:
+            backpos = reader.tell()
+            reader.seek(self.animBlockOffset, 0)
+            for offset in range(self.animBlockCount):
+                anAnimBlock = SourceMdlAnimBlock()
+                anAnimBlock.read(reader)
+                self.theAnimBlocks.append(anAnimBlock)
+            reader.seek(backpos, 0)
+
+        self.boneTableByNameOffset = reader.read_uint32()
+
+        self.vertexBaseP = reader.read_uint32()
+        self.indexBaseP = reader.read_uint32()
+
+        self.directionalLightDot = reader.read_uint8()
+
+        self.rootLod = reader.read_uint8()
+
+        self.allowedRootLodCount = reader.read_uint8()
+
+        self.unused = reader.read_uint8()
+
+        self.unused4 = reader.read_uint32()
+
+        self.flexControllerUiCount = reader.read_uint32()
+        self.flexControllerUiOffset = reader.read_uint32()
+
+        self.vertAnimFixedPointScale = reader.read_float()
+        self.surfacePropOffset = reader.read_uint32()
+
+        self.studioHeader2Offset = reader.read_uint32()
+
+        self.unused2 = reader.read_uint32()
+
+        print('DANGER', reader.tell())
+        reader.skip(16)
+        self.VTXoffset = reader.read_uint32()
+        self.VVDoffset = reader.read_uint32()
+        print('Found VTX:{} and VVD:{}'.format(self.VTXoffset, self.VVDoffset))
+        if self.VVDoffset != 0 and self.VTXoffset != 0:
+            start = reader.tell()
+            reader.seek(self.VTXoffset)
+            self.VTX = VTX.SourceVtxFile49(file = ByteIO(byte_object = reader._read(-1)))
+            reader.seek(self.VVDoffset)
+            self.VVD = VVD.SourceVvdFile49(file = ByteIO(byte_object = reader._read(-1)))
+            reader.seek(start)
+
+        if self.bodyPartCount == 0 and self.localSequenceCount > 0:
+            self.theMdlFileOnlyHasAnimations = True
+
+    def ReadHeader02(self, reader: ByteIO):
+
+        self.sourceBoneTransformCount = reader.read_uint32()
+        self.sourceBoneTransformOffset = reader.read_uint32()
+        self.illumPositionAttachmentIndex = reader.read_uint32()
+        self.maxEyeDeflection = reader.read_float()
+        self.linearBoneOffset = reader.read_uint32()
+
+        self.nameOffset = reader.read_uint32()
+        self.boneFlexDriverCount = reader.read_uint32()
+        self.boneTableByNameOffset = reader.read_uint32()
+        self.reserved = list([reader.read_uint32() for _ in range(56)])
+
+
+
+
 class SourceMdlBone:
     def __init__(self):
 
@@ -384,61 +687,59 @@ class SourceMdlBone:
 
     def read(self, reader: ByteIO, mdl: SourceMdlFileData):
         self.boneOffset = reader.tell()
-        if mdl.version == 10:
-            self.name = reader.read_ascii_string(32)
-            pass
-        else:
-            self.nameOffset = reader.read_uint32()
-            self.parentBoneIndex = reader.read_int32()
-            self.boneControllerIndex = [reader.read_uint32() for _ in range(6)]
-            self.position.read(reader)
-            self.quat.read(reader)
-            self.rotation.read(reader)
-            self.positionScale.read(reader)
-            self.rotationScale.read(reader)
+        self.nameOffset = reader.read_uint32()
+        self.parentBoneIndex = reader.read_int32()
+        self.boneControllerIndex = [reader.read_uint32() for _ in range(6)]
+        self.position.read(reader)
+        self.quat.read(reader)
+        self.rotation.read(reader)
+        self.positionScale.read(reader)
+        self.rotationScale.read(reader)
 
-            x0, x1, x2, x3 = reader.read_float(), reader.read_float(), reader.read_float(), reader.read_float()
-            y0, y1, y2, y3 = reader.read_float(), reader.read_float(), reader.read_float(), reader.read_float()
-            z0, z1, z2, z3 = reader.read_float(), reader.read_float(), reader.read_float(), reader.read_float()
-            self.poseToBoneColumn0.x = x0
-            self.poseToBoneColumn0.y = y0
-            self.poseToBoneColumn0.z = z0
-            self.poseToBoneColumn1.x = x1
-            self.poseToBoneColumn1.y = y1
-            self.poseToBoneColumn1.z = z1
-            self.poseToBoneColumn2.x = x2
-            self.poseToBoneColumn2.y = y2
-            self.poseToBoneColumn2.z = z2
-            self.poseToBoneColumn3.x = x3
-            self.poseToBoneColumn3.y = y3
-            self.poseToBoneColumn3.z = z3
+        x0, x1, x2, x3 = reader.read_float(), reader.read_float(), reader.read_float(), reader.read_float()
+        y0, y1, y2, y3 = reader.read_float(), reader.read_float(), reader.read_float(), reader.read_float()
+        z0, z1, z2, z3 = reader.read_float(), reader.read_float(), reader.read_float(), reader.read_float()
+        self.poseToBoneColumn0.x = x0
+        self.poseToBoneColumn0.y = y0
+        self.poseToBoneColumn0.z = z0
+        self.poseToBoneColumn1.x = x1
+        self.poseToBoneColumn1.y = y1
+        self.poseToBoneColumn1.z = z1
+        self.poseToBoneColumn2.x = x2
+        self.poseToBoneColumn2.y = y2
+        self.poseToBoneColumn2.z = z2
+        self.poseToBoneColumn3.x = x3
+        self.poseToBoneColumn3.y = y3
+        self.poseToBoneColumn3.z = z3
 
-            self.flags = reader.read_uint32()
-            self.qAlignment.read(reader)
-            self.proceduralRuleType = reader.read_uint32()
-            self.proceduralRuleOffset = reader.read_uint32()
-            self.physicsBoneIndex = reader.read_uint32()
-            self.surfacePropNameOffset = reader.read_uint32()
-            self.contents = reader.read_uint32()
-            self.unused = [reader.read_uint32() for _ in range(8)]
+        self.flags = reader.read_uint32()
+        self.qAlignment.read(reader)
+        self.proceduralRuleType = reader.read_uint32()
+        self.proceduralRuleOffset = reader.read_uint32()
+        self.physicsBoneIndex = reader.read_uint32()
+        self.surfacePropNameOffset = reader.read_uint32()
+        self.contents = reader.read_uint32()
+        self.unused = [reader.read_uint32() for _ in range(8)]
+        unused = [reader.read_uint32() for _ in range(7)]
         inputFileStreamPosition = reader.tell()
         if self.nameOffset != 0:
             self.name = reader.read_from_offset(self.boneOffset + self.nameOffset,reader.read_ascii_string)
-        if self.proceduralRuleType != 0:
-            if self.proceduralRuleType == self.STUDIO_PROC_AXISINTERP:
-                reader.seek(self.boneOffset + self.proceduralRuleOffset)
-                self.theAxisInterpBone = SourceMdlAxisInterpBone()
-                self.theAxisInterpBone.read(reader)
-            if self.proceduralRuleType == self.STUDIO_PROC_QUATINTERP:
-                pass
-                # self.ReadQuatInterpBone(self.boneOffset, reader)
-            if self.proceduralRuleType == self.STUDIO_PROC_JIGGLE:
-                pass
-                # self.ReadJiggleBone(self.boneOffset, reader)
+        # if self.proceduralRuleType != 0:
+        #     if self.proceduralRuleType == self.STUDIO_PROC_AXISINTERP:
+        #         reader.seek(self.boneOffset + self.proceduralRuleOffset)
+        #         self.theAxisInterpBone = SourceMdlAxisInterpBone()
+        #         self.theAxisInterpBone.read(reader)
+        #     if self.proceduralRuleType == self.STUDIO_PROC_QUATINTERP:
+        #         pass
+        #         # self.ReadQuatInterpBone(self.boneOffset, reader)
+        #     if self.proceduralRuleType == self.STUDIO_PROC_JIGGLE:
+        #         pass
+        #         # self.ReadJiggleBone(self.boneOffset, reader)
+        # print(self.surfacePropNameOffset)
         if self.surfacePropNameOffset != 0:
             reader.seek(self.boneOffset, 0)
             self.theSurfacePropName = reader.read_from_offset(reader.tell() + self.surfacePropNameOffset,reader.read_ascii_string)
-
+            # print(self.theSurfacePropName)
         reader.seek(inputFileStreamPosition, 0)
         mdl.theBones.append(self)
 
@@ -1050,7 +1351,7 @@ class SourceMdlTexture:
         self.unused1 = reader.read_uint32()
         self.materialP = reader.read_uint32()
         self.clientMaterialP = reader.read_uint32()
-        self.unused = [reader.read_uint32() for _ in range(10)]
+        self.unused = [reader.read_uint32() for _ in range(10 if mdl.version<53 else 5)]
         entry2 = reader.tell()
         if self.nameOffset!=0:
             self.thePathFileName = reader.read_from_offset(entry+self.nameOffset,reader.read_ascii_string)

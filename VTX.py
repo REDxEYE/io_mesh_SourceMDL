@@ -9,8 +9,11 @@ except:
 
 
 class SourceVtxFile49:
-    def __init__(self, file):
-        self.reader = ByteIO(path = file + ".dx90.vtx")
+    def __init__(self, path = None, file = None):
+        if path:
+            self.reader = ByteIO(path = path + ".dx90.vtx")
+        elif file:
+            self.reader = file
         self.retry = 0
         self.first_strip_group_end = 0
         self.second_strip_group_offset = 0

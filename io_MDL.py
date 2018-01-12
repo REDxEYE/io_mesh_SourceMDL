@@ -36,10 +36,10 @@ class IO_MDL:
                 self.VVD = VVD.SourceVvdFile49(file_path)
                 self.VTX = VTX.SourceVtxFile49(file_path)
                 self.MDL = MDL.SourceMdlFile49(file_path)
-        # elif version == 53:
-        #     self.MDL = Mdl53(file_path+".mdl")
-        #     self.VVD = self.MDL.VVD
-        #     self.VTX = self.MDL.VTX
+        elif version == 53:
+            self.MDL = MDL.SourceMdlFile53(path = file_path)
+            self.VVD = self.MDL.VVD
+            self.VTX = self.MDL.VTX
         if custom_name:
             self.armature_obj.name = custom_name
         self.create_skeleton(normal_bones)
