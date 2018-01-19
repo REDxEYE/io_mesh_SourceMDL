@@ -1,7 +1,7 @@
 bl_info = {
     "name": "Source Engine model import + textures (.mdl, .vvd, .vtx)",
     "author": "RED_EYE",
-    "version": (0, 7),
+    "version": (1, 1),
     "blender": (2, 78, 0),
     "location": "File > Import-Export > SourceEngine MDL (.mdl, .vvd, .vtx) ",
     "description": "Addon allows to import Source Engine models",
