@@ -1,5 +1,5 @@
 import random
-from pprint import pformat
+from pprint import pformat, pprint
 
 import sys
 from typing import List
@@ -131,7 +131,7 @@ class SourceMdlFileData:
         self.theAnimBlockRelativePathFileName = ""
         self.theAttachments = []
         self.theBodyParts = []
-        self.theBones = []
+        self.theBones = [] #type: List[SourceMdlBone]
         self.theBoneControllers = []
         self.theBoneTableByName = []
         self.theFlexDescs = [] #type: List[SourceMdlFlexDesc]
@@ -150,7 +150,7 @@ class SourceMdlFileData:
         self.theSkinFamilies = []
         self.theSurfacePropName = ""
         self.theTexturePaths = []
-        self.theTextures = []
+        self.theTextures = [] #type: List[SourceMdlTexture]
         self.theSectionFrameCount = 0
         self.theSectionFrameMinFrameCount = 0
         self.theActualFileSize = 0
@@ -648,6 +648,20 @@ class SourceMdlFileDataV53:
 
 
 class SourceMdlBone:
+    BONE_SCREEN_ALIGN_SPHERE = 0x8
+    BONE_SCREEN_ALIGN_CYLINDER = 0x10
+    BONE_USED_BY_VERTEX_LOD0 = 0x400
+    BONE_USED_BY_VERTEX_LOD1 = 0x800
+    BONE_USED_BY_VERTEX_LOD2 = 0x1000
+    BONE_USED_BY_VERTEX_LOD3 = 0x2000
+    BONE_USED_BY_VERTEX_LOD4 = 0x4000
+    BONE_USED_BY_VERTEX_LOD5 = 0x8000
+    BONE_USED_BY_VERTEX_LOD6 = 0x10000
+    BONE_USED_BY_VERTEX_LOD7 = 0x20000
+    BONE_USED_BY_BONE_MERGE = 0x40000
+    BONE_FIXED_ALIGNMENT = 0x100000
+    BONE_HAS_SAVEFRAME_POS = 0x200000
+    BONE_HAS_SAVEFRAME_ROT = 0x400000
     def __init__(self):
 
         self.boneOffset = 0
@@ -689,7 +703,7 @@ class SourceMdlBone:
         self.boneOffset = reader.tell()
         self.nameOffset = reader.read_uint32()
         self.parentBoneIndex = reader.read_int32()
-        self.boneControllerIndex = [reader.read_uint32() for _ in range(6)]
+        self.boneControllerIndex = [reader.read_int32() for _ in range(6)]
         self.position.read(reader)
         self.quat.read(reader)
         self.rotation.read(reader)
@@ -720,33 +734,118 @@ class SourceMdlBone:
         self.surfacePropNameOffset = reader.read_uint32()
         self.contents = reader.read_uint32()
         self.unused = [reader.read_uint32() for _ in range(8)]
-        unused = [reader.read_uint32() for _ in range(7)]
-        inputFileStreamPosition = reader.tell()
+        # unused = [reader.read_uint32() for _ in range(9)]
         if self.nameOffset != 0:
             self.name = reader.read_from_offset(self.boneOffset + self.nameOffset,reader.read_ascii_string)
-        # if self.proceduralRuleType != 0:
-        #     if self.proceduralRuleType == self.STUDIO_PROC_AXISINTERP:
-        #         reader.seek(self.boneOffset + self.proceduralRuleOffset)
-        #         self.theAxisInterpBone = SourceMdlAxisInterpBone()
-        #         self.theAxisInterpBone.read(reader)
-        #     if self.proceduralRuleType == self.STUDIO_PROC_QUATINTERP:
-        #         pass
-        #         # self.ReadQuatInterpBone(self.boneOffset, reader)
-        #     if self.proceduralRuleType == self.STUDIO_PROC_JIGGLE:
-        #         pass
-        #         # self.ReadJiggleBone(self.boneOffset, reader)
+        if self.proceduralRuleType != 0:
+            if self.proceduralRuleType == self.STUDIO_PROC_AXISINTERP:
+                with reader.save_current_pos():
+                    reader.seek(self.boneOffset + self.proceduralRuleOffset)
+                    self.theAxisInterpBone = SourceMdlAxisInterpBone().read(reader)
+            if self.proceduralRuleType == self.STUDIO_PROC_QUATINTERP:
+                with reader.save_current_pos():
+                    reader.seek(self.boneOffset + self.proceduralRuleOffset)
+                    self.theQuatInterpBone = SourceMdlQuatInterpBone().read(reader)
+            if self.proceduralRuleType == self.STUDIO_PROC_JIGGLE:
+                with reader.save_current_pos():
+                    reader.seek(self.boneOffset + self.proceduralRuleOffset)
+                    self.theJiggleBone = SourceMdlJiggleBone().read(reader)
         # print(self.surfacePropNameOffset)
         if self.surfacePropNameOffset != 0:
-            reader.seek(self.boneOffset, 0)
-            self.theSurfacePropName = reader.read_from_offset(reader.tell() + self.surfacePropNameOffset,reader.read_ascii_string)
-            # print(self.theSurfacePropName)
-        reader.seek(inputFileStreamPosition, 0)
+            self.theSurfacePropName = reader.read_from_offset(self.boneOffset + self.surfacePropNameOffset,reader.read_ascii_string)
         mdl.theBones.append(self)
+
 
 
 
     def __repr__(self):
         return "<Bone {} pos:{} rot: {} parent index: {}>".format(self.name, self.position.as_string, self.rotation.as_string,self.parentBoneIndex)
+
+class SourceMdlJiggleBone:
+    def __init__(self):
+        self.flags = 0
+
+        self.length = 0.0
+
+        self.tipMass = 0.0
+
+        self.yawStiffness = 0.0
+        self.yawDamping = 0.0
+
+        self.pitchStiffness = 0.0
+        self.pitchDamping = 0.0
+
+        self.alongStiffness = 0.0
+        self.alongDamping = 0.0
+        self.angleLimit = 0.0
+
+        self.minYaw = 0.0
+        self.maxYaw = 0.0
+
+        self.yawFriction = 0.0
+        self.yawBounce = 0.0
+
+        self.minPitch = 0.0
+        self.maxPitch = 0.0
+
+        self.pitchBounce = 0.0
+        self.pitchFriction = 0.0
+
+        self.baseMass = 0.0
+
+        self.baseStiffness = 0.0
+
+        self.baseDamping = 0.0
+
+        self.baseMinLeft = 0.0
+        self.baseMaxLeft = 0.0
+
+        self.baseLeftFriction = 0.0
+
+        self.baseMinUp = 0.0
+        self.baseMaxUp = 0.0
+
+        self.baseUpFriction = 0.0
+        self.baseMinForward = 0.0
+        self.baseMaxForward = 0.0
+        self.baseForwardFriction = 0.0
+
+    def read(self,reader:ByteIO):
+        self.flags = reader.read_int32()
+        self.length = reader.read_float()
+        self.tipMass = reader.read_float()
+        self.yawStiffness = reader.read_float()
+        self.yawDamping = reader.read_float()
+        self.pitchStiffness = reader.read_float()
+        self.pitchDamping = reader.read_float()
+        self.alongStiffness = reader.read_float()
+        self.alongDamping = reader.read_float()
+        self.angleLimit = reader.read_float()
+        self.minYaw = reader.read_float()
+        self.maxYaw = reader.read_float()
+        self.yawFriction = reader.read_float()
+        self.yawBounce = reader.read_float()
+        self.minPitch = reader.read_float()
+        self.maxPitch = reader.read_float()
+        self.pitchFriction = reader.read_float()
+        self.pitchBounce = reader.read_float()
+        self.baseMass = reader.read_float()
+        self.baseMinLeft = reader.read_float()
+        self.baseMaxLeft = reader.read_float()
+        self.baseLeftFriction = reader.read_float()
+        self.baseMinUp = reader.read_float()
+        self.baseMaxUp = reader.read_float()
+        self.baseUpFriction = reader.read_float()
+        self.baseMinForward = reader.read_float()
+        self.baseMaxForward = reader.read_float()
+        self.baseForwardFriction = reader.read_float()
+
+
+    def __str__(self):
+        return pformat(self.__dict__)
+
+    def __repr__(self):
+        return pformat(self.__dict__)
 
 
 class SourceMdlAxisInterpBone:
@@ -758,10 +857,9 @@ class SourceMdlAxisInterpBone:
 
     def read(self, reader: ByteIO):
         self.control = reader.read_uint32()
-        self.pos = [SourceVector() for _ in range(6)]
-        [v.read(reader) for v in self.pos]
-        self.quat = [SourceQuaternion() for _ in range(6)]
-        [q.read(reader) for q in self.quat]
+        self.pos = [SourceVector().read(reader) for _ in range(6)]
+        self.quat = [SourceQuaternion().read(reader) for _ in range(6)]
+        return  self
 
     def __str__(self):
         return "<AxisInterpBone control:{}>".format(self.control)

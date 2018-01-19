@@ -16,10 +16,14 @@ class SourceVector:
         self.x = reader.read_float()
         self.y = reader.read_float()
         self.z = reader.read_float()
-
+        return self
     @property
     def asList(self):
         return [self.x, self.y, self.z]
+
+    @property
+    def as_string_smd(self):
+        return "{:.6f} {:.6f} {:.6f}".format(self.x,self.y,self.z)
 
     @property
     def as_string(self):
@@ -43,7 +47,7 @@ class SourceQuaternion:
         self.y = reader.read_float()
         self.z = reader.read_float()
         self.w = reader.read_float()
-
+        return self
 
     def __str__(self):
         return "<Quaternion X:{} Y:{} Z:{} W:{}".format(self.x,self.y,self.z,self.w)
