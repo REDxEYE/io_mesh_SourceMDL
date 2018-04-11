@@ -199,10 +199,13 @@ class SourceMdlFile49:
         #     print(bone)
         # print(self.mdl.theAnimationDescs)
         for part in self.mdl.theBodyParts:  # type: SourceMdlBodyPart
-            print(part.theName, "list of meshes in bodygroup")
+            print("list of models in \"{}\" bodygroup".format(part.theName))
             for model in part.theModels:  # type: SourceMdlModel
-                print(model.name)
-                pprint(model.flex_frames)
+                print('\tmodel:', model.name)
+                # print('\teyeball count:',model.eyeballCount)
+                # pprint(model.flex_frames)
+                for flex_frame in model.flex_frames:
+                    print('\t', flex_frame)
                 # print('\t', model.name, 'list of flexes in this mesh:')
                 # for mesh in model.theMeshes:  # type: SourceMdlMesh
                 #     for flex in mesh.theFlexes:  # type: SourceMdlFlex
@@ -212,21 +215,31 @@ class SourceMdlFile49:
 
     def build_flex_frames(self):
         print('Building flex frames')
-        cumulative_vertex_offset = 0
-        flex_dest_flex_frame = []  # type:List[List[FlexFrame]]
 
+        # flexDescToFlexFrames = New List(Of List(Of FlexFrame))(Me.theMdlFileData.theFlexDescs.Count)
+        # For x As Integer = 0 To Me.theMdlFileData.theFlexDescs.Count - 1
+        # 	Dim flexFrameList As New List(Of FlexFrame)()
+        # 	flexDescToFlexFrames.Add(flexFrameList)
+        # Next ----┐
+        #          ▼
+        flex_dest_flex_frame = []  # type:List[List[FlexFrame]]
         for x in range(len(self.mdl.theFlexDescs)):
             flex_dest_flex_frame.append([])
 
+        cumulative_vertex_offset = 0
         for body_part in self.mdl.theBodyParts:
             print('Building flex frame for {}'.format(body_part.theName))
+            # No need to create defaultflex here.
+
             for model in body_part.theModels:
                 print('Processing model {}'.format(model.name))
+
                 for mesh in model.theMeshes:
                     vertex_offset = mesh.vertexIndexStart
-                    # print(vertex_offset)
+
                     for flex_index, flex in enumerate(mesh.theFlexes):
-                        print('\tParsing {} flex from {}'.format(self.mdl.theFlexDescs[flex.flexDescIndex].theName,model.name))
+                        print('\tParsing {} flex from {}'.format(self.mdl.theFlexDescs[flex.flexDescIndex].theName,
+                                                                 model.name))
                         flex_frame = None
                         if flex_dest_flex_frame[flex.flexDescIndex]:
                             for s_flex in flex_dest_flex_frame[flex.flexDescIndex]:
@@ -240,17 +253,24 @@ class SourceMdlFile49:
                             flex_frame = FlexFrame()
                             flex_frame.flex_name = self.mdl.theFlexDescs[flex.flexDescIndex].theName[:-1]
                             flex_desc_partner_index = mesh.theFlexes[flex_index].flexDescPartnerIndex
-                            if flex_desc_partner_index>0:
+
+                            if flex_desc_partner_index > 0:
+                                # aFlexFrame.flexDescription is skipped, because addon don't need this
+                                # False by default -------┐
+                                #                         ▼
                                 flex_frame.has_partner = True
                                 flex_frame.partner = flex_desc_partner_index
+
                             flex_dest_flex_frame[flex.flexDescIndex].append(flex_frame)
+
+                        # aFlexFrame.bodyAndMeshVertexIndexStarts.Add(meshVertexIndexStart + cumulativebodyPartVertexIndexStart)
+                        # aFlexFrame.flexes.Add(aFlex)
                         flex_frame.vertex_offsets.append(vertex_offset + cumulative_vertex_offset)
                         flex_frame.flexes.append(flex)
+                        # Adding flex frames to bodymodel instead of bodypart
                         model.flex_frames.append(flex_frame)
 
-
                 cumulative_vertex_offset += model.vertexCount
-
 
 
 class SourceMdlFile53(SourceMdlFile49):
@@ -287,9 +307,9 @@ if __name__ == '__main__':
         with f as sys.stdout:
             # MDL_edit('E:\\MDL_reader\\sexy_bonniev2')
             # a = SourceMdlFile53(r'H:\games\Titanfall 2\extr\models\weapons\titan_sniper_rifle\w_titan_sniper_rifle')
-            a = SourceMdlFile49(
-                r'G:\SteamLibrary\SteamApps\common\SourceFilmmaker\game\usermod\models\undertale\undyne_bigger_nude')
-            # a = SourceMdlFile49(r'.\test_data\nick_hwm')
+            # a = SourceMdlFile49(
+            # r'G:\SteamLibrary\SteamApps\common\SourceFilmmaker\game\usermod\models\undertale\undyne_bigger_nude')
+            a = SourceMdlFile49(r'.\test_data\nick_hwm')
             # a = SourceMdlFile49(r'.\test_data\xenomorph')
             # mdl2 = SourceMdlFile53(r'.\test_data\titan_buddy')
             # mdl2.test()

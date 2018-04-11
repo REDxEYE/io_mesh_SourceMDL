@@ -37,7 +37,7 @@ class IO_MDL:
                 self.VTX = VTX.SourceVtxFile49(file_path)
                 self.MDL = MDL.SourceMdlFile49(file_path)
         elif version == 53:
-            self.MDL = MDL.SourceMdlFile53(path = file_path)
+            self.MDL = MDL.SourceMdlFile53(path=file_path)
             self.VVD = self.MDL.VVD
             self.VTX = self.MDL.VTX
         if custom_name:
@@ -245,15 +245,15 @@ class IO_MDL:
                         else:
                             continue
                         bodyPartVertexIndexStart += model.vertexCount
-
-                        print('Converting UV')
                         vertexes = []
                         uvs = []
                         normals = []
+                        # Extracting vertex coordinates,UVs and normals
                         for vertex in self.VVD.vvd.theVertexes:
                             vertexes.append(convert_vertex(vertex))
                             uvs.append(convert_uv(vertex))
                             normals.append(convert_custom_normal(vertex))
+
                         self.mesh.from_pydata(vertexes, [], polygons)
                         self.mesh.update()
                         self.add_flexes(model)
@@ -271,8 +271,8 @@ class IO_MDL:
                         bpy.ops.object.select_all(action="DESELECT")
                         self.mesh_obj.select = True
                         bpy.context.scene.objects.active = self.mesh_obj
+
                         try:
-                            # print('NORMS', len(normals), len(self.mesh.loops))
                             self.mesh.create_normals_split()
                             self.mesh.use_auto_smooth = True
                             self.mesh.normals_split_custom_set_from_vertices(normals)
@@ -297,26 +297,31 @@ class IO_MDL:
                             bpy.ops.object.shade_smooth()
 
     def add_flexes(self, mdlmodel: MDL_DATA.SourceMdlModel):
+        # Creating base shape key
         self.mesh_obj.shape_key_add(name='base')
+
+        # Going through all flex frames in SourceMdlModel
         for flex_frame in mdlmodel.flex_frames:
+
+            # Now for every flex and vertex_offset(bodyAndMeshVertexIndexStarts)
             for flex, vertex_offset in zip(flex_frame.flexes, flex_frame.vertex_offsets):
-        # for mesh in mdlmodel.theMeshes:  # type: MDL_DATA.SourceMdlMesh
-        #     for flex in mesh.theFlexes:  # type: MDL_DATA.SourceMdlFlex
-                flexDesc = self.MDL.mdl.theFlexDescs[flex.flexDescIndex]
-                flex_name = flexDesc.theName
+
+                flex_desc = self.MDL.mdl.theFlexDescs[flex.flexDescIndex]
+                flex_name = flex_desc.theName
+                # if blender mesh does not have FLEX_NAME - create it,
+                # otherwise work with existing
                 if not self.mesh_obj.data.shape_keys.key_blocks.get(flex_name):
                     self.mesh_obj.shape_key_add(name=flex_name)
 
+                # iterating over all VertAnims
                 for flex_vert in flex.theVertAnims:  # type: MDL_DATA.SourceMdlVertAnim
-                    Vert_index = flex_vert.index + vertex_offset
-                    # Vert_index = flex_vert.index + mesh.vertexIndexStart
+                    Vert_index = flex_vert.index + vertex_offset # <- bodyAndMeshVertexIndexStarts
                     vx = self.mesh_obj.data.vertices[Vert_index].co.x
                     vy = self.mesh_obj.data.vertices[Vert_index].co.y
                     vz = self.mesh_obj.data.vertices[Vert_index].co.z
                     fx, fy, fz = flex_vert.theDelta
-                    # print('ADDING VERT ANIM vertex #{} for flex {}, COs -  x:{} y:{} z:{}'.format(Vert_index,flex_name,fx+vx,fy+vy,fz+vz))
                     self.mesh_obj.data.shape_keys.key_blocks[flex_name].data[Vert_index].co = (
-                    fx + vx, fy + vy, fz + vz)
+                        fx + vx, fy + vy, fz + vz)
 
 
 if __name__ == '__main__':
