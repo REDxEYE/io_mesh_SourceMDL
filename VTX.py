@@ -164,5 +164,5 @@ if __name__ == '__main__':
         with f as sys.stdout:
 
             # MDL_edit('E:\\MDL_reader\\sexy_bonniev2')
-            a = SourceVtxFile49(r'..\test_data\medic')
+            a = SourceVtxFile49(r'test_data\kali')
             print(a.vtx)

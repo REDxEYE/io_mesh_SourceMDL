@@ -22,7 +22,7 @@ class ByteIO:
 
         """
         Supported file handlers
-        :type byte_object: io.BytesIO
+        :type byte_object: bytes
         :type path: str
         :type file: io.FileIO
         """
@@ -82,6 +82,10 @@ class ByteIO:
         size = struct.calcsize(t)
         return struct.unpack(t, self._peek(size))[0]
 
+    def read_fmt(self,fmt):
+        size = struct.calcsize(fmt)
+        return struct.unpack(fmt, self._peek(size))
+
     def peek_uint64(self):
         return self.peek('Q')
 
@@ -125,6 +129,10 @@ class ByteIO:
         size = struct.calcsize(t)
         return struct.unpack(t, self._read(size))[0]
 
+    def read_fmt(self,fmt):
+        size = struct.calcsize(fmt)
+        return struct.unpack(fmt, self._read(size))
+
     def read_uint64(self):
         return self.read('Q')
 
@@ -157,7 +165,7 @@ class ByteIO:
 
     def read_ascii_string(self, length=None):
         if length:
-            return ''.join([chr(self.read_uint8()) for _ in range(length)])
+            return bytes(''.join([chr(self.read_uint8()) for _ in range(length)]),'utf').strip(b'\x00').decode('utf')
 
         acc = ''
         b = self.read_uint8()

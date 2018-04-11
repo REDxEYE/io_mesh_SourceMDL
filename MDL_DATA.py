@@ -1,4 +1,5 @@
 import random
+from enum import Enum
 from pprint import pformat, pprint
 
 import sys
@@ -6,17 +7,16 @@ from typing import List
 
 import io
 
-
-
 try:
     from .ByteIO import ByteIO
     from .GLOBALS import SourceVector, SourceQuaternion, SourceFloat16bits
-    from . import VTX,VVD
+    from . import VTX, VVD
 
 except:
     from ByteIO import ByteIO
     from GLOBALS import SourceVector, SourceQuaternion, SourceFloat16bits
-    import VTX,VVD
+    import VTX, VVD
+
 
 class SourceMdlAnimationDesc:
     def __init__(self):
@@ -125,16 +125,15 @@ class SourceMdlFileData:
         self.linearBoneOffset = 0
         self.reserved = [None] * 56
         self.theID = ""
-        self.theName = ""
         self.theAnimationDescs = []
         self.theAnimBlocks = []
         self.theAnimBlockRelativePathFileName = ""
         self.theAttachments = []
-        self.theBodyParts = []
-        self.theBones = [] #type: List[SourceMdlBone]
+        self.theBodyParts = []  # type: List[SourceMdlBodyPart]
+        self.theBones = []  # type: List[SourceMdlBone]
         self.theBoneControllers = []
         self.theBoneTableByName = []
-        self.theFlexDescs = [] #type: List[SourceMdlFlexDesc]
+        self.theFlexDescs = []  # type: List[SourceMdlFlexDesc]
         self.theFlexControllers = []
         self.theFlexControllerUis = []
         self.theFlexRules = []
@@ -150,12 +149,12 @@ class SourceMdlFileData:
         self.theSkinFamilies = []
         self.theSurfacePropName = ""
         self.theTexturePaths = []
-        self.theTextures = [] #type: List[SourceMdlTexture]
+        self.theTextures = []  # type: List[SourceMdlTexture]
         self.theSectionFrameCount = 0
         self.theSectionFrameMinFrameCount = 0
         self.theActualFileSize = 0
         self.theModelCommandIsUsed = False
-        self.theFlexFrames = []
+        self.theFlexFrames = [] #type: List[FlexFrame]
         self.theEyelidFlexFrameIndexes = []
         self.theFirstAnimationDesc = None
         self.theFirstAnimationDescFrameLines = {}
@@ -249,7 +248,7 @@ class SourceMdlFileData:
         self.surfacePropOffset = reader.read_uint32()
 
         if self.surfacePropOffset > 0:
-            self.theSurfacePropName = reader.read_from_offset(self.surfacePropOffset,reader.read_ascii_string)
+            self.theSurfacePropName = reader.read_from_offset(self.surfacePropOffset, reader.read_ascii_string)
 
         self.keyValueOffset = reader.read_uint32()
         self.keyValueSize = reader.read_uint32()
@@ -272,7 +271,8 @@ class SourceMdlFileData:
 
         if self.animBlockCount > 0:
             if self.animBlockNameOffset > 0:
-                self.theAnimBlockRelativePathFileName = reader.read_from_offset(reader.tell()+self.animBlockNameOffset,reader.read_ascii_string)
+                self.theAnimBlockRelativePathFileName = reader.read_from_offset(
+                    reader.tell() + self.animBlockNameOffset, reader.read_ascii_string)
 
         if self.animBlockOffset > 0:
             backpos = reader.tell()
@@ -427,7 +427,7 @@ class SourceMdlFileDataV53:
         self.illumPositionAttachmentIndex = 0
         self.maxEyeDeflection = 0
         self.linearBoneOffset = 0
-        self.reserved = [None]*53
+        self.reserved = [None] * 53
         self.theID = ""
         self.theName = ""
         self.theAnimationDescs = []
@@ -556,7 +556,7 @@ class SourceMdlFileDataV53:
         self.surfacePropOffset = reader.read_uint32()
 
         if self.surfacePropOffset > 0:
-            self.theSurfacePropName = reader.read_from_offset(self.surfacePropOffset,reader.read_ascii_string)
+            self.theSurfacePropName = reader.read_from_offset(self.surfacePropOffset, reader.read_ascii_string)
 
         self.keyValueOffset = reader.read_uint32()
         self.keyValueSize = reader.read_uint32()
@@ -579,7 +579,8 @@ class SourceMdlFileDataV53:
 
         if self.animBlockCount > 0:
             if self.animBlockNameOffset > 0:
-                self.theAnimBlockRelativePathFileName = reader.read_from_offset(reader.tell()+self.animBlockNameOffset,reader.read_ascii_string)
+                self.theAnimBlockRelativePathFileName = reader.read_from_offset(
+                    reader.tell() + self.animBlockNameOffset, reader.read_ascii_string)
 
         if self.animBlockOffset > 0:
             backpos = reader.tell()
@@ -623,9 +624,9 @@ class SourceMdlFileDataV53:
         if self.VVDoffset != 0 and self.VTXoffset != 0:
             start = reader.tell()
             reader.seek(self.VTXoffset)
-            self.VTX = VTX.SourceVtxFile49(file = ByteIO(byte_object = reader._read(-1)))
+            self.VTX = VTX.SourceVtxFile49(file=ByteIO(byte_object=reader._read(-1)))
             reader.seek(self.VVDoffset)
-            self.VVD = VVD.SourceVvdFile49(file = ByteIO(byte_object = reader._read(-1)))
+            self.VVD = VVD.SourceVvdFile49(file=ByteIO(byte_object=reader._read(-1)))
             reader.seek(start)
 
         if self.bodyPartCount == 0 and self.localSequenceCount > 0:
@@ -645,8 +646,6 @@ class SourceMdlFileDataV53:
         self.reserved = list([reader.read_uint32() for _ in range(56)])
 
 
-
-
 class SourceMdlBone:
     BONE_SCREEN_ALIGN_SPHERE = 0x8
     BONE_SCREEN_ALIGN_CYLINDER = 0x10
@@ -662,6 +661,22 @@ class SourceMdlBone:
     BONE_FIXED_ALIGNMENT = 0x100000
     BONE_HAS_SAVEFRAME_POS = 0x200000
     BONE_HAS_SAVEFRAME_ROT = 0x400000
+
+    class CONTENTS:
+        SOLID = 0x1
+        GRATE = 0x8
+        MONSTER = 0x2000000
+        LADDER = 0x20000000
+
+        @classmethod
+        def get_flags(cls, flag):
+            flags = []
+            for name, val in vars(cls).items():
+                if name.isupper():
+                    if (flag & val) > 0:
+                        flags.append(name)
+            return flags
+
     def __init__(self):
 
         self.boneOffset = 0
@@ -734,34 +749,71 @@ class SourceMdlBone:
         self.surfacePropNameOffset = reader.read_uint32()
         self.contents = reader.read_uint32()
         self.unused = [reader.read_uint32() for _ in range(8)]
-        # unused = [reader.read_uint32() for _ in range(9)]
+        if mdl.version > 49:
+            unused = [reader.read_uint32() for _ in range(6)]
         if self.nameOffset != 0:
-            self.name = reader.read_from_offset(self.boneOffset + self.nameOffset,reader.read_ascii_string)
+            self.name = reader.read_from_offset(self.boneOffset + self.nameOffset, reader.read_ascii_string)
         if self.proceduralRuleType != 0:
-            if self.proceduralRuleType == self.STUDIO_PROC_AXISINTERP:
+            if self.proceduralRuleType & self.STUDIO_PROC_AXISINTERP:
                 with reader.save_current_pos():
                     reader.seek(self.boneOffset + self.proceduralRuleOffset)
                     self.theAxisInterpBone = SourceMdlAxisInterpBone().read(reader)
-            if self.proceduralRuleType == self.STUDIO_PROC_QUATINTERP:
+            if self.proceduralRuleType & self.STUDIO_PROC_QUATINTERP:
                 with reader.save_current_pos():
                     reader.seek(self.boneOffset + self.proceduralRuleOffset)
                     self.theQuatInterpBone = SourceMdlQuatInterpBone().read(reader)
-            if self.proceduralRuleType == self.STUDIO_PROC_JIGGLE:
+            if self.proceduralRuleType & self.STUDIO_PROC_JIGGLE:
                 with reader.save_current_pos():
                     reader.seek(self.boneOffset + self.proceduralRuleOffset)
                     self.theJiggleBone = SourceMdlJiggleBone().read(reader)
         # print(self.surfacePropNameOffset)
         if self.surfacePropNameOffset != 0:
-            self.theSurfacePropName = reader.read_from_offset(self.boneOffset + self.surfacePropNameOffset,reader.read_ascii_string)
+            self.theSurfacePropName = reader.read_from_offset(self.boneOffset + self.surfacePropNameOffset,
+                                                              reader.read_ascii_string)
         mdl.theBones.append(self)
 
-
-
-
     def __repr__(self):
-        return "<Bone {} pos:{} rot: {} parent index: {}>".format(self.name, self.position.as_string, self.rotation.as_string,self.parentBoneIndex)
+        return "<Bone {} pos:{} rot: {} parent index: {}>".format(self.name, self.position.as_string,
+                                                                  self.rotation.as_string, self.parentBoneIndex)
+
 
 class SourceMdlJiggleBone:
+    class JIGGLE:
+        IS_FLEXIBLE = 0x01
+        IS_RIGID = 0x02
+        HAS_YAW_CONSTRAINT = 0x04
+        HAS_PITCH_CONSTRAINT = 0x08
+        HAS_ANGLE_CONSTRAINT = 0x10
+        HAS_LENGTH_CONSTRAINT = 0x20
+        HAS_BASE_SPRING = 0x40
+
+        def __init__(self, value):
+            self.value = value
+
+        def get_flags(self):
+            DFlags = []
+
+            vars_ = {var: self.__class__.__dict__[var] for var in vars(self.__class__) if
+                     not var.startswith('_') and var.isupper()}
+            for var, int_ in vars_.items():
+                if (self.value & int_) > 0:
+                    DFlags.append(var)
+            return DFlags
+
+        def __repr__(self):
+            return "<Flags:{}>".format(self.get_flags())
+
+        def __contains__(self, item):
+            return item & self.value
+
+    # define JIGGLE_IS_FLEXIBLE				0x01
+    # define JIGGLE_IS_RIGID					0x02
+    # define JIGGLE_HAS_YAW_CONSTRAINT		0x04
+    # define JIGGLE_HAS_PITCH_CONSTRAINT		0x08
+    # define JIGGLE_HAS_ANGLE_CONSTRAINT		0x10
+    # define JIGGLE_HAS_LENGTH_CONSTRAINT	0x20
+    # define JIGGLE_HAS_BASE_SPRING			0x40
+
     def __init__(self):
         self.flags = 0
 
@@ -810,8 +862,8 @@ class SourceMdlJiggleBone:
         self.baseMaxForward = 0.0
         self.baseForwardFriction = 0.0
 
-    def read(self,reader:ByteIO):
-        self.flags = reader.read_int32()
+    def read(self, reader: ByteIO):
+        self.flags = self.JIGGLE(reader.read_int32())
         self.length = reader.read_float()
         self.tipMass = reader.read_float()
         self.yawStiffness = reader.read_float()
@@ -839,13 +891,10 @@ class SourceMdlJiggleBone:
         self.baseMinForward = reader.read_float()
         self.baseMaxForward = reader.read_float()
         self.baseForwardFriction = reader.read_float()
-
-
-    def __str__(self):
-        return pformat(self.__dict__)
+        return self
 
     def __repr__(self):
-        return pformat(self.__dict__)
+        return "<JiggleBone flags:{0.flags} mass:{0.tipMass} length:{0.length}>".format(self)
 
 
 class SourceMdlAxisInterpBone:
@@ -859,7 +908,7 @@ class SourceMdlAxisInterpBone:
         self.control = reader.read_uint32()
         self.pos = [SourceVector().read(reader) for _ in range(6)]
         self.quat = [SourceQuaternion().read(reader) for _ in range(6)]
-        return  self
+        return self
 
     def __str__(self):
         return "<AxisInterpBone control:{}>".format(self.control)
@@ -880,8 +929,8 @@ class SourceMdlQuatInterpBone:
         self.triggerCount = reader.read_uint32()
         self.triggerOffset = reader.read_uint32()
         if self.triggerCount > 0 and self.triggerOffset != 0:
-            self.theTriggers = [SourceMdlQuatInterpBoneInfo() for _ in range(self.triggerCount)]
-            [t.read(reader) for t in self.theTriggers]
+            self.theTriggers = [SourceMdlQuatInterpBoneInfo().read(reader) for _ in range(self.triggerCount)]
+        return self
 
     def __str__(self):
         return "<QuatInterpBone control bone index:{}>".format(self.controlBoneIndex)
@@ -902,6 +951,7 @@ class SourceMdlQuatInterpBoneInfo:
         self.trigger.read(reader)
         self.pos.read(reader)
         self.quat.read(reader)
+        return self
 
 
 class SourceMdlBoneController:
@@ -944,7 +994,7 @@ class SourceMdlFlexDesc:
         entry = reader.tell()
         self.nameOffset = reader.read_uint32()
         if self.nameOffset != 0:
-            self.theName = reader.read_from_offset(entry+self.nameOffset,reader.read_ascii_string)
+            self.theName = reader.read_from_offset(entry + self.nameOffset, reader.read_ascii_string)
         pass
 
     def __str__(self):
@@ -968,15 +1018,15 @@ class SourceMdlFlexController:
         entry = reader.tell()
         self.typeOffset = reader.read_uint32()
         self.nameOffset = reader.read_uint32()
-        self.localToGlobal = reader.read_uint32()
+        self.localToGlobal = reader.read_int32()
         self.min = reader.read_float()
         self.max = reader.read_float()
         if self.typeOffset != 0:
-            self.theType = reader.read_from_offset(entry+self.typeOffset,reader.read_ascii_string)
+            self.theType = reader.read_from_offset(entry + self.typeOffset, reader.read_ascii_string)
         else:
             self.theType = ''
         if self.nameOffset != 0:
-            self.theName = reader.read_from_offset(entry+self.nameOffset,reader.read_ascii_string)
+            self.theName = reader.read_from_offset(entry + self.nameOffset, reader.read_ascii_string)
         else:
             self.theName = 'blank_name_' + str(len(mdl.theFlexDescs))
 
@@ -984,11 +1034,10 @@ class SourceMdlFlexController:
             mdl.theModelCommandIsUsed = True
         mdl.theFlexControllers.append(self)
 
-    def __str__(self):
-        return "<FlexController name:{} type:{}>".format(self.theName, self.theType)
-
     def __repr__(self):
-        return "<FlexController name:{} type:{}>".format(self.theName, self.theType)
+        return "<FlexController name:{} type:{} min/max:{}/{} localToGlobal:{}>".format(self.theName, self.theType,
+                                                                                        self.min, self.max,
+                                                                                        self.localToGlobal)
 
 
 class SourceMdlFlexRule:
@@ -1021,7 +1070,7 @@ class SourceMdlFlexRule:
         return pformat(self.__dict__)
 
 
-class SourceMdlFlexOp:
+class FlexOpType(Enum):
     STUDIO_CONST = 1
     STUDIO_FETCH1 = 2
     STUDIO_FETCH2 = 3
@@ -1044,32 +1093,31 @@ class SourceMdlFlexOp:
     STUDIO_DME_LOWER_EYELID = 20
     STUDIO_DME_UPPER_EYELID = 21
 
+
+class SourceMdlFlexOp:
+
     def __init__(self):
-        self.op = 0
+        self.op = FlexOpType
         self.index = 0
         self.value = 0
 
     def read(self, reader: ByteIO, mdl: SourceMdlFileData):
-        self.op = reader.read_uint32()
-        if self.op == SourceMdlFlexOp.STUDIO_CONST:
+        self.op = FlexOpType(reader.read_uint32())
+        if self.op == FlexOpType.STUDIO_CONST:
             self.value = reader.read_float()
         else:
             self.index = reader.read_uint32()
-            if self.op == SourceMdlFlexOp.STUDIO_FETCH2:
+            if self.op == FlexOpType.STUDIO_FETCH2:
                 mdl.theFlexDescs[self.index].theDescIsUsedByFlexRule = True
 
-    def __str__(self):
-        return "<FlexOp op:{}>".format(self.op)
-
     def __repr__(self):
-        return "<FlexOp op:{}>".format(self.op)
+        return "<FlexOp op:{} index:{} value:{}>".format(self.op.name, self.index, self.value)
 
 
 class SourceMdlAttachment:
     def __init__(self):
         self.name = ""
         self.type = 0
-        self.bone = 0
         self.attachmentPoint = SourceVector
         self.vectors = []
         self.nameOffset = 0
@@ -1095,7 +1143,7 @@ class SourceMdlAttachment:
             self.name = reader.read_ascii_string(64)
         else:
             self.nameOffset = reader.read_uint32()
-            self.name = reader.read_from_offset(self.nameOffset+entry,reader.read_ascii_string)
+            self.name = reader.read_from_offset(self.nameOffset + entry, reader.read_ascii_string)
             self.flags = reader.read_uint32()
             self.localBoneIndex = reader.read_uint32()
             self.localM11 = reader.read_float()
@@ -1127,12 +1175,14 @@ class SourceMdlBodyPart:
         self.base = 0
         self.modelOffset = 0
         self.theName = ""
-        self.theModels = []
+        self.theModels = []  # type: List[SourceMdlModel]
+        self.flex_frames = []  # type: List[FlexFrame]
 
     def read(self, reader: ByteIO, mdl: SourceMdlFileData):
         entry = reader.tell()
         self.nameOffset = reader.read_uint32()
-        self.theName = reader.read_from_offset(entry+self.nameOffset,reader.read_ascii_string) if self.nameOffset != 0 else "no-name{}".format(
+        self.theName = reader.read_from_offset(entry + self.nameOffset,
+                                               reader.read_ascii_string) if self.nameOffset != 0 else "no-name{}".format(
             len(mdl.theBodyParts))
         self.modelCount = reader.read_uint32()
         self.base = reader.read_uint32()
@@ -1144,7 +1194,6 @@ class SourceMdlBodyPart:
                 SourceMdlModel().read(reader, self)
         reader.seek(entry2)
         mdl.theBodyParts.append(self)
-
 
     def __repr__(self):
         return "<BodyPart name:{} model count:{} models:{}>".format(self.theName, self.modelCount, self.theModels)
@@ -1166,14 +1215,15 @@ class SourceMdlModel:
         self.eyeballOffset = 0
         self.vertexData = SourceMdlModelVertexData()
         self.unused = []
-        self.theMeshes = []
+        self.theMeshes = []  # type: List[SourceMdlMesh]
         self.theEyeballs = []
+        self.flex_frames = [] #type: List[FlexFrame]
 
     def read(self, reader: ByteIO, body_part: SourceMdlBodyPart):
         entry = reader.tell()
         self.name = reader.read_ascii_string(64)
         if not self.name:
-            self.name = "no-name-{}".format(len(body_part.theModels))
+            self.name = "{}-{}".format(body_part.theName,len(body_part.theModels))
         self.type = reader.read_uint32()
         self.boundingRadius = reader.read_float()
         self.meshCount = reader.read_uint32()
@@ -1198,11 +1248,11 @@ class SourceMdlModel:
         reader.seek(entry2, 0)
         body_part.theModels.append(self)
 
-
-        def __repr__(self):
-            return "<Model name:{} type:{} mesh count:{} meshes:{} eyeballs:{}>".format(self.name, self.type,
-                                                                                    self.meshCount,
-                                                                                    self.theMeshes, self.theEyeballs)
+    def __repr__(self):
+        return "<Model name:{} type:{} mesh count:{} meshes:{} eyeballs:{}>".format(self.name, self.type,
+                                                                                        self.meshCount,
+                                                                                        self.theMeshes,
+                                                                                        self.theEyeballs)
 
 
 class SourceMdlModelVertexData:
@@ -1253,7 +1303,7 @@ class SourceMdlEyeball:
     def read(self, reader: ByteIO, model: SourceMdlModel):
         entry = reader.tell()
         self.nameOffset = reader.read_uint32()
-        self.theName = reader.read_from_offset(entry+self.nameOffset,reader.read_ascii_string)
+        self.theName = reader.read_from_offset(entry + self.nameOffset, reader.read_ascii_string)
         self.boneIndex = reader.read_uint32()
         self.org.read(reader)
         self.zOffset = reader.read_float()
@@ -1298,7 +1348,7 @@ class SourceMdlMesh:
         self.centerZ = 0.0
         self.vertexData = SourceMdlMeshVertexData()
         self.unused = []  # 8
-        self.theFlexes = []
+        self.theFlexes = [] #type: List[SourceMdlFlex]
 
     def read(self, reader: ByteIO, model: SourceMdlModel):
         entry = reader.tell()
@@ -1322,10 +1372,9 @@ class SourceMdlMesh:
         if self.flexCount > 0 and self.flexOffset != 0:
             reader.seek(entry + self.flexOffset, 0)
             for _ in range(self.flexCount):
-                SourceMdlFlex().read(reader,self)
+                SourceMdlFlex().read(reader, self)
         reader.seek(entry2, 0)
         model.theMeshes.append(self)
-
 
     def __repr__(self):
         return "<Mesh material inxes:{} vertex count:{} flex count:{} flexes:{}>".format(self.materialIndex,
@@ -1349,6 +1398,8 @@ class SourceMdlMeshVertexData:
     def __repr__(self):
         return "<MeshVertexData vertex pointer:{}, LODs vertex count:{}>".format(self.modelVertexDataP,
                                                                                  self.lodVertexCount)
+
+
 class SourceMdlFlex:
     def __init__(self):
         self.flexDescIndex = 0
@@ -1366,7 +1417,7 @@ class SourceMdlFlex:
         self.STUDIO_VERT_ANIM_NORMAL = 0
         self.STUDIO_VERT_ANIM_WRINKLE = 1
 
-    def read(self,reader:ByteIO,mesh:SourceMdlMesh):
+    def read(self, reader: ByteIO, mesh: SourceMdlMesh):
         entry = reader.tell()
         self.flexDescIndex = reader.read_uint32()
         self.target0 = reader.read_float()
@@ -1384,21 +1435,25 @@ class SourceMdlFlex:
         self.unused = [reader.read_uint32() for _ in range(6)]
         entry2 = reader.tell()
 
-        if self.vertCount>0 and self.vertOffset !=0:
+        if self.vertCount > 0 and self.vertOffset != 0:
             with reader.save_current_pos():
-                reader.seek(entry+self.vertOffset)
+                reader.seek(entry + self.vertOffset)
                 for _ in range(self.vertCount):
                     if self.vertAnimType == self.STUDIO_VERT_ANIM_WRINKLE:
-                        self.theVertAnims.append(SourceMdlVertAnimWrinkle().read(reader,self))
+                        self.theVertAnims.append(SourceMdlVertAnimWrinkle().read(reader, self))
                     else:
-                        self.theVertAnims.append(SourceMdlVertAnim().read(reader,self))
+                        self.theVertAnims.append(SourceMdlVertAnim().read(reader, self))
         mesh.theFlexes.append(self)
 
     def __repr__(self):
-        return "<Flex Desc index:{} anim type:{}, vertex count:{} vertex offset:{}>".format(self.flexDescIndex, self.vertAnimType,self.vertCount,self.vertOffset)
+        return "<Flex Desc index:{} anim type:{}, vertex count:{} vertex offset:{}>".format(self.flexDescIndex,
+                                                                                            self.vertAnimType,
+                                                                                            self.vertCount,
+                                                                                            self.vertOffset)
+
 
 class SourceMdlVertAnim:
-    VertAnimFixedPointScale = 1/4096
+    VertAnimFixedPointScale = 1 / 4096
 
     def __init__(self):
         self.index = 0
@@ -1407,7 +1462,7 @@ class SourceMdlVertAnim:
         self.theDelta = []  # 3
         self.theNDelta = []  # 3
 
-    def read(self,reader:ByteIO,flex:SourceMdlFlex):
+    def read(self, reader: ByteIO, flex: SourceMdlFlex):
         self.index = reader.read_uint16()
         self.speed = reader.read_uint8()
         self.side = reader.read_uint8()
@@ -1415,20 +1470,20 @@ class SourceMdlVertAnim:
         self.theNDelta = [SourceFloat16bits().read(reader).TheFloatValue for _ in range(3)]
         return self
 
-
-
     def __repr__(self):
-        return "<VertAnim index:{} speed:{} side:{} delta:{}>".format(self.index, self.speed, self.side,self.theDelta)
+        return "<VertAnim index:{} speed:{} side:{} delta:{}>".format(self.index, self.speed, self.side, self.theDelta)
+
 
 class SourceMdlVertAnimWrinkle(SourceMdlVertAnim):
     def __init__(self):
         super().__init__()
         self.wrinkleDelta = 0
 
-    def read(self,reader:ByteIO,flex:SourceMdlFlex):
-        super().read(reader,flex)
+    def read(self, reader: ByteIO, flex: SourceMdlFlex):
+        super().read(reader, flex)
         self.wrinkleDelta = reader.read_uint16()
         return self
+
 
 class SourceMdlTexture:
     def __init__(self):
@@ -1441,7 +1496,7 @@ class SourceMdlTexture:
         self.unused = []  # len 10
         self.thePathFileName = 'texture' + pformat(random.randint(0, 256))
 
-    def read(self,reader:ByteIO,mdl:SourceMdlFileData):
+    def read(self, reader: ByteIO, mdl: SourceMdlFileData):
         entry = reader.tell()
         self.nameOffset = reader.read_uint32()
         self.flags = reader.read_uint32()
@@ -1449,10 +1504,10 @@ class SourceMdlTexture:
         self.unused1 = reader.read_uint32()
         self.materialP = reader.read_uint32()
         self.clientMaterialP = reader.read_uint32()
-        self.unused = [reader.read_uint32() for _ in range(10 if mdl.version<53 else 5)]
+        self.unused = [reader.read_uint32() for _ in range(10 if mdl.version < 53 else 5)]
         entry2 = reader.tell()
-        if self.nameOffset!=0:
-            self.thePathFileName = reader.read_from_offset(entry+self.nameOffset,reader.read_ascii_string)
+        if self.nameOffset != 0:
+            self.thePathFileName = reader.read_from_offset(entry + self.nameOffset, reader.read_ascii_string)
         reader.seek(entry2)
         mdl.theTextures.append(self)
 
@@ -1486,3 +1541,17 @@ class SourceMdlAnimBlock:
 
     def __repr__(self):
         return pformat(self.__dict__)
+
+
+class FlexFrame:
+    def __init__(self):
+        self.flex_name = ""
+        self.flex_description = ""
+        self.has_partner = False
+        self.partner = None
+        self.flex_split = 0.0
+        self.vertex_offsets = []  # type: List[int]
+        self.flexes = []  # type: List[SourceMdlFlex]
+
+    def __repr__(self):
+        return "<FlexFrame {} flexes:{} mesh inds:{}>".format(self.flex_name,self.flexes,self.vertex_offsets)

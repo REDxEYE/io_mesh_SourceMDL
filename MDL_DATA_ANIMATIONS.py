@@ -74,7 +74,7 @@ class SourceMdlAnimationValuePointer:
             self)
 
 
-class SourceQuaternion48bits(object):
+class SourceQuaternion48bits:
     def __init__(self):
         self.theXInput = SourceFloat16bits()
         self.theYInput = SourceFloat16bits()
@@ -90,12 +90,14 @@ class SourceQuaternion48bits(object):
                                                        self.theZWInput.TheFloatValue)
 
 
-class SourceQuaternion64bits(object):
+class SourceQuaternion64bits:
     def __init__(self):
-        self.theBytes = []  # type: List[int]
+        self.theBytes = [0,0,0,0,0,0,0,0]  # type: List[int]
 
     def read(self, reader: ByteIO):
+        self.theBytes.clear()
         self.theBytes = [reader.read_uint8() for _ in range(8)]
+        print(self.theBytes)
 
     @property
     def x(self):
@@ -131,7 +133,9 @@ class SourceQuaternion64bits(object):
     @property
     def w(self):
         print(1-self.x**2-self.y**2-self.z**2)
-        return math.sqrt(1-(self.x**2)-(self.y**2)-(self.z**2))*self.wneg
+        print(self.x**2,self.y**2,self.z**2)
+        # print('w',math.sqrt(1+(self.x*self.x-self.y*self.y-self.z*self.z))*self.wneg)
+        return math.sqrt(1-self.x**2-self.y**2-self.z**2)*self.wneg
 
     @property
     def as_4D_vec(self):
@@ -139,8 +143,9 @@ class SourceQuaternion64bits(object):
 
     def r2d(self,val):
         cos_a = self.w
+        print(cos_a)
         angle = math.acos(cos_a)*2
-        sin_a = math.sqrt(1-cos_a**2)
+        sin_a = math.sqrt(1-(cos_a**2))
         if math.fabs(sin_a)<0.000005:sin_a = 1
         return val/sin_a
 
@@ -159,6 +164,7 @@ class SourceQuaternion64bits(object):
         return [self.xd,self.yd,self.zd]
 
     def __repr__(self):
+        # return "<Quaternion64 X:{0.x} Y:{0.y} Z:{0.z}>".format(self)
         return "<Quaternion64 X:{0.xd} Y:{0.yd} Z:{0.zd}>".format(self)
 
 class IntegerAndSingleUnion:
@@ -216,8 +222,13 @@ class SourceMdlAnimation:
 
     def read(self, frame_count, anim_section, mdl: SourceMdlFileData, reader: ByteIO):
         anim_entry = reader.tell()
-        self.boneIndex = reader.read_int8()
+        self.boneIndex = reader.read_uint8()
         print('BoneIndex:',self.boneIndex)
+        try:
+            self.bone_name = mdl.theBones[self.boneIndex].name
+        except:
+            self.bone_name = "ERROR"
+        print('BoneName:',self.bone_name)
         if self.boneIndex == 255:
             reader.skip(3)
             return self, 0
@@ -228,33 +239,47 @@ class SourceMdlAnimation:
         self.sflags = self.STUDIO_ANIM.get_flags(self.flags)
         self.nextSourceMdlAnimationOffset = reader.read_int16()
         pdata = reader.tell()
+        print('Seq flag',self.flags,self.sflags)
         if (self.flags & self.STUDIO_ANIM.RAWROT2) > 0:
             with reader.save_current_pos():
+                reader.seek(pdata)
                 self.theRot64bits.read(reader)
+                print('Rot 64',self.theRot64bits)
 
         if (self.flags & self.STUDIO_ANIM.RAWROT) > 0:
             with reader.save_current_pos():
+                reader.seek(pdata)
                 self.theRot48bits.read(reader)
+                print('Rot 48', self.theRot48bits)
 
         if (self.flags & self.STUDIO_ANIM.RAWPOS) > 0:
             with reader.save_current_pos():
+                reader.seek(pdata+(((self.flags & self.STUDIO_ANIM.RAWROT) != 0)*6) + ((self.flags & self.STUDIO_ANIM.RAWROT2) != 0)*8)
                 self.thePos.read(reader)
+                print('Pos', self.thePos)
 
         if (self.flags & self.STUDIO_ANIM.ANIMROT) > 0:
-            rotV_entry = reader.tell()
-            reader.seek(pdata)
-            self.theRotV.read(reader)
-            self.theRotV.read_values(rotV_entry, frame_count, reader)
+            with reader.save_current_pos():
+                rotV_entry = reader.tell()
+                reader.seek(pdata)
+                self.theRotV.read(reader)
+                self.theRotV.read_values(rotV_entry, frame_count, reader)
+                print('Rot V', self.theRotV)
 
         if (self.flags & self.STUDIO_ANIM.ANIMPOS) > 0:
-            reader.seek((self.flags & self.STUDIO_ANIM.ANIMPOS) + pdata)
-            posV_entry = reader.tell()
-            self.thePosV.read(reader)
-            self.thePosV.read_values(posV_entry, frame_count, reader)
+            with reader.save_current_pos():
+                reader.seek(((self.flags & self.STUDIO_ANIM.ANIMPOS)!=0) + pdata)
+                posV_entry = reader.tell()
+                self.thePosV.read(reader)
+                self.thePosV.read_values(posV_entry, frame_count, reader)
+                print('Pos V', self.thePosV)
+        print('\n')
         pprint(self.__dict__)
+        print('\n')
         if self.nextSourceMdlAnimationOffset == 0:
             print('DONE WITH ANIMATIONS')
-            return self, 1
+            reader.seek(pdata)
+            return self, -1
         else:
             nextAnimationInputFileStreamPosition = anim_entry + self.nextSourceMdlAnimationOffset
             if nextAnimationInputFileStreamPosition < reader.tell():
@@ -267,7 +292,7 @@ class SourceMdlAnimation:
         return self, 1
 
     def __repr__(self):
-        return "<Animation bone index:{0.boneIndex} flags:{0.sflags} thePosV:{0.thePosV} theRotV:{0.theRotV} >".format(
+        return "<Animation bone name:{0.bone_name} index:{0.boneIndex} flags:{0.sflags} thePosV:{0.thePosV} theRotV:{0.theRotV} >".format(
             self)
 
 
@@ -548,21 +573,10 @@ class SourceMdlAnimationDesc49(SourceMdlAnimationDescBase):
         self.movementCount = reader.read_uint32()
         self.movementOffset = reader.read_uint32()
 
-        # if self.movementCount > 0:
-        #     with reader.save_current_pos():
-        #         reader.seek(entry + self.movementCount)
-        #         self.theMovements.append(SourceMdlMovement().read(reader))
-
         self.unused1 = [reader.read_uint32() for _ in range(6)]
         self.animBlock = reader.read_uint32()
         self.animOffset = reader.read_uint32()
-        # sectionCount = math.trunc(self.frameCount / self.sectionFrameCount) + 2
-        # if self.animBlock == 0:
-        #     for section_index in range(sectionCount):
-        # if self.animOffset != 0:
-        #     with reader.save_current_pos():
-        #         reader.seek(entry + self.animOffset)
-        #         ret, stat = SourceMdlAnimation().read(self.frameCount, self.theSectionsOfAnimations, MDL, reader)
+
 
         self.ikRuleCount = reader.read_uint32()
         self.ikRuleOffset = reader.read_uint32()
@@ -570,18 +584,9 @@ class SourceMdlAnimationDesc49(SourceMdlAnimationDescBase):
         self.localHierarchyCount = reader.read_uint32()
         self.localHierarchyOffset = reader.read_uint32()
 
-        # if self.localHierarchyCount > 0:
-        #     with reader.save_current_pos():
-        #         reader.seek(entry + self.localHierarchyOffset)
-        #         self.theLocalHierarchies.append(SourceMdlLocalHierarchy().read(reader))
 
         self.sectionOffset = reader.read_uint32()
         self.sectionFrameCount = reader.read_uint32()
-
-        # if self.sectionFrameCount != 0:
-        #     with reader.save_current_pos():
-        #         reader.seek(entry + self.sectionOffset)
-        #         self.theSections.append(SourceMdlAnimationSection().read(reader))
 
         self.spanFrameCount = reader.read_uint16()
         self.spanCount = reader.read_uint16()
@@ -605,3 +610,227 @@ class SourceMdlAnimationDesc49(SourceMdlAnimationDescBase):
     def __repr__(self):
         return "<AnimationDesc49 name:{0.theName} fps:{0.fps} frames:{0.frameCount} sectionFrameCount count:{0.sectionFrameCount}>".format(
             self)
+
+class SourceMdlSequenceDesc:
+    def __init__(self):
+        self.baseHeaderOffset = 0
+        self.nameOffset = 0
+        self.activityNameOffset = 0
+
+        #    int                    flags;        // looping/non-looping flags
+        self.flags = 0
+
+        #    int                    activity;    // initialized at loadtime to game DLL values
+        self.activity = 0
+        #    int                    actweight;
+        self.activityWeight = 0
+
+        #    int                    numevents;
+        self.eventCount = 0
+        #    int                    eventindex;
+        #    inline mstudioevent_t *pEvent( int i ) const { Assert( i >= 0 && i < numevents); return (mstudioevent_t *)(((byte *)this) + eventindex) + i; };
+        self.eventOffset = 0
+
+        #    Vector                bbmin;        // per sequence bounding box
+        self.bbMin = SourceVector()
+        #    Vector                bbmax;
+        self.bbMax = SourceVector()
+
+        #    int                    numblends;
+        self.blendCount = 0
+
+        #    // Index into array of shorts which is groupsize[0] x groupsize[1] in length
+        #    int                    animindexindex;
+        self.animIndexOffset = 0
+
+        #    int                    movementindex;    // [blend] float array for blended movement
+        self.movementIndex = 0
+        #    int                    groupsize[2];
+        self.groupSize = []
+        #    int                    paramindex[2];    // X, Y, Z, XR, YR, ZR
+        self.paramIndex = []
+        #    float                paramstart[2];    // local (0..1) starting value
+        self.paramStart = []
+        #    float                paramend[2];    // local (0..1) ending value
+        self.paramEnd = []
+        #    int                    paramparent;
+        self.paramParent = 0
+
+        #    float                fadeintime;        // ideal cross fate in time (0.2 default)
+        self.fadeInTime = 0.0
+        #    float                fadeouttime;    // ideal cross fade out time (0.2 default)
+        self.fadeOutTime = 0.0
+
+        #    int                    localentrynode;        // transition node at entry
+        self.localEntryNodeIndex = 0
+        #    int                    localexitnode;        // transition node at exit
+        self.localExitNodeIndex = 0
+        #    int                    nodeflags;        // transition rules
+        self.nodeFlags = 0
+
+        #    float                entryphase;        // used to match entry gait
+        self.entryPhase = 0.0
+        #    float                exitphase;        // used to match exit gait
+        self.exitPhase = 0.0
+
+        #    float                lastframe;        // frame that should generation EndOfSequence
+        self.lastFrame = 0.0
+
+        #    int                    nextseq;        // auto advancing sequences
+        self.nextSeq = 0
+        #    int                    pose;            // index of delta animation between end and nextseq
+        self.pose = 0
+
+        #    int                    numikrules;
+        self.ikRuleCount = 0
+
+        #    int                    numautolayers;    //
+        self.autoLayerCount = 0
+        #    int                    autolayerindex;
+        #    inline mstudioautolayer_t *pAutolayer( int i ) const { Assert( i >= 0 && i < numautolayers); return (mstudioautolayer_t *)(((byte *)this) + autolayerindex) + i; };
+        self.autoLayerOffset = 0
+
+        #    int                    weightlistindex;
+        self.weightOffset = 0
+        #    inline float        *pBoneweight( int i ) const { return ((float *)(((byte *)this) + weightlistindex) + i); };
+
+        #    // FIXME: make this 2D instead of 2x1D arrays
+        #    int                    posekeyindex;
+        self.poseKeyOffset = 0
+        #    float                *pPoseKey( int iParam, int iAnim ) const { return (float *)(((byte *)this) + posekeyindex) + iParam * groupsize[0] + iAnim; }
+
+        #    int                    numiklocks;
+        self.ikLockCount = 0
+        #    int                    iklockindex;
+        #    inline mstudioiklock_t *pIKLock( int i ) const { Assert( i >= 0 && i < numiklocks); return (mstudioiklock_t *)(((byte *)this) + iklockindex) + i; };
+        self.ikLockOffset = 0
+
+        #    // Key values
+        #    int                    keyvalueindex;
+        self.keyValueOffset = 0
+        #    int                    keyvaluesize;
+        #    inline const char * KeyValueText( void ) const { return keyvaluesize != 0 ? ((char *)this) + keyvalueindex : NULL; }
+        self.keyValueSize = 0
+
+        #    int                    cycleposeindex;        // index of pose parameter to use as cycle index
+        self.cyclePoseIndex = 0
+
+        #    int                    unused[7];        // remove/add as appropriate (grow back to 8 ints on version change!)
+        #======
+        #FROM: VERSION 49
+        #    int                    activitymodifierindex;
+        #    int                    numactivitymodifiers;
+        #    inline mstudioactivitymodifier_t *pActivityModifier( int i ) const { Assert( i >= 0 && i < numactivitymodifiers); return activitymodifierindex != 0 ? (mstudioactivitymodifier_t *)(((byte *)this) + activitymodifierindex) + i : NULL; };
+        #    int                    unused[5];        // remove/add as appropriate (grow back to 8 ints on version change!)
+        self.activityModifierOffset = 0
+        self.activityModifierCount = 0
+        self.unused = []
+
+
+        self.theName = ""
+        self.theActivityName = ""
+        self.thePoseKeys = []
+        self.theEvents = []
+        self.theAutoLayers = []
+        self.theIkLocks = []
+        #NOTE: In the file, a bone weight is a 32-bit float, i.e. a Single, but is stored as Double for better writing to file.
+        self.theBoneWeights = []
+        self.theWeightListIndex = 0
+        self.theAnimDescIndexes = []
+        self.theKeyValues = ""
+        self.theActivityModifiers = []
+        self.theBoneWeightsAreDefault = []
+
+    def read(self,reader:ByteIO,mdl:SourceMdlFileData):
+        entry = reader.tell()
+        self.baseHeaderOffset = reader.read_int32()
+        self.nameOffset = reader.read_uint32()
+        self.theName = reader.read_from_offset(entry+self.nameOffset,reader.read_ascii_string)
+        self.activityNameOffset = reader.read_uint32()
+        self.theActivityName = reader.read_from_offset(entry+self.activityNameOffset,reader.read_ascii_string)
+        self.flags = reader.read_uint32()
+        self.activity = reader.read_int32()
+        self.activityWeight = reader.read_uint32()
+        self.eventCount = reader.read_uint32()
+        self.eventOffset = reader.read_uint32()
+        self.bbMin.read(reader)
+        self.bbMax.read(reader)
+        self.blendCount = reader.read_uint32()
+        self.animIndexOffset = reader.read_uint32()
+        self.movementIndex = reader.read_uint32()
+        self.groupSize = [reader.read_uint32() for _ in range(2)]
+        self.paramIndex = [reader.read_int32() for _ in range(2)]
+        self.paramStart = [reader.read_uint32() for _ in range(2)]
+        self.paramEnd = [reader.read_uint32() for _ in range(2)]
+        self.paramParent = reader.read_uint32()
+        self.fadeInTime = reader.read_float()
+        self.fadeOutTime = reader.read_float()
+        self.localEntryNodeIndex = reader.read_uint32()
+        self.localExitNodeIndex = reader.read_uint32()
+        self.nodeFlags = reader.read_uint32()
+        self.entryPhase = reader.read_float()
+        self.exitPhase = reader.read_float()
+        self.lastFrame = reader.read_float()
+        self.nextSeq = reader.read_uint32()
+        self.pose = reader.read_uint32()
+
+        self.ikRuleCount = reader.read_uint32()
+        self.autoLayerCount = reader.read_uint32()
+        self.autoLayerOffset = reader.read_uint32()
+        self.weightOffset = reader.read_uint32()
+        self.poseKeyOffset = reader.read_uint32()
+
+        self.ikLockCount = reader.read_uint32()
+        self.ikLockOffset = reader.read_uint32()
+        self.keyValueOffset = reader.read_uint32()
+        self.keyValueSize = reader.read_uint32()
+        self.cyclePoseIndex = reader.read_uint32()
+        if mdl.version == 49:
+            self.activityModifierOffset = reader.read_int32()
+            self.activityModifierCount = reader.read_uint32()
+            self.unused = [reader.read_uint32() for _ in range(5)]
+        else:
+            self.unused = [reader.read_uint32() for _ in range(7)]
+
+        if self.groupSize[0] > 1 and self.groupSize[1] > 1 and self.poseKeyOffset !=0:
+            with reader.save_current_pos():
+                reader.seek(entry+self.poseKeyOffset)
+                for _ in range(self.groupSize[0]+self.groupSize[1]):
+                    self.thePoseKeys.append(reader.read_float())
+        if self.eventCount > 0 and self.eventOffset!=0:
+            with reader.save_current_pos():
+                reader.seek(entry+self.eventOffset)
+                for _ in range(self.eventCount):
+                    self.theEvents.append(SourceMdlEvent().read(reader))
+
+
+        return self
+
+
+class SourceMdlEvent:
+    NEW_EVENT_STYLE = 1 << 10
+
+    def __init__(self):
+        self.cycle = 0
+        self.eventIndex = 0
+        self.eventType = 0
+        self.options = [] #64
+        self.nameOffset = 0
+        self.theName = ''
+
+    def read(self,reader:ByteIO):
+        entry = reader.tell()
+        self.cycle = reader.read_float()
+        self.eventIndex = reader.read_uint32()
+        self.eventType = reader.read_uint32()
+        self.options = [reader.read_uint8() for _ in range(64)]
+        self.nameOffset = reader.read_uint32()
+        if self.nameOffset:
+            self.theName = reader.read_from_offset(self.nameOffset+entry,reader.read_ascii_string)
+        else:
+            self.theName = str(self.eventIndex)
+        return self
+
+
+
+

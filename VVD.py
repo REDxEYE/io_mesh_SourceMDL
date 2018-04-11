@@ -17,8 +17,9 @@ class SourceVvdFile49:
         self.vvd = SourceVvdFileData()
         self.vvd.read(self.reader)
 
+
 if __name__ == '__main__':
     with open('log.log', "w") as f:  # replace filepath & filename
         with f as sys.stdout:
             # MDL_edit('E:\\MDL_reader\\sexy_bonniev2')
-            SourceVvdFile49(r'..\test_data\cuz')
+            SourceVvdFile49(r'test_data\kali')

@@ -249,9 +249,11 @@ class IO_MDL:
                         print('Converting UV')
                         vertexes = []
                         uvs = []
+                        normals = []
                         for vertex in self.VVD.vvd.theVertexes:
                             vertexes.append(convert_vertex(vertex))
                             uvs.append(convert_uv(vertex))
+                            normals.append(convert_custom_normal(vertex))
                         self.mesh.from_pydata(vertexes, [], polygons)
                         self.mesh.update()
                         self.add_flexes(model)
@@ -269,34 +271,45 @@ class IO_MDL:
                         bpy.ops.object.select_all(action="DESELECT")
                         self.mesh_obj.select = True
                         bpy.context.scene.objects.active = self.mesh_obj
-
+                        try:
+                            # print('NORMS', len(normals), len(self.mesh.loops))
+                            self.mesh.create_normals_split()
+                            self.mesh.use_auto_smooth = True
+                            self.mesh.normals_split_custom_set_from_vertices(normals)
+                        except Exception as E:
+                            print(E)
+                            print('FAILED TO SET CUSTOM NORMALS')
                         with redirect_stdout(stdout):
-                            self.mesh.validate()
-                            self.mesh.validate()
                             bpy.ops.object.mode_set(mode='EDIT')
                             self.mesh.validate()
                             self.mesh.validate()
-                            bpy.ops.mesh.delete_loose()
-                            bpy.ops.mesh.normals_make_consistent(inside=False)
-                            bpy.ops.mesh.delete_loose()
-                            bpy.ops.mesh.remove_doubles(threshold=0.0001)
-                            bpy.ops.mesh.normals_make_consistent(inside=False)
+                            # bpy.ops.object.mode_set(mode='EDIT')
+                            # self.mesh.validate()
+                            # self.mesh.validate()
+                            # bpy.ops.mesh.delete_loose()
+                            # bpy.ops.mesh.normals_make_consistent(inside=False)
+                            # bpy.ops.mesh.delete_loose()
+                            # bpy.ops.mesh.remove_doubles(threshold=0.0001)
+                            # bpy.ops.mesh.normals_make_consistent(inside=False)
                             bpy.ops.object.mode_set(mode='OBJECT')
-                            self.mesh.validate()
-                            self.mesh.validate()
+                            # self.mesh.validate()
+                            # self.mesh.validate()
                             bpy.ops.object.shade_smooth()
 
     def add_flexes(self, mdlmodel: MDL_DATA.SourceMdlModel):
         self.mesh_obj.shape_key_add(name='base')
-        for mesh in mdlmodel.theMeshes:  # type: MDL_DATA.SourceMdlMesh
-            for flex in mesh.theFlexes:  # type: MDL_DATA.SourceMdlFlex
+        for flex_frame in mdlmodel.flex_frames:
+            for flex, vertex_offset in zip(flex_frame.flexes, flex_frame.vertex_offsets):
+        # for mesh in mdlmodel.theMeshes:  # type: MDL_DATA.SourceMdlMesh
+        #     for flex in mesh.theFlexes:  # type: MDL_DATA.SourceMdlFlex
                 flexDesc = self.MDL.mdl.theFlexDescs[flex.flexDescIndex]
                 flex_name = flexDesc.theName
-                if self.mesh_obj.data.shape_keys.key_blocks.get(flex_name):
-                    continue
-                self.mesh_obj.shape_key_add(name=flexDesc.theName)
+                if not self.mesh_obj.data.shape_keys.key_blocks.get(flex_name):
+                    self.mesh_obj.shape_key_add(name=flex_name)
+
                 for flex_vert in flex.theVertAnims:  # type: MDL_DATA.SourceMdlVertAnim
-                    Vert_index = flex_vert.index + mesh.vertexIndexStart
+                    Vert_index = flex_vert.index + vertex_offset
+                    # Vert_index = flex_vert.index + mesh.vertexIndexStart
                     vx = self.mesh_obj.data.vertices[Vert_index].co.x
                     vy = self.mesh_obj.data.vertices[Vert_index].co.y
                     vz = self.mesh_obj.data.vertices[Vert_index].co.z
@@ -307,4 +320,5 @@ class IO_MDL:
 
 
 if __name__ == '__main__':
-    a = IO_MDL(r'E:\PYTHON\MDL_reader\test_data\nick_hwm.mdl', normal_bones=True)
+    a = IO_MDL(r'test_data\veria_v2.mdl', normal_bones=True)
+    # a = IO_MDL(r'E:\PYTHON\MDL_reader\test_data\nick_hwm.mdl', normal_bones=True)
