@@ -186,26 +186,18 @@ class SourceMdlFile49:
 
     def test(self):
         pass
-        # for flex_rule in self.mdl.theFlexRules:
-        #     print(flex_rule)
-        #     print(self.mdl.theFlexDescs[flex_rule.flexIndex])
-        #     print(self.mdl.theFlexControllers[flex_rule.flexIndex])
-        # for flex_cont in self.mdl.theFlexControllers:
-        #     print(flex_cont)
-        # print(self.mdl.theFlexDescs[flex_rule.flexIndex])
-        # for flex_dest in self.mdl.theFlexDescs:
-        #     print(flex_dest)
-        # for bone in self.mdl.theBones:
-        #     print(bone)
+
+        for attachment in self.mdl.theAttachments:
+            print(attachment)
         # print(self.mdl.theAnimationDescs)
-        for part in self.mdl.theBodyParts:  # type: SourceMdlBodyPart
-            print("list of models in \"{}\" bodygroup".format(part.theName))
-            for model in part.theModels:  # type: SourceMdlModel
-                print('\tmodel:', model.name)
-                # print('\teyeball count:',model.eyeballCount)
-                # pprint(model.flex_frames)
-                for flex_frame in model.flex_frames:
-                    print('\t', flex_frame)
+        # for part in self.mdl.theBodyParts:  # type: SourceMdlBodyPart
+        #     print("list of models in \"{}\" bodygroup".format(part.theName))
+        #     for model in part.theModels:  # type: SourceMdlModel
+        #         print('\tmodel:', model.name)
+        #         # print('\teyeball count:',model.eyeballCount)
+        #         # pprint(model.flex_frames)
+        #         for flex_frame in model.flex_frames:
+        #             print('\t', flex_frame)
                 # print('\t', model.name, 'list of flexes in this mesh:')
                 # for mesh in model.theMeshes:  # type: SourceMdlMesh
                 #     for flex in mesh.theFlexes:  # type: SourceMdlFlex
@@ -251,7 +243,7 @@ class SourceMdlFile49:
 
                         if not flex_frame:
                             flex_frame = FlexFrame()
-                            flex_frame.flex_name = self.mdl.theFlexDescs[flex.flexDescIndex].theName[:-1]
+                            flex_frame.flex_name = self.mdl.theFlexDescs[flex.flexDescIndex].theName
                             flex_desc_partner_index = mesh.theFlexes[flex_index].flexDescPartnerIndex
 
                             if flex_desc_partner_index > 0:
@@ -275,9 +267,9 @@ class SourceMdlFile49:
 
 class SourceMdlFile53(SourceMdlFile49):
 
-    def __init__(self, filepath):
-        self.reader = ByteIO(path=filepath + '.mdl')
-        self.filename = os.path.basename(filepath + '.mdl')[:-4]
+    def __init__(self, path):
+        self.reader = ByteIO(path=path + '.mdl')
+        self.filename = os.path.basename(path + '.mdl')[:-4]
         self.mdl = SourceMdlFileDataV53()
         self.mdl.read(self.reader)
         self.VVD = self.mdl.VVD
@@ -305,11 +297,15 @@ class SourceMdlFile53(SourceMdlFile49):
 if __name__ == '__main__':
     with open('log.log', "w") as f:  # replace filepath & filename
         with f as sys.stdout:
+            # model = r'.\test_data\nick_hwm'
+            model = r'G:\SteamLibrary\SteamApps\common\SourceFilmmaker\game\tf_movies\models\player\hwm\spy'
+            # model = r'G:\SteamLibrary\SteamApps\common\SourceFilmmaker\game\usermod\models\MMmallow\KerriganSuccubusHOTS\kerrigansuccubus'
+            # model = r'.\test_data\test_case-2models-with-flexes'
             # MDL_edit('E:\\MDL_reader\\sexy_bonniev2')
             # a = SourceMdlFile53(r'H:\games\Titanfall 2\extr\models\weapons\titan_sniper_rifle\w_titan_sniper_rifle')
             # a = SourceMdlFile49(
             # r'G:\SteamLibrary\SteamApps\common\SourceFilmmaker\game\usermod\models\undertale\undyne_bigger_nude')
-            a = SourceMdlFile49(r'.\test_data\nick_hwm')
+            a = SourceMdlFile49(model)
             # a = SourceMdlFile49(r'.\test_data\xenomorph')
             # mdl2 = SourceMdlFile53(r'.\test_data\titan_buddy')
             # mdl2.test()

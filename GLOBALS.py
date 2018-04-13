@@ -1,3 +1,4 @@
+import math
 import random
 import struct
 
@@ -27,6 +28,9 @@ class SourceVector:
 
     def __sub__(self, other):
         return SourceVector([self.x - other.x, self.y - other.y,self.z - other.z])
+
+    def to_degrees(self):
+        return SourceVector(init_vec = [math.degrees(self.x),math.degrees(self.y),math.degrees(self.z)])
 
     @property
     def asList(self):

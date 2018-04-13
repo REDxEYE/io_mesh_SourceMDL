@@ -7,15 +7,19 @@ from typing import List
 
 import io
 
+
+
 try:
     from .ByteIO import ByteIO
     from .GLOBALS import SourceVector, SourceQuaternion, SourceFloat16bits
     from . import VTX, VVD
+    from . import math_utilities
 
 except:
     from ByteIO import ByteIO
     from GLOBALS import SourceVector, SourceQuaternion, SourceFloat16bits
     import VTX, VVD
+    import math_utilities
 
 
 class SourceMdlAnimationDesc:
@@ -433,9 +437,9 @@ class SourceMdlFileDataV53:
         self.theAnimationDescs = []
         self.theAnimBlocks = []
         self.theAnimBlockRelativePathFileName = ""
-        self.theAttachments = []
+        self.theAttachments = [] #type: List[SourceMdlAttachment]
         self.theBodyParts = []
-        self.theBones = []
+        self.theBones = [] #type: List[SourceMdlBone]
         self.theBoneControllers = []
         self.theBoneTableByName = []
         self.theFlexDescs = []
@@ -680,7 +684,7 @@ class SourceMdlBone:
     def __init__(self):
 
         self.boneOffset = 0
-        self.name = []
+        self.name = ""
         self.boneControllerIndex = []
         self.nameOffset = 0
         self.parentBoneIndex = 0
@@ -703,7 +707,6 @@ class SourceMdlBone:
         self.surfacePropNameOffset = 0
         self.contents = 0
         self.unused = []
-        self.theName = ""
         self.theAxisInterpBone = None  # type: SourceMdlAxisInterpBone
         self.theQuatInterpBone = None  # type: SourceMdlQuatInterpBone
         self.theJiggleBone = None  # type: SourceMdlJiggleBone
@@ -770,6 +773,8 @@ class SourceMdlBone:
         if self.surfacePropNameOffset != 0:
             self.theSurfacePropName = reader.read_from_offset(self.boneOffset + self.surfacePropNameOffset,
                                                               reader.read_ascii_string)
+
+        
         mdl.theBones.append(self)
 
     def __repr__(self):
@@ -1123,6 +1128,7 @@ class SourceMdlAttachment:
         self.nameOffset = 0
         self.flags = 0
         self.localBoneIndex = 0
+        self.parent_bone = None #type: SourceMdlBone
         self.localM11 = 0.0
         self.localM12 = 0.0
         self.localM13 = 0.0
@@ -1135,6 +1141,8 @@ class SourceMdlAttachment:
         self.localM32 = 0.0
         self.localM33 = 0.0
         self.localM34 = 0.0
+        self.rot = SourceVector()
+        self.pos = SourceVector()
         self.unused = []
 
     def read(self, reader: ByteIO, mdl: SourceMdlFileData):
@@ -1146,6 +1154,7 @@ class SourceMdlAttachment:
             self.name = reader.read_from_offset(self.nameOffset + entry, reader.read_ascii_string)
             self.flags = reader.read_uint32()
             self.localBoneIndex = reader.read_uint32()
+            self.parent_bone = mdl.theBones[self.localBoneIndex]
             self.localM11 = reader.read_float()
             self.localM12 = reader.read_float()
             self.localM13 = reader.read_float()
@@ -1159,13 +1168,23 @@ class SourceMdlAttachment:
             self.localM33 = reader.read_float()
             self.localM34 = reader.read_float()
             self.unused = [reader.read_uint32() for _ in range(8)]
+            self.rot.x, self.rot.y, self.rot.z = math_utilities.convert_rotation_matrix_to_degrees(self.localM11,
+                                                                                          self.localM21,
+                                                                                          self.localM31,
+                                                                                          self.localM12,
+                                                                                          self.localM22,
+                                                                                          self.localM32,
+                                                                                          self.localM33)
+            self.pos.y = round(self.localM24, 3)
+            self.pos.z = round(self.localM34, 3)
+            self.pos.x = round(self.localM14, 3)
+
         mdl.theAttachments.append(self)
 
-    def __str__(self):
-        return "<Attachment name:{} parent bone: {}>".format(self.name, self.localBoneIndex)
+
 
     def __repr__(self):
-        return "<Attachment name:{} parent bone: {}>".format(self.name, self.localBoneIndex)
+        return "<Attachment name:{} parent bone: {} loc:{} rot:{}>".format(self.name, self.parent_bone,self.pos.as_string,self.rot.to_degrees().as_string)
 
 
 class SourceMdlBodyPart:

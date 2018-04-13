@@ -6,12 +6,15 @@ import sys
 
 try:
     from . import VVD, VVD_DATA, VTX, MDL, MDL_DATA, VTX_DATA, GLOBALS, progressBar
+    from . import math_utilities
 except:
     sys.path.append(r'E:\PYTHON\MDL_reader\rewrite')
     import VVD, VVD_DATA, VTX, MDL, MDL_DATA, VTX_DATA, GLOBALS, progressBar
+    import math_utilities
 # from test_field.V53 import Mdl53
 import os.path, struct
 import bpy, mathutils
+import bmesh
 from mathutils import Vector, Matrix, Euler
 from contextlib import redirect_stdout
 import io
@@ -44,6 +47,7 @@ class IO_MDL:
             self.armature_obj.name = custom_name
         self.create_skeleton(normal_bones)
         self.create_mesh()
+        self.create_attachments()
 
     def create_skeleton(self, normal_bones=False):
 
@@ -148,10 +152,10 @@ class IO_MDL:
             VtxVertexIndex = StripGroup.theVtxIndexes[vtx_index_index]  # type: int
             VtxVertex = StripGroup.theVtxVertexes[VtxVertexIndex]  # type: VTX_DATA.SourceVtxVertex
             vertexIndex = VtxVertex.originalMeshVertexIndex + body_part_vertex_offset + mesh_vertex_offset
-            if VVD.vvd.fixupCount == 0:
-                Vertex = self.VVD.vvd.theVertexes[vertexIndex]  # type: GLOBALS.SourceVertex
-            else:
-                Vertex = self.VVD.vvd.theFixedVertexesByLod[0][vertexIndex]
+            # if VVD.vvd.fixupCount == 0:
+            #     Vertex = self.VVD.vvd.theVertexes[vertexIndex]  # type: GLOBALS.SourceVertex
+            # else:
+            #     Vertex = self.VVD.vvd.theFixedVertexesByLod[0][vertexIndex]
 
             return vertexIndex
 
@@ -172,7 +176,7 @@ class IO_MDL:
 
                             for vtxIndexIndex in range(0, len(strip_group.theVtxIndexes), 3):
                                 field.increment(3)
-                                if vtxIndexIndex % 250 == 0:
+                                if vtxIndexIndex % 500 == 0:
                                     field.draw()
                                 f = get_polygon(strip_group, vtxIndexIndex, lod_index, mesh_vertex_start,
                                                 body_part_vertex_offset, VVD)
@@ -272,13 +276,15 @@ class IO_MDL:
                         self.mesh_obj.select = True
                         bpy.context.scene.objects.active = self.mesh_obj
 
-                        try:
-                            self.mesh.create_normals_split()
-                            self.mesh.use_auto_smooth = True
-                            self.mesh.normals_split_custom_set_from_vertices(normals)
-                        except Exception as E:
-                            print(E)
-                            print('FAILED TO SET CUSTOM NORMALS')
+                        # self.mesh.normals_split_custom_set(normals)
+
+                        # try:
+                        #     self.mesh.create_normals_split()
+                        #     self.mesh.use_auto_smooth = True
+                        #     self.mesh.normals_split_custom_set_from_vertices(normals)
+                        # except Exception as E:
+                        #     print(E)
+                        #     print('FAILED TO SET CUSTOM NORMALS')
                         with redirect_stdout(stdout):
                             bpy.ops.object.mode_set(mode='EDIT')
                             self.mesh.validate()
@@ -315,13 +321,47 @@ class IO_MDL:
 
                 # iterating over all VertAnims
                 for flex_vert in flex.theVertAnims:  # type: MDL_DATA.SourceMdlVertAnim
-                    Vert_index = flex_vert.index + vertex_offset # <- bodyAndMeshVertexIndexStarts
+                    Vert_index = flex_vert.index + vertex_offset  # <- bodyAndMeshVertexIndexStarts
                     vx = self.mesh_obj.data.vertices[Vert_index].co.x
                     vy = self.mesh_obj.data.vertices[Vert_index].co.y
                     vz = self.mesh_obj.data.vertices[Vert_index].co.z
                     fx, fy, fz = flex_vert.theDelta
                     self.mesh_obj.data.shape_keys.key_blocks[flex_name].data[Vert_index].co = (
                         fx + vx, fy + vy, fz + vz)
+
+    def create_attachments(self):
+        # MathModule.ConvertRotationMatrixToDegrees(anAttachment.localM11, anAttachment.localM21, anAttachment.localM31,
+        #                                           anAttachment.localM12, anAttachment.localM22, anAttachment.localM32,
+        #                                           anAttachment.localM33, angleX, angleY, angleZ)
+        # offsetX = Math.Round(anAttachment.localM14, 2)
+        # offsetY = Math.Round(anAttachment.localM24, 2)
+        # offsetZ = Math.Round(anAttachment.localM34, 2)
+        # angleX = Math.Round(angleX, 2)
+        # angleY = Math.Round(angleY, 2)
+        # angleZ = Math.Round(angleZ, 2)
+
+        for attachment in self.MDL.mdl.theAttachments:
+            bone = self.armature.bones.get(self.MDL.mdl.theBones[attachment.localBoneIndex].name)
+
+            empty = bpy.data.objects.new("empty", None)
+            bpy.context.scene.objects.link(empty)
+            empty.name = attachment.name
+            pos = Vector([attachment.pos.x,attachment.pos.y,attachment.pos.z])
+            rot = Euler([attachment.rot.x,attachment.rot.y,attachment.rot.z])
+            # mat = Matrix.Translation(pos) * rot.to_matrix().to_4x4()
+            empty.matrix_basis.identity()
+            empty.parent = self.armature_obj
+            empty.parent_type = 'BONE'
+            empty.parent_bone = bone.name
+            empty.location = pos
+            empty.rotation_euler = rot
+
+            # if empty.parent:
+            #     empty.matrix = empty.parent.matrix * mat
+            # else:
+            #     empty.matrix = mat
+            # empty.location = bone.head+Vector(attachment.pos.asList)
+            # empty.parent = bone
 
 
 if __name__ == '__main__':
