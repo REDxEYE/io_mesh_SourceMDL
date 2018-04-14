@@ -17,7 +17,7 @@ class SourceMdlFile49:
         self.filename = os.path.basename(filepath + '.mdl')[:-4]
         self.mdl = SourceMdlFileData()
         self.mdl.read(self.reader)
-
+        print(self)
         self.read_bones()
         self.readBoneControllers()
 
@@ -32,6 +32,7 @@ class SourceMdlFile49:
         self.read_textures()
         self.read_texture_paths()
         self.build_flex_frames()
+        self.prepare_models()
         # self.read_local_animation_descs()
         # self.read_sequences()
 
@@ -186,9 +187,13 @@ class SourceMdlFile49:
 
     def test(self):
         pass
-
-        for attachment in self.mdl.theAttachments:
-            print(attachment)
+        # for n,model in enumerate(self.mdl.bodyparts):
+        #     print(n,' ',end = '')
+        #     pprint(model)
+        for bone in self.mdl.theBones:
+            print(bone)
+        # for attachment in self.mdl.theAttachments:
+        #     print(attachment)
         # print(self.mdl.theAnimationDescs)
         # for part in self.mdl.theBodyParts:  # type: SourceMdlBodyPart
         #     print("list of models in \"{}\" bodygroup".format(part.theName))
@@ -224,14 +229,14 @@ class SourceMdlFile49:
             # No need to create defaultflex here.
 
             for model in body_part.theModels:
-                print('Processing model {}'.format(model.name))
+                print('\tProcessing model {}'.format(model.name))
 
                 for mesh in model.theMeshes:
                     vertex_offset = mesh.vertexIndexStart
 
                     for flex_index, flex in enumerate(mesh.theFlexes):
-                        print('\tParsing {} flex from {}'.format(self.mdl.theFlexDescs[flex.flexDescIndex].theName,
-                                                                 model.name))
+                        # print('\t\tParsing {} flex from {}'.format(self.mdl.theFlexDescs[flex.flexDescIndex].theName,
+                        #                                          model.name))
                         flex_frame = None
                         if flex_dest_flex_frame[flex.flexDescIndex]:
                             for s_flex in flex_dest_flex_frame[flex.flexDescIndex]:
@@ -263,6 +268,32 @@ class SourceMdlFile49:
                         model.flex_frames.append(flex_frame)
 
                 cumulative_vertex_offset += model.vertexCount
+    @staticmethod
+    def comp_flex_frames(f1,f2):
+        if len(f1)!=len(f2):
+            return False
+        for a,b in zip(f1,f2):
+            if a!=b:
+                return False
+        return True
+
+    def prepare_models(self):
+        for bodypart in self.mdl.theBodyParts:
+            if bodypart.modelCount>1:
+                self.mdl.bodyparts.append([bodypart])
+                continue
+            model = bodypart.theModels[0]
+            added = False
+            for bodyparts in self.mdl.bodyparts:
+                for _model in bodyparts:
+                    if self.comp_flex_frames(model.flex_frames,_model.theModels[0].flex_frames):
+                        bodyparts.append(bodypart)
+                        added = True
+                        break
+            if not added:
+                self.mdl.bodyparts.append([bodypart])
+
+
 
 
 class SourceMdlFile53(SourceMdlFile49):
@@ -287,27 +318,27 @@ class SourceMdlFile53(SourceMdlFile49):
         self.read_body_parts()
         self.read_textures()
         self.read_texture_paths()
-        self.read_sequences()
+        # self.read_sequences()
 
     def test(self):
         for sq in self.mdl.theSequenceDescs:
             print(sq.__dict__)
+        for bone in self.mdl.theBones:
+            print(bone)
 
 
 if __name__ == '__main__':
     with open('log.log', "w") as f:  # replace filepath & filename
         with f as sys.stdout:
             # model = r'.\test_data\nick_hwm'
-            model = r'G:\SteamLibrary\SteamApps\common\SourceFilmmaker\game\tf_movies\models\player\hwm\spy'
+            model = r'H:\games\Titanfall 2\extr\models\weapons\titan_sniper_rifle\w_titan_sniper_rifle'
+            # model = r'G:\SteamLibrary\SteamApps\common\SourceFilmmaker\game\workshop\models\player\asrielflex'
+            # model = r'G:\SteamLibrary\SteamApps\common\SourceFilmmaker\game\tf_movies\models\player\hwm\spy'
             # model = r'G:\SteamLibrary\SteamApps\common\SourceFilmmaker\game\usermod\models\MMmallow\KerriganSuccubusHOTS\kerrigansuccubus'
             # model = r'.\test_data\test_case-2models-with-flexes'
-            # MDL_edit('E:\\MDL_reader\\sexy_bonniev2')
-            # a = SourceMdlFile53(r'H:\games\Titanfall 2\extr\models\weapons\titan_sniper_rifle\w_titan_sniper_rifle')
-            # a = SourceMdlFile49(
-            # r'G:\SteamLibrary\SteamApps\common\SourceFilmmaker\game\usermod\models\undertale\undyne_bigger_nude')
-            a = SourceMdlFile49(model)
-            # a = SourceMdlFile49(r'.\test_data\xenomorph')
-            # mdl2 = SourceMdlFile53(r'.\test_data\titan_buddy')
-            # mdl2.test()
-            a.test()
+            # a = SourceMdlFile49(model)
+            # a.test()
+
+            mdl2 = SourceMdlFile53(model)
+            mdl2.test()
             # print(a.mdl)

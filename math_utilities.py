@@ -23,7 +23,8 @@ import math
 # 		End If
 # 	End Sub
 def convert_rotation_matrix_to_degrees(m0, m1, m2, m3, m4, m5, m8):
-    angleY = -math.asin(m2)
+    # print(m0, m1, m2, m3, m4, m5, m8)
+    angleY = -math.asin(round(m2,6))
     c = math.cos(angleY)
     # angleY = math.radians(angleY)
     if abs(c) > 0.005:

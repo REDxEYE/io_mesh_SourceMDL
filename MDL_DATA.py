@@ -166,6 +166,7 @@ class SourceMdlFileData:
         self.theProceduralBonesCommandIsUsed = False
         self.theWeightLists = []
         self.nameOffset = 0
+        self.bodyparts = [] #type: List[List[SourceMdlBodyPart]]
 
     def read(self, reader: ByteIO):
         self.readHeader00(reader)
@@ -620,18 +621,18 @@ class SourceMdlFileDataV53:
 
         self.unused2 = reader.read_uint32()
 
-        print('DANGER', reader.tell())
+        # print('DANGER', reader.tell())
         reader.skip(16)
         self.VTXoffset = reader.read_uint32()
         self.VVDoffset = reader.read_uint32()
         print('Found VTX:{} and VVD:{}'.format(self.VTXoffset, self.VVDoffset))
         if self.VVDoffset != 0 and self.VTXoffset != 0:
-            start = reader.tell()
-            reader.seek(self.VTXoffset)
-            self.VTX = VTX.SourceVtxFile49(file=ByteIO(byte_object=reader._read(-1)))
-            reader.seek(self.VVDoffset)
-            self.VVD = VVD.SourceVvdFile49(file=ByteIO(byte_object=reader._read(-1)))
-            reader.seek(start)
+            with reader.save_current_pos():
+                reader.seek(self.VTXoffset)
+                self.VTX = VTX.SourceVtxFile49(file=ByteIO(byte_object=reader._read(-1)))
+                reader.seek(self.VVDoffset)
+                self.VVD = VVD.SourceVvdFile49(file=ByteIO(byte_object=reader._read(-1)))
+
 
         if self.bodyPartCount == 0 and self.localSequenceCount > 0:
             self.theMdlFileOnlyHasAnimations = True
@@ -753,7 +754,7 @@ class SourceMdlBone:
         self.contents = reader.read_uint32()
         self.unused = [reader.read_uint32() for _ in range(8)]
         if mdl.version > 49:
-            unused = [reader.read_uint32() for _ in range(6)]
+            unused = [reader.read_uint32() for _ in range(7)]
         if self.nameOffset != 0:
             self.name = reader.read_from_offset(self.boneOffset + self.nameOffset, reader.read_ascii_string)
         if self.proceduralRuleType != 0:
@@ -769,12 +770,12 @@ class SourceMdlBone:
                 with reader.save_current_pos():
                     reader.seek(self.boneOffset + self.proceduralRuleOffset)
                     self.theJiggleBone = SourceMdlJiggleBone().read(reader)
-        # print(self.surfacePropNameOffset)
         if self.surfacePropNameOffset != 0:
             self.theSurfacePropName = reader.read_from_offset(self.boneOffset + self.surfacePropNameOffset,
                                                               reader.read_ascii_string)
 
-        
+
+        print(reader.tell()-self.boneOffset)
         mdl.theBones.append(self)
 
     def __repr__(self):
@@ -1168,6 +1169,7 @@ class SourceMdlAttachment:
             self.localM33 = reader.read_float()
             self.localM34 = reader.read_float()
             self.unused = [reader.read_uint32() for _ in range(8)]
+            # print(self)
             self.rot.x, self.rot.y, self.rot.z = math_utilities.convert_rotation_matrix_to_degrees(self.localM11,
                                                                                           self.localM21,
                                                                                           self.localM31,
@@ -1215,7 +1217,7 @@ class SourceMdlBodyPart:
         mdl.theBodyParts.append(self)
 
     def __repr__(self):
-        return "<BodyPart name:{} model count:{} models:{}>".format(self.theName, self.modelCount, self.theModels)
+        return "<BodyPart name:{} model count:{} >".format(self.theName, self.modelCount)
 
 
 class SourceMdlModel:
