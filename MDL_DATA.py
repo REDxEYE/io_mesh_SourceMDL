@@ -469,6 +469,7 @@ class SourceMdlFileDataV53:
         self.theMdlFileOnlyHasAnimations = False
         self.theProceduralBonesCommandIsUsed = False
         self.theWeightLists = []
+        self.bodyparts = []  # type: List[List[Tuple[int,SourceMdlBodyPart]]]
 
     def read(self, reader: ByteIO):
         self.readHeader00(reader)
@@ -742,6 +743,8 @@ class SourceMdlBone:
         self.contents = reader.read_uint32()
         if mdl.version >= 48:
             _ = [reader.read_uint32() for _ in range(8)]
+        if mdl.version >=53:
+            reader.skip(4*7)
         if self.nameOffset != 0:
             self.name = reader.read_from_offset(self.boneOffset + self.nameOffset, reader.read_ascii_string)
         # print(self.boneOffset, self)
