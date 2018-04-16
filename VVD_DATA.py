@@ -1,3 +1,5 @@
+from typing import List
+
 try:
     from .ByteIO import ByteIO
     from .GLOBALS import SourceVertex
@@ -19,7 +21,7 @@ class SourceVvdFileData:
         self.tangentDataOffset = 0
         self.theVertexesByLod = {}
         self.theFixedVertexesByLod = []
-        self.theVertexes = []
+        self.theVertexes = [] #type: List[SourceVertex]
         self.theFixups = []
 
     def read(self, reader: ByteIO):

@@ -16,10 +16,12 @@ class SourceVvdFile49:
             self.reader = file
         self.vvd = SourceVvdFileData()
         self.vvd.read(self.reader)
-
+    def test(self):
+        print(len(self.vvd.theVertexes))
 
 if __name__ == '__main__':
     with open('log.log', "w") as f:  # replace filepath & filename
         with f as sys.stdout:
+            model = r'.\test_data\xenomorph'
             # MDL_edit('E:\\MDL_reader\\sexy_bonniev2')
-            SourceVvdFile49(r'test_data\kali')
+            SourceVvdFile49(model).test()

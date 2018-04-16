@@ -36,6 +36,10 @@ class Progress_bar:
     def isDone(self):
         return self.curr>=self.max
 
+    @isDone.setter
+    def isDone(self,value):
+        self.curr = self.max
+
     @property
     def asPercent(self):
         return (self.curr/self.max)*100

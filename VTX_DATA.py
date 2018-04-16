@@ -1,4 +1,6 @@
 from pprint import pformat
+from typing import List
+
 try:
     from .ByteIO import ByteIO
 except:
@@ -19,7 +21,7 @@ class SourceVtxFileData:
         self.materialReplacementListOffset = 0
         self.bodyPartCount = 0
         self.bodyPartOffset = 0
-        self.theVtxBodyParts = []
+        self.theVtxBodyParts = [] #type: List[SourceVtxBodyPart]
 
     def read(self, reader: ByteIO):
         self.version = reader.read_uint32()
@@ -37,6 +39,7 @@ class SourceVtxFileData:
         if self.bodyPartOffset>0:
             for _ in range(self.bodyPartCount):
                 self.theVtxBodyParts.append(SourceVtxBodyPart().read(reader))
+        # print(self.maxBonesPerVertex)
 
     def __repr__(self):
         return "<FileData version:{} lod count:{} body part count:{} \nbodyparts:{}>\n".format(self.version,

@@ -2,22 +2,22 @@ import sys, os.path
 
 try:
     from .MDL_DATA import *
-    from .ByteIO import ByteIO
+    from .ByteIO import *
     from .MDL_DATA_ANIMATIONS import *
 except:
     from MDL_DATA import *
-    from ByteIO import ByteIO
+    from ByteIO import *
     from MDL_DATA_ANIMATIONS import *
 
 
 class SourceMdlFile49:
 
     def __init__(self, filepath):
-        self.reader = ByteIO(path=filepath + '.mdl')
+        self.reader = ByteIO(path=filepath + '.mdl',copy_data_from_handle=False,)
         self.filename = os.path.basename(filepath + '.mdl')[:-4]
         self.mdl = SourceMdlFileData()
         self.mdl.read(self.reader)
-        print(self)
+        # print(self)
         self.read_bones()
         self.readBoneControllers()
 
@@ -190,6 +190,12 @@ class SourceMdlFile49:
         # for n,model in enumerate(self.mdl.bodyparts):
         #     print(n,' ',end = '')
         #     pprint(model)
+        # GenericUInt.set_reader(self.reader)
+        # GenericString.set_reader(self.reader)
+        # self.mdl.boneCount.value = 1
+        # self.mdl.name.value = r'red_eye\nick_HW2.mdl'
+        # print(repr(self.mdl.boneCount))
+        # print(repr(self.mdl.name))
         for bone in self.mdl.theBones:
             print(bone)
         # for attachment in self.mdl.theAttachments:
@@ -278,20 +284,20 @@ class SourceMdlFile49:
         return True
 
     def prepare_models(self):
-        for bodypart in self.mdl.theBodyParts:
+        for n,bodypart in enumerate(self.mdl.theBodyParts):
             if bodypart.modelCount>1:
-                self.mdl.bodyparts.append([bodypart])
+                self.mdl.bodyparts.append([(n,bodypart)])
                 continue
             model = bodypart.theModels[0]
             added = False
             for bodyparts in self.mdl.bodyparts:
-                for _model in bodyparts:
+                for _,_model in bodyparts:
                     if self.comp_flex_frames(model.flex_frames,_model.theModels[0].flex_frames):
-                        bodyparts.append(bodypart)
+                        bodyparts.append((n,bodypart))
                         added = True
                         break
             if not added:
-                self.mdl.bodyparts.append([bodypart])
+                self.mdl.bodyparts.append([(n,bodypart)])
 
 
 
@@ -330,15 +336,17 @@ class SourceMdlFile53(SourceMdlFile49):
 if __name__ == '__main__':
     with open('log.log', "w") as f:  # replace filepath & filename
         with f as sys.stdout:
-            # model = r'.\test_data\nick_hwm'
-            model = r'H:\games\Titanfall 2\extr\models\weapons\titan_sniper_rifle\w_titan_sniper_rifle'
+            # model = r'G:\SteamLibrary\SteamApps\common\SourceFilmmaker\game\tf_movies\models\player\hwm\medic'
+            # model = r'.\test_data\nick_hw2'
+            model = r'.\test_data\xenomorph'
+            # model = r'H:\games\Titanfall 2\extr\models\weapons\titan_sniper_rifle\w_titan_sniper_rifle'
             # model = r'G:\SteamLibrary\SteamApps\common\SourceFilmmaker\game\workshop\models\player\asrielflex'
             # model = r'G:\SteamLibrary\SteamApps\common\SourceFilmmaker\game\tf_movies\models\player\hwm\spy'
             # model = r'G:\SteamLibrary\SteamApps\common\SourceFilmmaker\game\usermod\models\MMmallow\KerriganSuccubusHOTS\kerrigansuccubus'
             # model = r'.\test_data\test_case-2models-with-flexes'
-            # a = SourceMdlFile49(model)
-            # a.test()
+            a = SourceMdlFile49(model)
+            a.test()
 
-            mdl2 = SourceMdlFile53(model)
-            mdl2.test()
+            # mdl2 = SourceMdlFile53(model)
+            # mdl2.test()
             # print(a.mdl)

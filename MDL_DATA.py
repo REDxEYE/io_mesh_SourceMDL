@@ -3,11 +3,9 @@ from enum import Enum
 from pprint import pformat, pprint
 
 import sys
-from typing import List
+from typing import List, Tuple
 
 import io
-
-
 
 try:
     from .ByteIO import ByteIO
@@ -158,7 +156,7 @@ class SourceMdlFileData:
         self.theSectionFrameMinFrameCount = 0
         self.theActualFileSize = 0
         self.theModelCommandIsUsed = False
-        self.theFlexFrames = [] #type: List[FlexFrame]
+        self.theFlexFrames = []  # type: List[FlexFrame]
         self.theEyelidFlexFrameIndexes = []
         self.theFirstAnimationDesc = None
         self.theFirstAnimationDescFrameLines = {}
@@ -166,7 +164,7 @@ class SourceMdlFileData:
         self.theProceduralBonesCommandIsUsed = False
         self.theWeightLists = []
         self.nameOffset = 0
-        self.bodyparts = [] #type: List[List[SourceMdlBodyPart]]
+        self.bodyparts = []  # type: List[List[Tuple[int,SourceMdlBodyPart]]]
 
     def read(self, reader: ByteIO):
         self.readHeader00(reader)
@@ -438,9 +436,9 @@ class SourceMdlFileDataV53:
         self.theAnimationDescs = []
         self.theAnimBlocks = []
         self.theAnimBlockRelativePathFileName = ""
-        self.theAttachments = [] #type: List[SourceMdlAttachment]
+        self.theAttachments = []  # type: List[SourceMdlAttachment]
         self.theBodyParts = []
-        self.theBones = [] #type: List[SourceMdlBone]
+        self.theBones = []  # type: List[SourceMdlBone]
         self.theBoneControllers = []
         self.theBoneTableByName = []
         self.theFlexDescs = []
@@ -633,7 +631,6 @@ class SourceMdlFileDataV53:
                 reader.seek(self.VVDoffset)
                 self.VVD = VVD.SourceVvdFile49(file=ByteIO(byte_object=reader._read(-1)))
 
-
         if self.bodyPartCount == 0 and self.localSequenceCount > 0:
             self.theMdlFileOnlyHasAnimations = True
 
@@ -652,20 +649,20 @@ class SourceMdlFileDataV53:
 
 
 class SourceMdlBone:
-    BONE_SCREEN_ALIGN_SPHERE = 0x8
-    BONE_SCREEN_ALIGN_CYLINDER = 0x10
-    BONE_USED_BY_VERTEX_LOD0 = 0x400
-    BONE_USED_BY_VERTEX_LOD1 = 0x800
-    BONE_USED_BY_VERTEX_LOD2 = 0x1000
-    BONE_USED_BY_VERTEX_LOD3 = 0x2000
-    BONE_USED_BY_VERTEX_LOD4 = 0x4000
-    BONE_USED_BY_VERTEX_LOD5 = 0x8000
-    BONE_USED_BY_VERTEX_LOD6 = 0x10000
-    BONE_USED_BY_VERTEX_LOD7 = 0x20000
-    BONE_USED_BY_BONE_MERGE = 0x40000
-    BONE_FIXED_ALIGNMENT = 0x100000
-    BONE_HAS_SAVEFRAME_POS = 0x200000
-    BONE_HAS_SAVEFRAME_ROT = 0x400000
+    # BONE_SCREEN_ALIGN_SPHERE = 0x8
+    # BONE_SCREEN_ALIGN_CYLINDER = 0x10
+    # BONE_USED_BY_VERTEX_LOD0 = 0x400
+    # BONE_USED_BY_VERTEX_LOD1 = 0x800
+    # BONE_USED_BY_VERTEX_LOD2 = 0x1000
+    # BONE_USED_BY_VERTEX_LOD3 = 0x2000
+    # BONE_USED_BY_VERTEX_LOD4 = 0x4000
+    # BONE_USED_BY_VERTEX_LOD5 = 0x8000
+    # BONE_USED_BY_VERTEX_LOD6 = 0x10000
+    # BONE_USED_BY_VERTEX_LOD7 = 0x20000
+    # BONE_USED_BY_BONE_MERGE = 0x40000
+    # BONE_FIXED_ALIGNMENT = 0x100000
+    # BONE_HAS_SAVEFRAME_POS = 0x200000
+    # BONE_HAS_SAVEFRAME_ROT = 0x400000
 
     class CONTENTS:
         SOLID = 0x1
@@ -729,44 +726,36 @@ class SourceMdlBone:
         self.positionScale.read(reader)
         self.rotationScale.read(reader)
 
-        x0, x1, x2, x3 = reader.read_float(), reader.read_float(), reader.read_float(), reader.read_float()
-        y0, y1, y2, y3 = reader.read_float(), reader.read_float(), reader.read_float(), reader.read_float()
-        z0, z1, z2, z3 = reader.read_float(), reader.read_float(), reader.read_float(), reader.read_float()
-        self.poseToBoneColumn0.x = x0
-        self.poseToBoneColumn0.y = y0
-        self.poseToBoneColumn0.z = z0
-        self.poseToBoneColumn1.x = x1
-        self.poseToBoneColumn1.y = y1
-        self.poseToBoneColumn1.z = z1
-        self.poseToBoneColumn2.x = x2
-        self.poseToBoneColumn2.y = y2
-        self.poseToBoneColumn2.z = z2
-        self.poseToBoneColumn3.x = x3
-        self.poseToBoneColumn3.y = y3
-        self.poseToBoneColumn3.z = z3
+        self.poseToBoneColumn0.x, self.poseToBoneColumn1.x, self.poseToBoneColumn2.x, self.poseToBoneColumn3.x = \
+            reader.read_float(), reader.read_float(), reader.read_float(), reader.read_float()
+        self.poseToBoneColumn0.y, self.poseToBoneColumn1.y, self.poseToBoneColumn2.y, self.poseToBoneColumn3.y = \
+            reader.read_float(), reader.read_float(), reader.read_float(), reader.read_float()
+        self.poseToBoneColumn0.z, self.poseToBoneColumn1.z, self.poseToBoneColumn2.z, self.poseToBoneColumn3.z = \
+            reader.read_float(), reader.read_float(), reader.read_float(), reader.read_float()
 
-        self.flags = reader.read_uint32()
         self.qAlignment.read(reader)
+        self.flags = reader.read_uint32()
         self.proceduralRuleType = reader.read_uint32()
         self.proceduralRuleOffset = reader.read_uint32()
         self.physicsBoneIndex = reader.read_uint32()
         self.surfacePropNameOffset = reader.read_uint32()
         self.contents = reader.read_uint32()
-        self.unused = [reader.read_uint32() for _ in range(8)]
-        if mdl.version > 49:
-            unused = [reader.read_uint32() for _ in range(7)]
+        if mdl.version >= 48:
+            _ = [reader.read_uint32() for _ in range(8)]
         if self.nameOffset != 0:
             self.name = reader.read_from_offset(self.boneOffset + self.nameOffset, reader.read_ascii_string)
-        if self.proceduralRuleType != 0:
-            if self.proceduralRuleType & self.STUDIO_PROC_AXISINTERP:
+        # print(self.boneOffset, self)
+        # print(self.proceduralRuleType, self.proceduralRuleOffset)
+        if self.proceduralRuleType != 0 and self.proceduralRuleOffset != 0:
+            if self.proceduralRuleType == self.STUDIO_PROC_AXISINTERP:
                 with reader.save_current_pos():
                     reader.seek(self.boneOffset + self.proceduralRuleOffset)
                     self.theAxisInterpBone = SourceMdlAxisInterpBone().read(reader)
-            if self.proceduralRuleType & self.STUDIO_PROC_QUATINTERP:
+            if self.proceduralRuleType == self.STUDIO_PROC_QUATINTERP:
                 with reader.save_current_pos():
                     reader.seek(self.boneOffset + self.proceduralRuleOffset)
                     self.theQuatInterpBone = SourceMdlQuatInterpBone().read(reader)
-            if self.proceduralRuleType & self.STUDIO_PROC_JIGGLE:
+            if self.proceduralRuleType == self.STUDIO_PROC_JIGGLE:
                 with reader.save_current_pos():
                     reader.seek(self.boneOffset + self.proceduralRuleOffset)
                     self.theJiggleBone = SourceMdlJiggleBone().read(reader)
@@ -774,8 +763,7 @@ class SourceMdlBone:
             self.theSurfacePropName = reader.read_from_offset(self.boneOffset + self.surfacePropNameOffset,
                                                               reader.read_ascii_string)
 
-
-        print(reader.tell()-self.boneOffset)
+        a = 5
         mdl.theBones.append(self)
 
     def __repr__(self):
@@ -1129,7 +1117,7 @@ class SourceMdlAttachment:
         self.nameOffset = 0
         self.flags = 0
         self.localBoneIndex = 0
-        self.parent_bone = None #type: SourceMdlBone
+        self.parent_bone = None  # type: SourceMdlBone
         self.localM11 = 0.0
         self.localM12 = 0.0
         self.localM13 = 0.0
@@ -1155,7 +1143,10 @@ class SourceMdlAttachment:
             self.name = reader.read_from_offset(self.nameOffset + entry, reader.read_ascii_string)
             self.flags = reader.read_uint32()
             self.localBoneIndex = reader.read_uint32()
-            self.parent_bone = mdl.theBones[self.localBoneIndex]
+            try:
+                self.parent_bone = mdl.theBones[self.localBoneIndex]
+            except:
+                self.parent_bone = SourceMdlBone()
             self.localM11 = reader.read_float()
             self.localM12 = reader.read_float()
             self.localM13 = reader.read_float()
@@ -1171,22 +1162,22 @@ class SourceMdlAttachment:
             self.unused = [reader.read_uint32() for _ in range(8)]
             # print(self)
             self.rot.x, self.rot.y, self.rot.z = math_utilities.convert_rotation_matrix_to_degrees(self.localM11,
-                                                                                          self.localM21,
-                                                                                          self.localM31,
-                                                                                          self.localM12,
-                                                                                          self.localM22,
-                                                                                          self.localM32,
-                                                                                          self.localM33)
+                                                                                                   self.localM21,
+                                                                                                   self.localM31,
+                                                                                                   self.localM12,
+                                                                                                   self.localM22,
+                                                                                                   self.localM32,
+                                                                                                   self.localM33)
             self.pos.y = round(self.localM24, 3)
             self.pos.z = round(self.localM34, 3)
             self.pos.x = round(self.localM14, 3)
 
         mdl.theAttachments.append(self)
 
-
-
     def __repr__(self):
-        return "<Attachment name:{} parent bone: {} loc:{} rot:{}>".format(self.name, self.parent_bone,self.pos.as_string,self.rot.to_degrees().as_string)
+        return "<Attachment name:{} parent bone: {} loc:{} rot:{}>".format(self.name, self.parent_bone,
+                                                                           self.pos.as_string,
+                                                                           self.rot.to_degrees().as_string)
 
 
 class SourceMdlBodyPart:
@@ -1238,13 +1229,13 @@ class SourceMdlModel:
         self.unused = []
         self.theMeshes = []  # type: List[SourceMdlMesh]
         self.theEyeballs = []
-        self.flex_frames = [] #type: List[FlexFrame]
+        self.flex_frames = []  # type: List[FlexFrame]
 
     def read(self, reader: ByteIO, body_part: SourceMdlBodyPart):
         entry = reader.tell()
         self.name = reader.read_ascii_string(64)
         if not self.name:
-            self.name = "{}-{}".format(body_part.theName,len(body_part.theModels))
+            self.name = "{}-{}".format(body_part.theName, len(body_part.theModels))
         self.type = reader.read_uint32()
         self.boundingRadius = reader.read_float()
         self.meshCount = reader.read_uint32()
@@ -1271,9 +1262,9 @@ class SourceMdlModel:
 
     def __repr__(self):
         return "<Model name:{} type:{} mesh count:{} meshes:{} eyeballs:{}>".format(self.name, self.type,
-                                                                                        self.meshCount,
-                                                                                        self.theMeshes,
-                                                                                        self.theEyeballs)
+                                                                                    self.meshCount,
+                                                                                    self.theMeshes,
+                                                                                    self.theEyeballs)
 
 
 class SourceMdlModelVertexData:
@@ -1369,7 +1360,7 @@ class SourceMdlMesh:
         self.centerZ = 0.0
         self.vertexData = SourceMdlMeshVertexData()
         self.unused = []  # 8
-        self.theFlexes = [] #type: List[SourceMdlFlex]
+        self.theFlexes = []  # type: List[SourceMdlFlex]
 
     def read(self, reader: ByteIO, model: SourceMdlModel):
         entry = reader.tell()
@@ -1575,4 +1566,4 @@ class FlexFrame:
         self.flexes = []  # type: List[SourceMdlFlex]
 
     def __repr__(self):
-        return "<FlexFrame {} flexes:{} mesh inds:{}>".format(self.flex_name,self.flexes,self.vertex_offsets)
+        return "<FlexFrame {} flexes:{} mesh inds:{}>".format(self.flex_name, self.flexes, self.vertex_offsets)

@@ -165,4 +165,5 @@ if __name__ == '__main__':
 
             # MDL_edit('E:\\MDL_reader\\sexy_bonniev2')
             a = SourceVtxFile49(r'test_data\kali')
+            # a = SourceVtxFile49(r'test_data\kali')
             print(a.vtx)

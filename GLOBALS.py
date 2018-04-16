@@ -22,6 +22,9 @@ class SourceVector:
 
         return self
 
+    def __eq__(self, other):
+        return  self.x == other.x and self.y == other.y and self.z == other.z
+
     def __add__(self, other):
         return SourceVector([self.x + other.x,self.y + other.y,self.z + other.z])
 

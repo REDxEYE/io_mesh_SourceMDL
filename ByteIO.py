@@ -43,6 +43,8 @@ class ByteIO:
 
         elif byte_object:
             self.file = io.BytesIO(byte_object)
+    def __repr__(self):
+        return "<ByteIO {}/{}>".format(self.tell(),self.size())
 
     def close(self):
         if hasattr(self.file, 'mode'):
