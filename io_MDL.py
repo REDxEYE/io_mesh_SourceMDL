@@ -281,7 +281,7 @@ class IO_MDL:
         bpy.ops.object.select_all(action="DESELECT")
         self.mesh_obj.select = True
         bpy.context.scene.objects.active = self.mesh_obj
-        print(normals)
+        # print(normals)
 
         with redirect_stdout(stdout):
             bpy.ops.object.mode_set(mode='EDIT')
@@ -300,6 +300,7 @@ class IO_MDL:
             # self.mesh.validate()
             bpy.ops.object.shade_smooth()
         self.mesh.normals_split_custom_set(normals)
+        self.mesh.use_auto_smooth = True
 
     def create_models(self):
         self.MDL.mdl = self.MDL.mdl  # type: MDL_DATA.SourceMdlFileData
