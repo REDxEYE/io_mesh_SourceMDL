@@ -212,9 +212,9 @@ class IO_MDL:
                     else:
                         print('Strip group is empty')
 
-                    v_ex(strip_vertex_indexes[::-1])
-                    i_ex(strip_indexes[::-1])
-                    m_ex(strip_material[::-1])
+                    v_ex(strip_vertex_indexes)
+                    i_ex(strip_indexes)
+                    m_ex(strip_material)
                     vn_ex(strip_vertex_normals)
             else:
                 print('VTX mesh is empty')
