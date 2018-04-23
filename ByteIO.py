@@ -6,7 +6,7 @@ SEEK_SET = 0
 SEEK_CUR = 1
 SEEK_END = 2
 
-
+from io import BytesIO
 class OffsetOutOfBounds(Exception):
     pass
 
@@ -43,6 +43,8 @@ class ByteIO:
 
         elif byte_object:
             self.file = io.BytesIO(byte_object)
+        else:
+            self.file = BytesIO()
     def __repr__(self):
         return "<ByteIO {}/{}>".format(self.tell(),self.size())
 
@@ -182,10 +184,11 @@ class ByteIO:
     def read_from_offset(self, offset, reader, **reader_args):
         if offset > self.size():
             raise OffsetOutOfBounds()
-        curr_offset = self.tell()
-        self.seek(offset, io.SEEK_SET)
-        ret = reader(**reader_args)
-        self.seek(curr_offset, io.SEEK_SET)
+        # curr_offset = self.tell()
+        with self.save_current_pos():
+            self.seek(offset, io.SEEK_SET)
+            ret = reader(**reader_args)
+        # self.seek(curr_offset, io.SEEK_SET)
         return ret
 
     # ------------ WRITE SECTION ------------ #
@@ -243,6 +246,15 @@ class ByteIO:
         ret = writer(value)
         self.seek(curr_offset, io.SEEK_SET)
         return ret
+
+    def read_bytes(self,size):
+        return self._read(size)
+
+    def read_float16(self):
+        return self.read('e')
+
+    def write_bytes(self,data):
+        self._write(data)
 
 
 if __name__ == '__main__':

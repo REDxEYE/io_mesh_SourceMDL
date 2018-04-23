@@ -53,10 +53,70 @@ class MDLImporter(bpy.types.Operator):
         wm = context.window_manager
         wm.fileselect_add(self)
         return {'RUNNING_MODAL'}
+class VmeshImporter(bpy.types.Operator):
+    """Load Source2 Engine VMESH models"""
+    bl_idname = "import_mesh.vmesh"
+    bl_label = "Import vmehs_c"
+    bl_options = {'UNDO'}
+
+    filepath = StringProperty(
+        subtype='FILE_PATH',
+    )
+    # WorkDir = StringProperty(name="path to folder with gameinfo.txt", maxlen=1024, default="", subtype='FILE_PATH')
+    # Import_textures = BoolProperty(name="Import textures?\nLARGE TEXTURES MAY CAUSE OUT OF MEMORY AND CRASH",
+    #                                default=False, subtype='UNSIGNED')
+    # forrig = BoolProperty(name="Make normal skeleton or original from source?", default=False, subtype='UNSIGNED')
+    filter_glob = StringProperty(default="*.vmesh_c", options={'HIDDEN'})
+
+    def execute(self, context):
+        from .Source2 import Vmesh_IO
+        # doTexture = True
+        # if self.properties.WorkDir == '': doTexture = False
+        # io_MDL.IO_MDL(self.filepath, working_directory=self.properties.WorkDir,
+        #               import_textures=doTexture and self.properties.Import_textures,
+        #               normal_bones=self.properties.forrig)
+        Vmesh_IO.VMESH_IO(self.filepath).build_meshes()
+        return {'FINISHED'}
+
+    def invoke(self, context, event):
+        wm = context.window_manager
+        wm.fileselect_add(self)
+        return {'RUNNING_MODAL'}
+class VmdlImporter(bpy.types.Operator):
+    """Load Source2 Engine VMESH models"""
+    bl_idname = "import_mesh.vmdl"
+    bl_label = "Import vmdl_c"
+    bl_options = {'UNDO'}
+
+    filepath = StringProperty(
+        subtype='FILE_PATH',
+    )
+    # WorkDir = StringProperty(name="path to folder with gameinfo.txt", maxlen=1024, default="", subtype='FILE_PATH')
+    # Import_textures = BoolProperty(name="Import textures?\nLARGE TEXTURES MAY CAUSE OUT OF MEMORY AND CRASH",
+    #                                default=False, subtype='UNSIGNED')
+    # forrig = BoolProperty(name="Make normal skeleton or original from source?", default=False, subtype='UNSIGNED')
+    filter_glob = StringProperty(default="*.vmdl_c", options={'HIDDEN'})
+
+    def execute(self, context):
+        from .Source2 import Vmdl_IO
+        # doTexture = True
+        # if self.properties.WorkDir == '': doTexture = False
+        # io_MDL.IO_MDL(self.filepath, working_directory=self.properties.WorkDir,
+        #               import_textures=doTexture and self.properties.Import_textures,
+        #               normal_bones=self.properties.forrig)
+        Vmdl_IO.Vmdl_IO(self.filepath)
+        return {'FINISHED'}
+
+    def invoke(self, context, event):
+        wm = context.window_manager
+        wm.fileselect_add(self)
+        return {'RUNNING_MODAL'}
 
 
 def menu_import(self, context):
     self.layout.operator(MDLImporter.bl_idname, text="MDL mesh (.mdl)")
+    self.layout.operator(VmeshImporter.bl_idname, text="Vmesh mesh (.vmesh_c)")
+    self.layout.operator(VmdlImporter.bl_idname, text="Vmesh mesh (.vmdl_c)")
 
 
 def register():

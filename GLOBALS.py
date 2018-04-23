@@ -50,6 +50,29 @@ class SourceVector:
     def as_string(self):
         return " X:{} Y:{} Z:{}".format(self.x, self.y, self.z)
 
+    def magnitude(self):
+        magn = math.sqrt(self.x ** 2 + self.y ** 2 + self.z ** 2)
+        return magn
+
+    def normalize(self):
+        magn = self.magnitude()
+        if magn == 0:
+            return self
+        self.x = self.x / magn
+        self.y = self.y / magn
+        self.z = self.z / magn
+        return self
+
+    @property
+    def as_normalized(self):
+        magn = self.magnitude()
+        if magn == 0:
+            return self
+        x = self.x / magn
+        y = self.y / magn
+        z = self.z / magn
+        return SourceVector(init_vec=[x,y,z])
+
     def __str__(self):
         return "<Vector 3D X:{} Y:{} Z:{}".format(self.x, self.y, self.z)
 
@@ -186,6 +209,7 @@ class SourceVertex:
         self.texCoordX = 0
         self.texCoordY = 0
 
+
     def read(self, reader: ByteIO):
         self.boneWeight.read(reader)
         self.position.read(reader)
@@ -195,7 +219,7 @@ class SourceVertex:
         return self
 
     def __str__(self):
-        return "<Vertex pos:{} bone weight:{}>".format(self.position.as_string, self.boneWeight)
+        return "<Vertex pos:{}>".format(self.position.as_string)
 
     def __repr__(self):
         return self.__str__()

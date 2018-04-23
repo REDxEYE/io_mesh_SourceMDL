@@ -22,6 +22,8 @@ class SourceVvdFile49:
 if __name__ == '__main__':
     with open('log.log', "w") as f:  # replace filepath & filename
         with f as sys.stdout:
-            model = r'.\test_data\xenomorph'
+            # model = r'.\test_data\xenomorph'
+            model = r'G:\SteamLibrary\SteamApps\common\SourceFilmmaker\game\usermod\models\MMmallow\KerriganSuccubusHOTS\kerrigansuccubus'
+
             # MDL_edit('E:\\MDL_reader\\sexy_bonniev2')
             SourceVvdFile49(model).test()

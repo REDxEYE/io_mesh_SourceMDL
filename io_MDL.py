@@ -153,10 +153,10 @@ class IO_MDL:
             VtxVertexIndex = StripGroup.theVtxIndexes[vtx_index_index+i]  # type: int
             VtxVertex = StripGroup.theVtxVertexes[VtxVertexIndex]  # type: VTX_DATA.SourceVtxVertex
             vertexIndex = VtxVertex.originalMeshVertexIndex + body_part_vertex_offset + mesh_vertex_offset
-            if self.VVD.vvd.fixupCount == 0:
+            try:
                 vn = self.VVD.vvd.theVertexes[vertexIndex].normal.asList  # type: GLOBALS.SourceVertex
-            else:
-                vn = self.VVD.vvd.theFixedVertexesByLod[0][vertexIndex].normal.asList  # type: GLOBALS.SourceVertex
+            except:
+                vn = [0,1,0]
             verts_inds.append(vertexIndex)
             vn_s.append(vn)
         return verts_inds,vn_s
@@ -212,9 +212,9 @@ class IO_MDL:
                     else:
                         print('Strip group is empty')
 
-                    v_ex(strip_vertex_indexes)
-                    i_ex(strip_indexes)
-                    m_ex(strip_material)
+                    v_ex(strip_vertex_indexes[::-1])
+                    i_ex(strip_indexes[::-1])
+                    m_ex(strip_material[::-1])
                     vn_ex(strip_vertex_normals)
             else:
                 print('VTX mesh is empty')
@@ -290,7 +290,7 @@ class IO_MDL:
             # bpy.ops.object.mode_set(mode='EDIT')
             # self.mesh.validate()
             # self.mesh.validate()
-            bpy.ops.mesh.delete_loose()
+            # bpy.ops.mesh.delete_loose()
             # bpy.ops.mesh.normals_make_consistent(inside=False)
             # bpy.ops.mesh.delete_loose()
             # bpy.ops.mesh.remove_doubles(threshold=0.0001)

@@ -338,19 +338,20 @@ class SourceMdlFile53(SourceMdlFile49):
 
 
 if __name__ == '__main__':
-    with open('log.log', "w") as f:  # replace filepath & filename
+    with open('log.log', "w",encoding='utf8') as f:  # replace filepath & filename
         with f as sys.stdout:
             # model = r'G:\SteamLibrary\SteamApps\common\SourceFilmmaker\game\tf_movies\models\player\hwm\medic'
             # model = r'.\test_data\nick_hw2'
+            model = r'.\test_data\reimu_v2'
             # model = r'.\test_data\xenomorph'
-            model = r'H:\games\Titanfall 2\extr\models\weapons\titan_sniper_rifle\w_titan_sniper_rifle'
+            # model = r'H:\games\Titanfall 2\extr\models\weapons\titan_sniper_rifle\w_titan_sniper_rifle'
             # model = r'G:\SteamLibrary\SteamApps\common\SourceFilmmaker\game\workshop\models\player\asrielflex'
             # model = r'G:\SteamLibrary\SteamApps\common\SourceFilmmaker\game\tf_movies\models\player\hwm\spy'
             # model = r'G:\SteamLibrary\SteamApps\common\SourceFilmmaker\game\usermod\models\MMmallow\KerriganSuccubusHOTS\kerrigansuccubus'
             # model = r'.\test_data\test_case-2models-with-flexes'
-            # a = SourceMdlFile49(model)
-            # a.test()
+            a = SourceMdlFile49(model)
+            a.test()
 
-            mdl2 = SourceMdlFile53(model)
-            mdl2.test()
+            # mdl2 = SourceMdlFile53(model)
+            # mdl2.test()
             # print(a.mdl)

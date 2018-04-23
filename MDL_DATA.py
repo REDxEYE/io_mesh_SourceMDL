@@ -746,7 +746,7 @@ class SourceMdlBone:
         if mdl.version >=53:
             reader.skip(4*7)
         if self.nameOffset != 0:
-            self.name = reader.read_from_offset(self.boneOffset + self.nameOffset, reader.read_ascii_string)
+            self.name = reader.read_from_offset(self.boneOffset + self.nameOffset, reader.read_ascii_string).encode("ascii",'ignore').decode('ascii')
         # print(self.boneOffset, self)
         # print(self.proceduralRuleType, self.proceduralRuleOffset)
         if self.proceduralRuleType != 0 and self.proceduralRuleOffset != 0:
