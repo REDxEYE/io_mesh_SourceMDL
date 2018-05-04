@@ -55,6 +55,7 @@ class IO_MDL:
 
         self.armature_obj = bpy.context.object
         self.armature_obj.show_x_ray = True
+        self.armature_obj.name = self.name
 
         self.armature = self.armature_obj.data
         self.armature.name = self.name + "_ARM"
@@ -252,19 +253,10 @@ class IO_MDL:
         self.vertex_offset += model.vertexCount
         vertexes = []
         uvs = []
-        # normals = []
         for vertex in self.VVD.vvd.theVertexes:
             vert_co, uv, norm = IO_MDL.convert_vertex(vertex)
             vertexes.append(vert_co)
             uvs.append(uv)
-            # normals.append(norm)
-        # for vertex_index in vertex_indexes:
-        #     try:
-        #         normals.append(self.VVD.vvd.theVertexes[vertex_index].normal.asList)
-        #     except:
-        #         print('fail on',vertex_index)
-        # print(polygons)
-        # input()
         self.mesh.from_pydata(vertexes, [], polygons)
         self.mesh.update()
         self.add_flexes(model)
@@ -338,16 +330,6 @@ class IO_MDL:
                         fx + vx, fy + vy, fz + vz)
 
     def create_attachments(self):
-        # MathModule.ConvertRotationMatrixToDegrees(anAttachment.localM11, anAttachment.localM21, anAttachment.localM31,
-        #                                           anAttachment.localM12, anAttachment.localM22, anAttachment.localM32,
-        #                                           anAttachment.localM33, angleX, angleY, angleZ)
-        # offsetX = Math.Round(anAttachment.localM14, 2)
-        # offsetY = Math.Round(anAttachment.localM24, 2)
-        # offsetZ = Math.Round(anAttachment.localM34, 2)
-        # angleX = Math.Round(angleX, 2)
-        # angleY = Math.Round(angleY, 2)
-        # angleZ = Math.Round(angleZ, 2)
-
         for attachment in self.MDL.mdl.theAttachments:
             bone = self.armature.bones.get(self.MDL.mdl.theBones[attachment.localBoneIndex].name)
 
@@ -356,20 +338,12 @@ class IO_MDL:
             empty.name = attachment.name
             pos = Vector([attachment.pos.x, attachment.pos.y, attachment.pos.z])
             rot = Euler([attachment.rot.x, attachment.rot.y, attachment.rot.z])
-            # mat = Matrix.Translation(pos) * rot.to_matrix().to_4x4()
             empty.matrix_basis.identity()
             empty.parent = self.armature_obj
             empty.parent_type = 'BONE'
             empty.parent_bone = bone.name
             empty.location = pos
             empty.rotation_euler = rot
-
-            # if empty.parent:
-            #     empty.matrix = empty.parent.matrix * mat
-            # else:
-            #     empty.matrix = mat
-            # empty.location = bone.head+Vector(attachment.pos.asList)
-            # empty.parent = bone
 
 
 if __name__ == '__main__':

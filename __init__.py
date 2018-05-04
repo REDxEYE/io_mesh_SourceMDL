@@ -94,7 +94,7 @@ class VmdlImporter(bpy.types.Operator):
     # WorkDir = StringProperty(name="path to folder with gameinfo.txt", maxlen=1024, default="", subtype='FILE_PATH')
     # Import_textures = BoolProperty(name="Import textures?\nLARGE TEXTURES MAY CAUSE OUT OF MEMORY AND CRASH",
     #                                default=False, subtype='UNSIGNED')
-    # forrig = BoolProperty(name="Make normal skeleton or original from source?", default=False, subtype='UNSIGNED')
+    import_meshes = BoolProperty(name="Import meshes", default=False, subtype='UNSIGNED')
     filter_glob = StringProperty(default="*.vmdl_c", options={'HIDDEN'})
 
     def execute(self, context):
@@ -104,7 +104,7 @@ class VmdlImporter(bpy.types.Operator):
         # io_MDL.IO_MDL(self.filepath, working_directory=self.properties.WorkDir,
         #               import_textures=doTexture and self.properties.Import_textures,
         #               normal_bones=self.properties.forrig)
-        Vmdl_IO.Vmdl_IO(self.filepath)
+        Vmdl_IO.Vmdl_IO(self.filepath,self.import_meshes)
         return {'FINISHED'}
 
     def invoke(self, context, event):
