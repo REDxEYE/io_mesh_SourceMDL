@@ -32,10 +32,10 @@ class MDLImporter(bpy.types.Operator):
     filter_glob = StringProperty(default="*.mdl", options={'HIDDEN'})
 
     def execute(self, context):
-        from . import io_MDL
+        from . import io_Mdl
         doTexture = True
         if self.properties.WorkDir == '': doTexture = False
-        io_MDL.IOMdl(self.filepath, working_directory=self.properties.WorkDir,
+        io_Mdl.IOMdl(self.filepath, working_directory=self.properties.WorkDir,
                      import_textures=doTexture and self.properties.Import_textures,
                      normal_bones=self.properties.forrig)
         return {'FINISHED'}
