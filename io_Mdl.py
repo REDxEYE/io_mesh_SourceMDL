@@ -26,7 +26,7 @@ except ImportError:
 try:
     import bpy
 
-    bpy.app.debug = True
+    # bpy.app.debug = True
     import mathutils
     from mathutils import Vector, Matrix, Euler
 except ImportError:

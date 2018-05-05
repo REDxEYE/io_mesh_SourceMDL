@@ -10,7 +10,6 @@ bl_info = {
     # "tracker_url": "http://www.barneyparker.com/blender-json-import-export-plugin",
     "category": "Import-Export"}
 
-
 import bpy
 
 from bpy.props import StringProperty, BoolProperty
@@ -25,19 +24,23 @@ class MDLImporter(bpy.types.Operator):
     filepath = StringProperty(
         subtype='FILE_PATH',
     )
-    WorkDir = StringProperty(name="path to folder with gameinfo.txt", maxlen=1024, default="", subtype='FILE_PATH')
-    Import_textures = BoolProperty(name="Import textures?\nLARGE TEXTURES MAY CAUSE OUT OF MEMORY AND CRASH",
-                                   default=False, subtype='UNSIGNED')
-    forrig = BoolProperty(name="Make normal skeleton or original from source?", default=False, subtype='UNSIGNED')
+    # WorkDir = StringProperty(name="path to folder with gameinfo.txt", maxlen=1024, default="", subtype='FILE_PATH')
+    # Import_textures = BoolProperty(name="Import textures?\nLARGE TEXTURES MAY CAUSE OUT OF MEMORY AND CRASH",
+    #                                default=False, subtype='UNSIGNED')
+    normal_bones = BoolProperty(name="Make normal skeleton or original from source?", default=False, subtype='UNSIGNED')
     filter_glob = StringProperty(default="*.mdl", options={'HIDDEN'})
 
     def execute(self, context):
         from . import io_Mdl
-        doTexture = True
-        if self.properties.WorkDir == '': doTexture = False
-        io_Mdl.IOMdl(self.filepath, working_directory=self.properties.WorkDir,
-                     import_textures=doTexture and self.properties.Import_textures,
-                     normal_bones=self.properties.forrig)
+        # import_textues = True
+        # if self.properties.WorkDir == '':
+        #     import_textues = False
+        self.WorkDir = ''
+        import_textues = False
+        self.Import_textures = False
+        io_Mdl.IOMdl(self.filepath, working_directory=self.WorkDir,
+                     import_textures=import_textues and self.Import_textures,
+                     normal_bones=self.normal_bones)
         return {'FINISHED'}
 
     def invoke(self, context, event):
@@ -63,7 +66,7 @@ class VmeshImporter(bpy.types.Operator):
         # if self.properties.WorkDir == '': doTexture = False
         # io_MDL.IO_MDL(self.filepath, working_directory=self.properties.WorkDir,
         #               import_textures=doTexture and self.properties.Import_textures,
-        #               normal_bones=self.properties.forrig)
+        #               normal_bones=self.properties.normal_bones)
         Vmesh_IO.VMESH_IO(self.filepath).build_meshes()
         return {'FINISHED'}
 
@@ -90,11 +93,6 @@ class VmdlImporter(bpy.types.Operator):
 
     def execute(self, context):
         from .Source2 import Vmdl_IO
-        # doTexture = True
-        # if self.properties.WorkDir == '': doTexture = False
-        # io_MDL.IO_MDL(self.filepath, working_directory=self.properties.WorkDir,
-        #               import_textures=doTexture and self.properties.Import_textures,
-        #               normal_bones=self.properties.forrig)
         Vmdl_IO.Vmdl_IO(self.filepath, self.import_meshes)
         return {'FINISHED'}
 
