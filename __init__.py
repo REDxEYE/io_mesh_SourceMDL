@@ -28,6 +28,7 @@ class MDLImporter(bpy.types.Operator):
     # Import_textures = BoolProperty(name="Import textures?\nLARGE TEXTURES MAY CAUSE OUT OF MEMORY AND CRASH",
     #                                default=False, subtype='UNSIGNED')
     normal_bones = BoolProperty(name="Make normal skeleton or original from source?", default=False, subtype='UNSIGNED')
+    join_clamped = BoolProperty(name="Join clamped meshes?", default=False, subtype='UNSIGNED')
     filter_glob = StringProperty(default="*.mdl", options={'HIDDEN'})
 
     def execute(self, context):
@@ -40,7 +41,7 @@ class MDLImporter(bpy.types.Operator):
         self.Import_textures = False
         io_Mdl.IOMdl(self.filepath, working_directory=self.WorkDir,
                      import_textures=import_textues and self.Import_textures,
-                     normal_bones=self.normal_bones)
+                     normal_bones=self.normal_bones,join_clamped = self.join_clamped)
         return {'FINISHED'}
 
     def invoke(self, context, event):

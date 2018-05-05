@@ -42,13 +42,15 @@ def split(array, n=3):
 class IOMdl:
     def __init__(self, path: str = None, import_textures=False, working_directory=None, co=None, rot=False,
                  internal_files=None,
-                 custom_name=None, normal_bones=False):
+                 custom_name=None, normal_bones=False,join_clamped = False):
         # TODO: make import_textures to do stuff
         self.import_textures = import_textures
         # TODO: make working_directory to do something useful
         self.working_directory = working_directory
         # TODO: recall what this this is for
         self.internal_files = internal_files
+
+        self.join_clamped = join_clamped
 
         self.name = os.path.basename(path)[:-4]
         self.co = co
@@ -310,14 +312,6 @@ class IOMdl:
             bpy.ops.object.mode_set(mode='EDIT')
             self.mesh.validate()
             self.mesh.validate()
-            # bpy.ops.object.mode_set(mode='EDIT')
-            # self.mesh.validate()
-            # self.mesh.validate()
-            # bpy.ops.mesh.delete_loose()
-            # bpy.ops.mesh.normals_make_consistent(inside=False)
-            # bpy.ops.mesh.delete_loose()
-            # bpy.ops.mesh.remove_doubles(threshold=0.0001)
-            # bpy.ops.mesh.normals_make_consistent(inside=False)
             bpy.ops.object.mode_set(mode='OBJECT')
             # self.mesh.validate()
             # self.mesh.validate()
@@ -328,14 +322,31 @@ class IOMdl:
             bpy.ops.object.mode_set(mode='EDIT')
             bpy.ops.mesh.delete_loose()
             bpy.ops.object.mode_set(mode='OBJECT')
+        return self.mesh_obj
 
     def create_models(self):
         self.MDL.file_data = self.MDL.file_data  # type: MDL_DATA.SourceMdlFileData
         for bodyparts in self.MDL.file_data.bodypart_frames:
+            to_join = []
             for bodypart_index, bodypart in bodyparts:
+
                 for model_index, model in enumerate(bodypart.models):
                     vtx_model = self.VTX.vtx.vtx_body_parts[bodypart_index].vtx_models[model_index]
-                    self.create_model(model, vtx_model)
+                    to_join.append(self.create_model(model, vtx_model))
+            # print(self.join_clamped,to_join)
+            if self.join_clamped:
+                for ob in to_join:
+                    if ob.type == 'MESH':
+                        ob.select = True
+                        bpy.context.scene.objects.active = ob
+                    else:
+                        ob.select = False
+                bpy.context.scene.objects.active = to_join[0]
+                with redirect_stdout(stdout):
+                    bpy.ops.object.join()
+                    bpy.ops.object.mode_set(mode='EDIT')
+                    bpy.ops.mesh.remove_doubles(threshold=0.00001)
+                    bpy.ops.object.mode_set(mode='OBJECT')
 
     def add_flexes(self, mdlmodel: MDL_DATA.SourceMdlModel):
         # Creating base shape key
@@ -389,6 +400,6 @@ class IOMdl:
 
 
 if __name__ == '__main__':
-    a = IOMdl(r'test_data\nick_hwm.mdl', normal_bones=False)
+    a = IOMdl(r'test_data\nick_hwm.mdl', normal_bones=False,join_clamped=True)
     # a = IOMdl(r'test_data\titan_buddy.mdl', normal_bones=False)
     # a = IO_MDL(r'E:\PYTHON\MDL_reader\test_data\nick_hwm.mdl', normal_bones=True)

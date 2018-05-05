@@ -290,6 +290,9 @@ class SourceMdlFile49:
                 self.file_data.bodypart_frames.append([(n, body_part)])
                 continue
             model = body_part.models[0]
+            if 'clamped' not in model.name:
+                self.file_data.bodypart_frames.append([(n, body_part)])
+                continue
             added = False
             for bodyparts in self.file_data.bodypart_frames:
                 for _, _model in bodyparts:
@@ -299,6 +302,7 @@ class SourceMdlFile49:
                         break
             if not added:
                 self.file_data.bodypart_frames.append([(n, body_part)])
+        print(self.file_data.bodypart_frames)
 
 
 class SourceMdlFile53(SourceMdlFile49):
@@ -339,15 +343,16 @@ if __name__ == '__main__':
     # with open('log.log', "w",encoding='utf8') as f:  # replace filepath & filename
     #     with f as sys.stdout:
     # model_path = r'G:\SteamLibrary\SteamApps\common\SourceFilmmaker\game\tf_movies\models\player\hwm\medic'
-    # model_path = r'.\test_data\nick_hw2'
+    model_path = r'.\test_data\nick_hwm'
     # model_path = r'.\test_data\reimu_v2'
     # model_path = r'G:\SteamLibrary\SteamApps\common\SourceFilmmaker\game\usermod\models\bge\narry\zach_water_v3'
-    model_path = r'.\test_data\l_pistol_noenv'
+    # model_path = r'.\test_data\l_pistol_noenv'
     # model_path = r'.\test_data\hard_suit'
     # model_path = r'H:\games\Titanfall 2\extr\models\weapons\titan_sniper_rifle\w_titan_sniper_rifle'
     # model_path = r'G:\SteamLibrary\SteamApps\common\SourceFilmmaker\game\workshop\models\player\asrielflex'
     # model_path = r'G:\SteamLibrary\SteamApps\common\SourceFilmmaker\game\tf_movies\models\player\hwm\spy'
     # model_path = r'.\test_data\test_case-2models-with-flexes'
+    # a = SourceMdlFile53(model_path)
     a = SourceMdlFile49(model_path)
     a.test()
 
