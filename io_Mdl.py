@@ -63,7 +63,7 @@ class IOMdl:
         self.VVD = None  # type: VVD.SourceVvdFile49
         self.VTX = None  # type: VTX.SourceVtxFile49
         if version == 53:
-            print('Found TitanFall2 model')
+            print('Found Titanfall2 model_path')
             self.MDL = MDL.SourceMdlFile53(path=file_path)
             self.VVD = self.MDL.VVD
             self.VTX = self.MDL.VTX
@@ -254,7 +254,7 @@ class IOMdl:
     def create_model(self, model: MDL_DATA.SourceMdlModel, vtx_model: VTX_DATA.SourceVtxModel):
         name = model.name.replace('.smd', '').replace('.dmx', '')
         if len(vtx_model.vtx_model_lods[0].vtx_meshes) < 1:
-            print('No meshes in vtx model')
+            print('No meshes in vtx model_path')
             return
         self.mesh_obj = bpy.data.objects.new(name, bpy.data.meshes.new(name))
         self.mesh_obj.parent = self.armature_obj
@@ -285,10 +285,13 @@ class IOMdl:
             uvs.append(uv)
         self.mesh.from_pydata(vertexes, [], polygons)
         self.mesh.update()
-        print('Adding flexes')
+        if self.MDL.file_data.flex_descs:
+            print('Adding flexes')
         self.add_flexes(model)
         for n, vertex in enumerate(self.VVD.file_data.vertexes):
             for bone_index, weight in zip(vertex.boneWeight.bone, vertex.boneWeight.weight):
+                if weight == 0.0:
+                    continue
                 weight_groups[self.MDL.file_data.bones[bone_index].name].add([n], weight, 'REPLACE')
         self.mesh.uv_textures.new()
         uv_data = self.mesh.uv_layers[0].data
@@ -321,6 +324,10 @@ class IOMdl:
             bpy.ops.object.shade_smooth()
         self.mesh.normals_split_custom_set(normals)
         self.mesh.use_auto_smooth = True
+        with redirect_stdout(stdout):
+            bpy.ops.object.mode_set(mode='EDIT')
+            bpy.ops.mesh.delete_loose()
+            bpy.ops.object.mode_set(mode='OBJECT')
 
     def create_models(self):
         self.MDL.file_data = self.MDL.file_data  # type: MDL_DATA.SourceMdlFileData
@@ -378,6 +385,7 @@ class IOMdl:
         empty.name = 'illum position'
         empty.parent = self.armature_obj
         empty.location = Vector(self.MDL.file_data.illumination_position.as_list)
+        empty.empty_draw_type = 'SPHERE'
 
 
 if __name__ == '__main__':

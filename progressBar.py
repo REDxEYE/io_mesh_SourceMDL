@@ -68,7 +68,7 @@ class Progress_bar:
 
 if __name__ == '__main__':
     a = Progress_bar(desc='Importing vertex indexes', max_=100, len_=20)
-    a2 = Progress_bar(desc='Generating model', max_=100, len_=20)
+    a2 = Progress_bar(desc='Generating model_path', max_=100, len_=20)
     while not a2.is_done:
         if a.is_done:
             a2.increment(1)

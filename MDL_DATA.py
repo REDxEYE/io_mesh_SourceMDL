@@ -1054,7 +1054,7 @@ class SourceMdlBodyPart:
         mdl.body_parts.append(self)
 
     def __repr__(self):
-        return "<BodyPart name:{} model count:{} >".format(self.name, self.model_count)
+        return "<BodyPart name:{} model_path count:{} >".format(self.name, self.model_count)
 
 
 class SourceMdlModel:
@@ -1230,7 +1230,7 @@ class SourceMdlMesh:
 
         self.vertexData.read(reader)
         self.unused = [reader.read_uint32() for _ in range(8)]
-        # print('Reading ', model.name, n, 'mesh')
+        # print('Reading ', model_path.name, n, 'mesh')
         if self.material_type == 1:
             model.eyeballs[self.material_param].texture_index = self.material_index
         entry2 = reader.tell()
@@ -1294,7 +1294,7 @@ class SourceMdlFlex:
         self.vertCount = reader.read_uint32()
         self.vertOffset = reader.read_uint32()
 
-        # print('Reading', mesh.model.body_part.mdl.flex_descs[self.flexDescIndex].name, 'flex')
+        # print('Reading', mesh.model_path.body_part.mdl.flex_descs[self.flexDescIndex].name, 'flex')
         self.flexDescPartnerIndex = reader.read_uint32()
         self.vertAnimType = reader.read_uint8()
 

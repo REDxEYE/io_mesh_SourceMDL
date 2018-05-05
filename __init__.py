@@ -1,5 +1,5 @@
 bl_info = {
-    "name": "Source Engine model import + textures (.mdl, .file_data, .vtx)",
+    "name": "Source Engine model_path import + textures (.mdl, .file_data, .vtx)",
     "author": "RED_EYE",
     "version": (1, 1),
     "blender": (2, 78, 0),

@@ -65,7 +65,7 @@ class SourceVtxBodyPart:
         return self
 
     def __repr__(self):
-        return "<BodyPart model count:{} models:{}>".format(self.model_count, self.vtx_models)
+        return "<BodyPart model_path count:{} models:{}>".format(self.model_count, self.vtx_models)
 
 
 class SourceVtxModel:

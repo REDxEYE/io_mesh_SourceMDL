@@ -6,7 +6,7 @@ from Source2.Blocks.VBIB import *
 import os.path
 import bpy, mathutils
 
-# model = r'E:\PYTHON\io_mesh_SourceMDL/test_data/source2/bad_ancient_destruction_pitrim_model.vmesh_c'
+# model_path = r'E:\PYTHON\io_mesh_SourceMDL/test_data/source2/bad_ancient_destruction_pitrim_model.vmesh_c'
 
 
 class VMESH_IO:

@@ -186,9 +186,9 @@ class SourceMdlFile49:
 
     def test(self):
         pass
-        # for n,model in enumerate(self.mdl.bodyparts):
+        # for n,model_path in enumerate(self.mdl.bodyparts):
         #     print(n,' ',end = '')
-        #     pprint(model)
+        #     pprint(model_path)
         # GenericUInt.set_reader(self.reader)
         # GenericString.set_reader(self.reader)
         # self.mdl.bone_count.value = 1
@@ -202,14 +202,14 @@ class SourceMdlFile49:
         # print(self.mdl.theAnimationDescs)
         # for part in self.mdl.theBodyParts:  # type: SourceMdlBodyPart
         #     print("list of models in \"{}\" bodygroup".format(part.name))
-        #     for model in part.models:  # type: SourceMdlModel
-        #         print('\tmodel:', model.name)
-        #         # print('\teyeball count:',model.eyeball_count)
-        #         # pprint(model.flex_frames)
-        #         for flex_frame in model.flex_frames:
+        #     for model_path in part.models:  # type: SourceMdlModel
+        #         print('\tmodel_path:', model_path.name)
+        #         # print('\teyeball count:',model_path.eyeball_count)
+        #         # pprint(model_path.flex_frames)
+        #         for flex_frame in model_path.flex_frames:
         #             print('\t', flex_frame)
-        # print('\t', model.name, 'list of flexes in this mesh:')
-        # for mesh in model.meshes:  # type: SourceMdlMesh
+        # print('\t', model_path.name, 'list of flexes in this mesh:')
+        # for mesh in model_path.meshes:  # type: SourceMdlMesh
         #     for flex in mesh.flexes:  # type: SourceMdlFlex
         #         print('\t\t', flex, self.mdl.theFlexDescs[flex.flexDescIndex])
         # for m in self.mdl.theTextures: #type: SourceMdlTexture
@@ -234,14 +234,14 @@ class SourceMdlFile49:
             # No need to create defaultflex here.
 
             for model in body_part.models:
-                print('\tProcessing model {}'.format(model.name))
+                print('\tProcessing model_path {}'.format(model.name))
 
                 for mesh in model.meshes:
                     vertex_offset = mesh.vertex_index_start
 
                     for flex_index, flex in enumerate(mesh.flexes):
                         # print('\t\tParsing {} flex from {}'.format(self.mdl.theFlexDescs[flex.flexDescIndex].name,
-                        #                                          model.name))
+                        #                                          model_path.name))
                         flex_frame = None
                         if flex_dest_flex_frame[flex.flexDescIndex]:
                             for s_flex in flex_dest_flex_frame[flex.flexDescIndex]:
@@ -342,7 +342,8 @@ if __name__ == '__main__':
     # model_path = r'.\test_data\nick_hw2'
     # model_path = r'.\test_data\reimu_v2'
     # model_path = r'G:\SteamLibrary\SteamApps\common\SourceFilmmaker\game\usermod\models\bge\narry\zach_water_v3'
-    model_path = r'.\test_data\hard_suit'
+    model_path = r'.\test_data\l_pistol_noenv'
+    # model_path = r'.\test_data\hard_suit'
     # model_path = r'H:\games\Titanfall 2\extr\models\weapons\titan_sniper_rifle\w_titan_sniper_rifle'
     # model_path = r'G:\SteamLibrary\SteamApps\common\SourceFilmmaker\game\workshop\models\player\asrielflex'
     # model_path = r'G:\SteamLibrary\SteamApps\common\SourceFilmmaker\game\tf_movies\models\player\hwm\spy'

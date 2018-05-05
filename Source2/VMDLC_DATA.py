@@ -20,7 +20,7 @@
 #         self.model_info.read(reader)
 #
 #     def __repr__(self):
-#         return '<DataBlock model name:"{}">'.format(self.model_name)
+#         return '<DataBlock model_path name:"{}">'.format(self.model_name)
 #
 #
 # class ModelInfo(Dummy):

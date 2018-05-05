@@ -147,14 +147,14 @@ if __name__ == '__main__':
     with open('log.log', "w") as f:  # replace filepath & filename
         with f as sys.stdout:
             model = r'../test_data/source2/sniper.vmdl_c'
-            # model = r'../test_data/source2/victory.vanim_c'
-            # model = r'../test_data/source2/sniper_lod1.vmesh_c'
-            # model = r'../test_data/source2/sniper_model.vmesh_c'
-            # model = r'../test_data/source2/gordon_at_desk.vmdl_c'
-            # model = r'../test_data/source2/abaddon_body.vmat_c'
+            # model_path = r'../test_data/source2/victory.vanim_c'
+            # model_path = r'../test_data/source2/sniper_lod1.vmesh_c'
+            # model_path = r'../test_data/source2/sniper_model.vmesh_c'
+            # model_path = r'../test_data/source2/gordon_at_desk.vmdl_c'
+            # model_path = r'../test_data/source2/abaddon_body.vmat_c'
 
-            # model = r'../test_data/source2/sniper_model.vmorf_c'
-            # model = r'../test_data/source2/sniper.vphys_c'
+            # model_path = r'../test_data/source2/sniper_model.vmorf_c'
+            # model_path = r'../test_data/source2/sniper.vphys_c'
 
             vmdl = ValveFile(model)
             vmdl.read_block_info()

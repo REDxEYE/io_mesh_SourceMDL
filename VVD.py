@@ -18,13 +18,15 @@ class SourceVvdFile49:
         self.file_data.read(self.reader)
 
     def test(self):
-        print(len(self.file_data.vertexes))
+        for v in self.file_data.vertexes:
+            print(v.boneWeight)
 
 
 if __name__ == '__main__':
     with open('log.log', "w") as f:  # replace filepath & filename
         with f as sys.stdout:
-            # model = r'.\test_data\xenomorph'
-            model = r'.\test_data\hard_suit'
+            # model_path = r'.\test_data\xenomorph'
+            # model_path = r'.\test_data\hard_suit'
+            model_path = r'.\test_data\l_pistol_noenv'
             # MDL_edit('E:\\MDL_reader\\sexy_bonniev2')
-            SourceVvdFile49(model).test()
+            SourceVvdFile49(model_path).test()
