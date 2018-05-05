@@ -169,7 +169,7 @@ if __name__ == '__main__':
             bone_rotations = model_skeleton['m_boneRotParent']
             bone_parents = model_skeleton['m_nParent']
             for n in range(len(bone_names)):
-                print(bone_names[n],'parent -',bone_names[bone_parents[n]],bone_parents[n],bone_positions[n],quaternion_to_euler_angle(*bone_rotations[n].asList))
+                print(bone_names[n],'parent -', bone_names[bone_parents[n]], bone_parents[n], bone_positions[n], quaternion_to_euler_angle(*bone_rotations[n].as_list))
             # print(bone_parents)
             # print(vmdl.available_resources)
             # print(vmdl.header)

@@ -191,7 +191,7 @@ class VertexBuffer(Dummy):
                     vertex.boneWeight.bone = attrib.read_from_buffer(self.buffer)
                     vertex.boneWeight.boneCount = len(vertex.boneWeight.bone)
                 if attrib.name == "BLENDWEIGHT":
-                    vertex.boneWeight.weight = SourceVector4D(*attrib.read_from_buffer(self.buffer)).to_floats.asList
+                    vertex.boneWeight.weight = SourceVector4D(*attrib.read_from_buffer(self.buffer)).to_floats.as_list
             self.vertexes.append(vertex)
             self.buffer.seek(entry + self.size)
 

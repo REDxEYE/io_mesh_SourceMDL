@@ -86,8 +86,8 @@ class SourceQuaternion48bits:
         self.theZWInput.read(reader)
 
     def __repr__(self):
-        return '<Quaternion X: {} Y: {} Z: {}>'.format(self.theXInput.TheFloatValue, self.theYInput.TheFloatValue,
-                                                       self.theZWInput.TheFloatValue)
+        return '<Quaternion X: {} Y: {} Z: {}>'.format(self.theXInput.float_value, self.theYInput.float_value,
+                                                       self.theZWInput.float_value)
 
 
 class SourceQuaternion64bits:
@@ -188,8 +188,8 @@ class SourceVector48bits:
         self.theZInput.read(reader)
 
     def __repr__(self):
-        return '<Vector X: {} Y: {} Z: {}>'.format(self.theXInput.TheFloatValue, self.theYInput.TheFloatValue,
-                                                   self.theZInput.TheFloatValue)
+        return '<Vector X: {} Y: {} Z: {}>'.format(self.theXInput.float_value, self.theYInput.float_value,
+                                                   self.theZInput.float_value)
 
 
 class SourceMdlAnimation:
@@ -225,15 +225,15 @@ class SourceMdlAnimation:
         self.boneIndex = reader.read_uint8()
         print('BoneIndex:',self.boneIndex)
         try:
-            self.bone_name = mdl.theBones[self.boneIndex].name
+            self.bone_name = mdl.bones[self.boneIndex].name
         except:
             self.bone_name = "ERROR"
         print('BoneName:',self.bone_name)
         if self.boneIndex == 255:
             reader.skip(3)
             return self, 0
-        if self.boneIndex >= mdl.boneCount:
-            print('Bone index out of range {} - {}'.format(self.boneIndex, mdl.boneCount))
+        if self.boneIndex >= mdl.bone_count:
+            print('Bone index out of range {} - {}'.format(self.boneIndex, mdl.bone_count))
             return self, 0
         self.flags = reader.read_uint8()
         self.sflags = self.STUDIO_ANIM.get_flags(self.flags)
@@ -595,8 +595,8 @@ class SourceMdlAnimationDesc49(SourceMdlAnimationDescBase):
         self.fileOffsetStart2 = entry + self.spanOffset
         self.fileOffsetEnd2 = entry + self.spanOffset-1
         if self.spanFrameCount!=0 or self.spanCount!=0 or self.spanOffset!=0 or self.spanStallTime!=0:
-            for bone_index in range(len(MDL.theBones)):
-                bone = MDL.theBones[bone_index] #type: SourceMdlBone
+            for bone_index in range(len(MDL.bones)):
+                bone = MDL.bones[bone_index] #type: SourceMdlBone
                 if bone.flags & SourceMdlBone.BONE_HAS_SAVEFRAME_POS:
                     self.fileOffsetEnd2 += self.spanCount * 6
                 if bone.flags & SourceMdlBone.BONE_HAS_SAVEFRAME_ROT:

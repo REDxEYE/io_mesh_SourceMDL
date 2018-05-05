@@ -54,12 +54,12 @@ class Vmdl_IO:
                 bl_parent, parent = bones[self.bone_parents[n]]
                 bl_bone.parent = bl_parent
                 bl_bone.tail = Vector([0, 0, 0]) + bl_bone.head
-                bl_bone.head = Vector(bone_pos.asList)-bl_parent.head  # + bl_bone.head
+                bl_bone.head = Vector(bone_pos.as_list) - bl_parent.head  # + bl_bone.head
                 bl_bone.tail = bl_bone.head + Vector([0, 0, 1])
             else:
                 pass
                 bl_bone.tail = Vector([0,0,0])+ bl_bone.head
-                bl_bone.head = Vector(bone_pos.asList) #+ bl_bone.head
+                bl_bone.head = Vector(bone_pos.as_list) #+ bl_bone.head
                 bl_bone.tail = bl_bone.head + Vector([0,0,1])
 
         # bpy.ops.object.mode_set(mode='POSE')

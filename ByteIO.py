@@ -1,12 +1,10 @@
 import struct
 import io
 import contextlib
-
-SEEK_SET = 0
-SEEK_CUR = 1
-SEEK_END = 2
-
+import typing
 from io import BytesIO
+
+
 class OffsetOutOfBounds(Exception):
     pass
 
@@ -24,7 +22,7 @@ class ByteIO:
         Supported file handlers
         :type byte_object: bytes
         :type path: str
-        :type file: io.FileIO
+        :type file: typing.BinaryIO
         """
         if file:
             if 'w' in file.mode:
@@ -45,8 +43,9 @@ class ByteIO:
             self.file = io.BytesIO(byte_object)
         else:
             self.file = BytesIO()
+
     def __repr__(self):
-        return "<ByteIO {}/{}>".format(self.tell(),self.size())
+        return "<ByteIO {}/{}>".format(self.tell(), self.size())
 
     def close(self):
         if hasattr(self.file, 'mode'):
@@ -86,7 +85,7 @@ class ByteIO:
         size = struct.calcsize(t)
         return struct.unpack(t, self._peek(size))[0]
 
-    def read_fmt(self,fmt):
+    def peek_fmt(self, fmt):
         size = struct.calcsize(fmt)
         return struct.unpack(fmt, self._peek(size))
 
@@ -133,7 +132,7 @@ class ByteIO:
         size = struct.calcsize(t)
         return struct.unpack(t, self._read(size))[0]
 
-    def read_fmt(self,fmt):
+    def read_fmt(self, fmt):
         size = struct.calcsize(fmt)
         return struct.unpack(fmt, self._read(size))
 
@@ -169,7 +168,7 @@ class ByteIO:
 
     def read_ascii_string(self, length=None):
         if length:
-            return bytes(''.join([chr(self.read_uint8()) for _ in range(length)]),'utf').strip(b'\x00').decode('utf')
+            return bytes(''.join([chr(self.read_uint8()) for _ in range(length)]), 'utf').strip(b'\x00').decode('utf')
 
         acc = ''
         b = self.read_uint8()
@@ -247,13 +246,13 @@ class ByteIO:
         self.seek(curr_offset, io.SEEK_SET)
         return ret
 
-    def read_bytes(self,size):
+    def read_bytes(self, size):
         return self._read(size)
 
     def read_float16(self):
         return self.read('e')
 
-    def write_bytes(self,data):
+    def write_bytes(self, data):
         self._write(data)
 
 

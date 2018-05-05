@@ -1,4 +1,6 @@
-import time, sys
+import sys
+import time
+
 
 # def update_progress(job_title, progress):
 #     length = 20 # modify this to change the length
@@ -13,67 +15,62 @@ import time, sys
 #     time.sleep(0.1)
 #     update_progress("Some job", i/100.0)
 # update_progress("Some job", 1)
-from typing import Tuple
 
 
 class Progress_bar:
 
-
-    def __init__(self,desc,max_,len_):
+    def __init__(self, desc, max_, len_):
         self.len = len_
         self.max = max_
         self.desc = desc
         self.curr = 0
 
-    def increment(self,val):
-        self.curr+=val
+    def increment(self, val):
+        self.curr += val
 
     @property
     def state(self):
-        return self.curr,self.max
+        return self.curr, self.max
 
     @property
-    def isDone(self):
-        return self.curr>=self.max
+    def is_done(self):
+        return self.curr >= self.max
 
-    @isDone.setter
-    def isDone(self,value):
+    @is_done.setter
+    def is_done(self, value):
         self.curr = self.max
 
     @property
-    def asPercent(self):
-        return (self.curr/self.max)*100
+    def as_percent(self):
+        return (self.curr / self.max) * 100
 
     @property
-    def asFloat(self):
+    def as_float(self):
         return self.curr / self.max
 
-
     def draw(self):
-        if self.isDone:
+        if self.is_done:
             sys.stdout.write('\r')
             bar = '{name}  [{progress}] {curr}/{max} Done    '.format(name=self.desc, progress='#' * round(
-                self.len * self.asFloat) + ' ' * round(self.len * (1 - self.asFloat)), curr=self.curr, max=self.max)
+                self.len * self.as_float) + ' ' * round(self.len * (1 - self.as_float)), curr=self.curr, max=self.max)
             sys.stdout.write(bar)
             sys.stdout.write('\n')
 
         else:
             sys.stdout.write('\r')
             bar = '{name}  [{progress}] {curr}/{max} {percent:4}%   '.format(name=self.desc, progress='#' * round(
-                self.len * self.asFloat) + ' ' * round(self.len * (1 - self.asFloat)), curr=self.curr, max=self.max,
-                                                                          percent=round(self.asPercent, 2))
+                self.len * self.as_float) + ' ' * round(self.len * (1 - self.as_float)), curr=self.curr, max=self.max,
+                                                                             percent=round(self.as_percent, 2))
 
             sys.stdout.write(bar)
         sys.stdout.flush()
 
 
-
-
 if __name__ == '__main__':
-    a = Progress_bar(desc ='Importing vertex indexes' ,max_ =100,len_=20)
-    a2 = Progress_bar(desc ='Generating model' ,max_ =100,len_=20)
-    while not a2.isDone:
-        if a.isDone:
+    a = Progress_bar(desc='Importing vertex indexes', max_=100, len_=20)
+    a2 = Progress_bar(desc='Generating model', max_=100, len_=20)
+    while not a2.is_done:
+        if a.is_done:
             a2.increment(1)
             a2.draw()
         else:

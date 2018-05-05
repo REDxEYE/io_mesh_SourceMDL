@@ -1,30 +1,55 @@
+import io
+import os.path
 import random
-from typing import Tuple
-
+import struct
 import time
-import sys
+from contextlib import redirect_stdout
+from pprint import pprint
 
 try:
     from . import VVD, VVD_DATA, VTX, MDL, MDL_DATA, VTX_DATA, GLOBALS, progressBar
     from . import math_utilities
-except:
+except ImportError:
+    import sys
+
     sys.path.append(r'E:\PYTHON\MDL_reader\rewrite')
-    import VVD, VVD_DATA, VTX, MDL, MDL_DATA, VTX_DATA, GLOBALS, progressBar
+    import VVD
+    import VVD_DATA
+    import VTX
+    import MDL
+    import MDL_DATA
+    import VTX_DATA
+    import GLOBALS
+    import progressBar
     import math_utilities
-import os.path, struct,numpy
-import bpy, mathutils
-import bmesh
-from mathutils import Vector, Matrix, Euler
-from contextlib import redirect_stdout
-import io
+
+# Blender imports
+try:
+    import bpy
+
+    bpy.app.debug = True
+    import mathutils
+    from mathutils import Vector, Matrix, Euler
+except ImportError:
+    raise Exception("Cannot be run without bpy (blender) module")
 
 stdout = io.StringIO()
 
-split = lambda A, n=3: [A[i:i + n] for i in range(0, len(A), n)]
-class IO_MDL:
+
+def split(array, n=3):
+    return [array[i:i + n] for i in range(0, len(array), n)]
+
+
+class IOMdl:
     def __init__(self, path: str = None, import_textures=False, working_directory=None, co=None, rot=False,
                  internal_files=None,
                  custom_name=None, normal_bones=False):
+        # TODO: make import_textures to do stuff
+        self.import_textures = import_textures
+        # TODO: make working_directory to do something useful
+        self.working_directory = working_directory
+        # TODO: recall what this this is for
+        self.internal_files = internal_files
 
         self.name = os.path.basename(path)[:-4]
         self.co = co
@@ -33,19 +58,30 @@ class IO_MDL:
         with open(path, 'rb') as fp:
             fp.read(4)
             version = struct.unpack('i', fp.read(4))[0]
+
         file_path = path.replace('.dx90', "")[:-4]
-        if version < 53:
+        self.MDL = None  # type: MDL.SourceMdlFile49
+        self.VVD = None  # type: VVD.SourceVvdFile49
+        self.VTX = None  # type: VTX.SourceVtxFile49
+        if version == 53:
+            print('Found TitanFall2 model')
+            self.MDL = MDL.SourceMdlFile53(path=file_path)
+            self.VVD = self.MDL.VVD
+            self.VTX = self.MDL.VTX
+
+        elif version < 53:
             if path:
                 self.VVD = VVD.SourceVvdFile49(file_path)
                 self.VTX = VTX.SourceVtxFile49(file_path)
                 self.MDL = MDL.SourceMdlFile49(file_path)
-        elif version == 53:
-            self.MDL = MDL.SourceMdlFile53(path=file_path)
-            self.VVD = self.MDL.VVD
-            self.VTX = self.MDL.VTX
+
+        self.armature_obj = None
+        self.armature = None
+        self.create_skeleton(normal_bones)
         if custom_name:
             self.armature_obj.name = custom_name
-        self.create_skeleton(normal_bones)
+        self.mesh_obj = None
+        self.mesh = None
         self.create_models()
         self.create_attachments()
 
@@ -63,10 +99,10 @@ class IO_MDL:
 
         bpy.ops.object.mode_set(mode='EDIT')
         bones = []
-        for se_bone in self.MDL.mdl.theBones:  # type: MDL_DATA.SourceMdlBone
+        for se_bone in self.MDL.file_data.bones:  # type: MDL_DATA.SourceMdlBone
             bones.append((self.armature.edit_bones.new(se_bone.name), se_bone))
 
-        for bl_bone, se_bone in bones:  # type: Tuple[bpy.types.EditBone, MDL_DATA.SourceMdlBone]
+        for bl_bone, se_bone in bones:  # type: bpy.types.EditBone, MDL_DATA.SourceMdlBone
             if se_bone.parentBoneIndex != -1:
                 bl_parent, parent = bones[se_bone.parentBoneIndex]
                 bl_bone.parent = bl_parent
@@ -75,7 +111,7 @@ class IO_MDL:
             bl_bone.tail = Vector([0, 0, 1]) + bl_bone.head
 
         bpy.ops.object.mode_set(mode='POSE')
-        for se_bone in self.MDL.mdl.theBones:  # type: MDL_DATA.SourceMdlBone
+        for se_bone in self.MDL.file_data.bones:  # type: MDL_DATA.SourceMdlBone
             bl_bone = self.armature_obj.pose.bones.get(se_bone.name)
             pos = Vector([se_bone.position.x, se_bone.position.y, se_bone.position.z])
             rot = Euler([se_bone.rotation.x, se_bone.rotation.y, se_bone.rotation.z])
@@ -112,12 +148,13 @@ class IO_MDL:
             bpy.ops.armature.calculate_roll(type='GLOBAL_POS_Z')
         bpy.ops.object.mode_set(mode='OBJECT')
 
-    def get_material(self, mat_name, model_ob):
+    @staticmethod
+    def get_material(mat_name, model_ob):
         if mat_name:
             mat_name = mat_name
         else:
             mat_name = "Material"
-
+        mat_ind = 0
         md = model_ob.data
         mat = None
         for candidate in bpy.data.materials:  # Do we have this material already?
@@ -137,34 +174,35 @@ class IO_MDL:
             mat = bpy.data.materials.new(mat_name)
             md.materials.append(mat)
             # Give it a random colour
-            randCol = []
+            rand_col = []
             for i in range(3):
-                randCol.append(random.uniform(.4, 1))
-            mat.diffuse_color = randCol
+                rand_col.append(random.uniform(.4, 1))
+            mat.diffuse_color = rand_col
 
             mat_ind = len(md.materials) - 1
 
         return mat_ind
 
-    def get_polygon(self,StripGroup: VTX_DATA.SourceVtxStripGroup, vtx_index_index: int, lodIndex, mesh_vertex_offset,
+    def get_polygon(self, strip_group: VTX_DATA.SourceVtxStripGroup, vtx_index_index: int, _, mesh_vertex_offset,
                     body_part_vertex_offset: int):
-        verts_inds = []
+        vertex_indices = []
         vn_s = []
-        for i in [0,2,1]:
-            VtxVertexIndex = StripGroup.theVtxIndexes[vtx_index_index+i]  # type: int
-            VtxVertex = StripGroup.theVtxVertexes[VtxVertexIndex]  # type: VTX_DATA.SourceVtxVertex
-            vertexIndex = VtxVertex.originalMeshVertexIndex + body_part_vertex_offset + mesh_vertex_offset
+        for i in [0, 2, 1]:
+            vtx_vertex_index = strip_group.vtx_indexes[vtx_index_index + i]  # type: int
+            vtx_vertex = strip_group.vtx_vertexes[vtx_vertex_index]  # type: VTX_DATA.SourceVtxVertex
+            vertex_index = vtx_vertex.original_mesh_vertex_index + body_part_vertex_offset + mesh_vertex_offset
             try:
-                vn = self.VVD.vvd.theVertexes[vertexIndex].normal.asList  # type: GLOBALS.SourceVertex
-            except:
-                vn = [0,1,0]
-            verts_inds.append(vertexIndex)
+                vn = self.VVD.file_data.vertexes[vertex_index]  # type: GLOBALS.SourceVertex
+                vn = vn.normal.as_list
+            except IndexError:
+                vn = [0, 1, 0]
+            vertex_indices.append(vertex_index)
             vn_s.append(vn)
-        return verts_inds,vn_s
+        return vertex_indices, vn_s
 
     def convert_mesh(self, vtx_model: VTX_DATA.SourceVtxModel, lod_index, model: MDL_DATA.SourceMdlModel,
                      material_indexes):
-        vtx_lod = vtx_model.theVtxModelLods[lod_index]  # type: VTX_DATA.SourceVtxModelLod
+        vtx_lod = vtx_model.vtx_model_lods[lod_index]  # type: VTX_DATA.SourceVtxModelLod
         indexes = []
         vertex_indexes = []
         vertex_normals = []
@@ -174,31 +212,32 @@ class IO_MDL:
         m_ex = material_indexes.extend
         vn_ex = vertex_normals.extend
 
-        for mesh_index, vtx_mesh in enumerate(vtx_lod.theVtxMeshes):  # type: int,VTX_DATA.SourceVtxMesh
-            material_index = model.theMeshes[mesh_index].materialIndex
-            mesh_vertex_start = model.theMeshes[mesh_index].vertexIndexStart
-            if vtx_mesh.theVtxStripGroups:
+        for mesh_index, vtx_mesh in enumerate(vtx_lod.vtx_meshes):  # type: int,VTX_DATA.SourceVtxMesh
+            material_index = model.meshes[mesh_index].material_index
+            mesh_vertex_start = model.meshes[mesh_index].vertex_index_start
+            if vtx_mesh.vtx_strip_groups:
 
                 for group_index, strip_group in enumerate(
-                        vtx_mesh.theVtxStripGroups):  # type: VTX_DATA.SourceVtxStripGroup
+                        vtx_mesh.vtx_strip_groups):  # type: VTX_DATA.SourceVtxStripGroup
                     # optimisation, because bigger list - slower append operation
                     strip_vertex_indexes = []
                     strip_indexes = []
                     strip_material = []
                     strip_vertex_normals = []
+                    # small speedup
                     sv_app = strip_vertex_indexes.append
                     sm_app = strip_material.append
                     si_app = strip_indexes.append
                     svn_app = strip_vertex_normals.extend
-                    if strip_group.theVtxStrips and strip_group.theVtxIndexes and strip_group.theVtxVertexes:
-                        field = progressBar.Progress_bar('Converting mesh', len(strip_group.theVtxIndexes), 20)
+                    if strip_group.vtx_strips and strip_group.vtx_indexes and strip_group.vtx_vertexes:
+                        field = progressBar.Progress_bar('Converting mesh', len(strip_group.vtx_indexes), 20)
 
-                        for vtxIndexIndex in range(0, len(strip_group.theVtxIndexes), 3):
+                        for vtxIndexIndex in range(0, len(strip_group.vtx_indexes), 3):
                             field.increment(3)
                             if not vtxIndexIndex % 500:
                                 field.draw()
-                            f,vn = self.get_polygon(strip_group, vtxIndexIndex, lod_index, mesh_vertex_start,
-                                                    self.vertex_offset)
+                            f, vn = self.get_polygon(strip_group, vtxIndexIndex, lod_index, mesh_vertex_start,
+                                                     self.vertex_offset)
                             si_app(f)
                             svn_app(vn)
                             sm_app(material_index)
@@ -208,7 +247,7 @@ class IO_MDL:
                                 sv_app(vtxIndexIndex + 2)
                             if vtxIndexIndex + 1 not in vertex_indexes:
                                 sv_app(vtxIndexIndex + 1)
-                        field.isDone = True
+                        field.is_done = True
                         field.draw()
                     else:
                         print('Strip group is empty')
@@ -219,15 +258,15 @@ class IO_MDL:
                     vn_ex(strip_vertex_normals)
             else:
                 print('VTX mesh is empty')
-        return indexes, material_indexes, vertex_indexes,vertex_normals
+        return indexes, material_indexes, vertex_indexes, vertex_normals
 
     @staticmethod
     def convert_vertex(vertex: GLOBALS.SourceVertex):
-        return vertex.position.asList, (vertex.texCoordX, 1 - vertex.texCoordY), vertex.normal.asList
+        return vertex.position.as_list, (vertex.texCoordX, 1 - vertex.texCoordY), vertex.normal.as_list
 
     def create_model(self, model: MDL_DATA.SourceMdlModel, vtx_model: VTX_DATA.SourceVtxModel):
-        name = model.name
-        if len(vtx_model.theVtxModelLods[0].theVtxMeshes) < 1:
+        name = model.name.replace('.smd', '').replace('.dmx', '')
+        if len(vtx_model.vtx_model_lods[0].vtx_meshes) < 1:
             print('No meshes in vtx model')
             return
         self.mesh_obj = bpy.data.objects.new(name, bpy.data.meshes.new(name))
@@ -236,35 +275,37 @@ class IO_MDL:
         modifier = self.mesh_obj.modifiers.new(type="ARMATURE", name="Armature")
         modifier.object = self.armature_obj
         self.mesh = self.mesh_obj.data
-        materials = [self.get_material(mat.thePathFileName, self.mesh_obj) for mat in
-                     self.MDL.mdl.theTextures]
+        [self.get_material(mat.thePathFileName, self.mesh_obj) for mat in self.MDL.file_data.textures]
         material_indexes = []
         weight_groups = {bone.name: self.mesh_obj.vertex_groups.new(bone.name) for bone in
-                         self.MDL.mdl.theBones}
-        vtxmodellod = vtx_model.theVtxModelLods[0]  # type: VTX_DATA.SourceVtxModelLod
+                         self.MDL.file_data.bones}
+        vtx_model_lod = vtx_model.vtx_model_lods[0]  # type: VTX_DATA.SourceVtxModelLod
         print('Converting {} mesh'.format(name))
-        if vtxmodellod.meshCount > 0:
+        if vtx_model_lod.meshCount > 0:
             t = time.time()
-            polygons, polygon_material_indexes, vertex_indexes,normals= self.convert_mesh(vtx_model, 0, model,
-                                                                                          material_indexes)
-            print('Mesh generation took {} sec'.format(round(time.time() - t),2))
+            polygons, polygon_material_indexes, vertex_indexes, normals = self.convert_mesh(vtx_model, 0, model,
+                                                                                            material_indexes)
+            print('Mesh generation took {} sec'.format(round(time.time() - t), 2))
         else:
             return
-        self.vertex_offset += model.vertexCount
+        self.vertex_offset += model.vertex_count
         vertexes = []
         uvs = []
-        for vertex in self.VVD.vvd.theVertexes:
-            vert_co, uv, norm = IO_MDL.convert_vertex(vertex)
+        print('Preparing vertexes')
+        for n, vertex in enumerate(self.VVD.file_data.vertexes):
+            vert_co, uv, norm = IOMdl.convert_vertex(vertex)
             vertexes.append(vert_co)
             uvs.append(uv)
         self.mesh.from_pydata(vertexes, [], polygons)
         self.mesh.update()
+        print('Adding flexes')
         self.add_flexes(model)
-        for n, vertex in enumerate(self.VVD.vvd.theVertexes):
+        for n, vertex in enumerate(self.VVD.file_data.vertexes):
             for bone_index, weight in zip(vertex.boneWeight.bone, vertex.boneWeight.weight):
-                weight_groups[self.MDL.mdl.theBones[bone_index].name].add([n], weight, 'REPLACE')
+                weight_groups[self.MDL.file_data.bones[bone_index].name].add([n], weight, 'REPLACE')
         self.mesh.uv_textures.new()
         uv_data = self.mesh.uv_layers[0].data
+        print('Applying UV')
         for i in range(len(uv_data)):
             u = uvs[self.mesh.loops[i].vertex_index]
             uv_data[i].uv = u
@@ -295,11 +336,11 @@ class IO_MDL:
         self.mesh.use_auto_smooth = True
 
     def create_models(self):
-        self.MDL.mdl = self.MDL.mdl  # type: MDL_DATA.SourceMdlFileData
-        for bodyparts in self.MDL.mdl.bodyparts:
+        self.MDL.file_data = self.MDL.file_data  # type: MDL_DATA.SourceMdlFileData
+        for bodyparts in self.MDL.file_data.bodypart_frames:
             for bodypart_index, bodypart in bodyparts:
-                for model_index, model in enumerate(bodypart.theModels):
-                    vtx_model = self.VTX.vtx.theVtxBodyParts[bodypart_index].theVtxModels[model_index]
+                for model_index, model in enumerate(bodypart.models):
+                    vtx_model = self.VTX.vtx.vtx_body_parts[bodypart_index].vtx_models[model_index]
                     self.create_model(model, vtx_model)
 
     def add_flexes(self, mdlmodel: MDL_DATA.SourceMdlModel):
@@ -312,8 +353,8 @@ class IO_MDL:
             # Now for every flex and vertex_offset(bodyAndMeshVertexIndexStarts)
             for flex, vertex_offset in zip(flex_frame.flexes, flex_frame.vertex_offsets):
 
-                flex_desc = self.MDL.mdl.theFlexDescs[flex.flexDescIndex]
-                flex_name = flex_desc.theName
+                flex_desc = self.MDL.file_data.flex_descs[flex.flexDescIndex]
+                flex_name = flex_desc.name
                 # if blender mesh does not have FLEX_NAME - create it,
                 # otherwise work with existing
                 if not self.mesh_obj.data.shape_keys.key_blocks.get(flex_name):
@@ -321,17 +362,17 @@ class IO_MDL:
 
                 # iterating over all VertAnims
                 for flex_vert in flex.theVertAnims:  # type: MDL_DATA.SourceMdlVertAnim
-                    Vert_index = flex_vert.index + vertex_offset  # <- bodyAndMeshVertexIndexStarts
-                    vx = self.mesh_obj.data.vertices[Vert_index].co.x
-                    vy = self.mesh_obj.data.vertices[Vert_index].co.y
-                    vz = self.mesh_obj.data.vertices[Vert_index].co.z
+                    vertex_index = flex_vert.index + vertex_offset  # <- bodyAndMeshVertexIndexStarts
+                    vx = self.mesh_obj.data.vertices[vertex_index].co.x
+                    vy = self.mesh_obj.data.vertices[vertex_index].co.y
+                    vz = self.mesh_obj.data.vertices[vertex_index].co.z
                     fx, fy, fz = flex_vert.theDelta
-                    self.mesh_obj.data.shape_keys.key_blocks[flex_name].data[Vert_index].co = (
+                    self.mesh_obj.data.shape_keys.key_blocks[flex_name].data[vertex_index].co = (
                         fx + vx, fy + vy, fz + vz)
 
     def create_attachments(self):
-        for attachment in self.MDL.mdl.theAttachments:
-            bone = self.armature.bones.get(self.MDL.mdl.theBones[attachment.localBoneIndex].name)
+        for attachment in self.MDL.file_data.attachments:
+            bone = self.armature.bones.get(self.MDL.file_data.bones[attachment.localBoneIndex].name)
 
             empty = bpy.data.objects.new("empty", None)
             bpy.context.scene.objects.link(empty)
@@ -344,8 +385,15 @@ class IO_MDL:
             empty.parent_bone = bone.name
             empty.location = pos
             empty.rotation_euler = rot
+        # illumination_position
+        empty = bpy.data.objects.new("empty", None)
+        bpy.context.scene.objects.link(empty)
+        empty.name = 'illum position'
+        empty.parent = self.armature_obj
+        empty.location = Vector(self.MDL.file_data.illumination_position.as_list)
 
 
 if __name__ == '__main__':
-    a = IO_MDL(r'test_data\veria_v2.mdl', normal_bones=True)
+    a = IOMdl(r'test_data\nick_hwm.mdl', normal_bones=False)
+    # a = IOMdl(r'test_data\titan_buddy.mdl', normal_bones=False)
     # a = IO_MDL(r'E:\PYTHON\MDL_reader\test_data\nick_hwm.mdl', normal_bones=True)

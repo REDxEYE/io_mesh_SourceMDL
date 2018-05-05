@@ -36,12 +36,12 @@ class VMESH_IO:
             normals = []
             # Extracting vertex coordinates,UVs and normals
             for vertex in v_mesh.vertexes:
-                vertexes.append(vertex.position.asList)
+                vertexes.append(vertex.position.as_list)
                 uvs.append([vertex.texCoordX, vertex.texCoordY])
                 vertex.normal.convert()
             for poly in indexes.indexes:
                 for v in poly:
-                    normals.append(v_mesh.vertexes[v].normal.asList)
+                    normals.append(v_mesh.vertexes[v].normal.as_list)
 
             mesh.from_pydata(vertexes, [], indexes.indexes)
             mesh.update()

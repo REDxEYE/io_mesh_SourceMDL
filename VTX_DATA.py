@@ -3,78 +3,76 @@ from typing import List
 
 try:
     from .ByteIO import ByteIO
-except:
+except ImportError:
     from ByteIO import ByteIO
 
-maxBonesPerVertex = 3
+max_bones_per_vertex = 3
 
 
 class SourceVtxFileData:
     def __init__(self):
         self.version = 0
-        self.vertexCacheSize = 0
-        self.maxBonesPerStrip = 3
-        self.maxBonesPerTri = 3
-        self.maxBonesPerVertex = 3
+        self.vertex_cache_size = 0
+        self.max_bones_per_strip = 3
+        self.max_bones_per_tri = 3
+        self.max_bones_per_vertex = 3
         self.checksum = 0
         self.lodCount = 0
-        self.materialReplacementListOffset = 0
+        self.material_replacement_list_offset = 0
         self.bodyPartCount = 0
         self.bodyPartOffset = 0
-        self.theVtxBodyParts = [] #type: List[SourceVtxBodyPart]
+        self.vtx_body_parts = []  # type: List[SourceVtxBodyPart]
 
     def read(self, reader: ByteIO):
         self.version = reader.read_uint32()
-        self.vertexCacheSize = reader.read_uint32()
-        self.maxBonesPerStrip = reader.read_uint16()
-        self.maxBonesPerTri = reader.read_uint16()
-        self.maxBonesPerVertex = reader.read_uint32()
+        self.vertex_cache_size = reader.read_uint32()
+        self.max_bones_per_strip = reader.read_uint16()
+        self.max_bones_per_tri = reader.read_uint16()
+        self.max_bones_per_vertex = reader.read_uint32()
         self.checksum = reader.read_uint32()
         self.lodCount = reader.read_uint32()
-        self.materialReplacementListOffset = reader.read_uint32()
+        self.material_replacement_list_offset = reader.read_uint32()
         self.bodyPartCount = reader.read_uint32()
         self.bodyPartOffset = reader.read_uint32()
-        global maxBonesPerVertex
-        maxBonesPerVertex = self.maxBonesPerVertex
-        if self.bodyPartOffset>0:
+        global max_bones_per_vertex
+        max_bones_per_vertex = self.max_bones_per_vertex
+        if self.bodyPartOffset > 0:
             for _ in range(self.bodyPartCount):
-                self.theVtxBodyParts.append(SourceVtxBodyPart().read(reader))
-        # print(self.maxBonesPerVertex)
+                self.vtx_body_parts.append(SourceVtxBodyPart().read(reader))
+        # print(self.max_bones_per_vertex)
 
     def __repr__(self):
         return "<FileData version:{} lod count:{} body part count:{} \nbodyparts:{}>\n".format(self.version,
                                                                                                self.lodCount,
                                                                                                self.bodyPartCount,
-                                                                                               self.theVtxBodyParts)
+                                                                                               self.vtx_body_parts)
 
 
 class SourceVtxBodyPart:
     def __init__(self):
-        self.modelCount = 0
-        self.modelOffset = 0
-        self.theVtxModels = []
+        self.model_count = 0
+        self.model_offset = 0
+        self.vtx_models = []
 
     def read(self, reader: ByteIO):
         entry = reader.tell()
-        self.modelCount = reader.read_uint32()
-        self.modelOffset = reader.read_uint32()
+        self.model_count = reader.read_uint32()
+        self.model_offset = reader.read_uint32()
         with reader.save_current_pos():
-            reader.seek(entry+self.modelOffset)
-            for _ in range(self.modelCount):
-                self.theVtxModels.append(SourceVtxModel().read(reader))
+            reader.seek(entry + self.model_offset)
+            for _ in range(self.model_count):
+                self.vtx_models.append(SourceVtxModel().read(reader))
         return self
 
-
-
     def __repr__(self):
-        return "\n<BodyPart model count:{} models:{}>".format(self.modelCount, self.theVtxModels)
+        return "<BodyPart model count:{} models:{}>".format(self.model_count, self.vtx_models)
 
 
 class SourceVtxModel:
     def __init__(self):
         self.lodCount = 0
         self.lodOffset = 0
-        self.theVtxModelLods = []
+        self.vtx_model_lods = []  # type: List[SourceVtxModelLod]
 
     def read(self, reader: ByteIO):
         entry = reader.tell()
@@ -84,12 +82,11 @@ class SourceVtxModel:
             if self.lodCount > 0 and self.lodOffset != 0:
                 reader.seek(entry + self.lodOffset)
                 for _ in range(self.lodCount):
-                    self.theVtxModelLods.append(SourceVtxModelLod().read(reader,self))
+                    self.vtx_model_lods.append(SourceVtxModelLod().read(reader, self))
         return self
 
-
     def __repr__(self):
-        return "\n<Model  lod count:{} lods:{}>".format(self.lodCount, self.theVtxModelLods)
+        return "<Model  lod count:{} lods:{}>".format(self.lodCount, self.vtx_model_lods)
 
 
 class SourceVtxModelLod:
@@ -98,7 +95,7 @@ class SourceVtxModelLod:
         self.meshCount = 0
         self.meshOffset = 0
         self.switchPoint = 0
-        self.theVtxMeshes = []
+        self.vtx_meshes = []
         self.first_strip_end = 0
         self.second_strip_end = 0
         self.extra_8_bytes = False
@@ -106,56 +103,56 @@ class SourceVtxModelLod:
 
     def read(self, reader: ByteIO, model: SourceVtxModel):
         entry = reader.tell()
-        self.lod = len(model.theVtxModelLods)
+        self.lod = len(model.vtx_model_lods)
         self.meshCount = reader.read_uint32()
         self.meshOffset = reader.read_uint32()
         self.switchPoint = reader.read_float()
         with reader.save_current_pos():
-            if self.meshOffset>0:
+            if self.meshOffset > 0:
                 reader.seek(entry + self.meshOffset)
                 # analyze
                 for _ in range(self.meshCount):
-                    SourceVtxMesh().read(reader,self,analyze=True)
+                    SourceVtxMesh().read(reader, self, analyze=True)
                 # actually read
                 reader.seek(entry + self.meshOffset)
                 for _ in range(self.meshCount):
-                    self.theVtxMeshes.append(SourceVtxMesh().read(reader, self,analyze=False))
+                    self.vtx_meshes.append(SourceVtxMesh().read(reader, self, analyze=False))
         return self
 
-
-
     def __repr__(self):
-        return "\n<ModelLod mesh count:{} meshes:{}>".format(self.meshCount, self.theVtxMeshes)
+        return "<ModelLod mesh count:{} meshes:{}>".format(self.meshCount, self.vtx_meshes)
 
 
 class SourceVtxMesh:
     extra_8 = True
     final = False
+
     @classmethod
-    def set_extra_8(cls,extra_8):
+    def set_extra_8(cls, extra_8):
         cls.extra_8 = extra_8
+
     @classmethod
-    def set_final(cls,final):
+    def set_final(cls, final):
         cls.final = final
 
     def __init__(self):
-        self.stripGroupCount = 0
-        self.stripGroupOffset = 0
+        self.strip_group_count = 0
+        self.strip_group_offset = 0
         self.flags = 0
-        self.theVtxStripGroups = []
+        self.vtx_strip_groups = []
 
-    def read(self, reader: ByteIO,lod:SourceVtxModelLod,analyze = False):
+    def read(self, reader: ByteIO, lod: SourceVtxModelLod, analyze=False):
         entry = reader.tell()
-        self.stripGroupCount = reader.read_uint32()
-        self.stripGroupOffset = reader.read_uint32()
+        self.strip_group_count = reader.read_uint32()
+        self.strip_group_offset = reader.read_uint32()
         self.flags = reader.read_uint8()
         if analyze:
-            if self.stripGroupCount>0 and self.stripGroupOffset!=0:
+            if self.strip_group_count > 0 and self.strip_group_offset != 0:
                 if lod.first_strip_end == 0:
                     with reader.save_current_pos():
-                        reader.seek(entry+self.stripGroupOffset)
-                        for _ in range(self.stripGroupCount):
-                            SourceVtxStripGroup().read(reader,self.extra_8,read_other=False)
+                        reader.seek(entry + self.strip_group_offset)
+                        for _ in range(self.strip_group_count):
+                            SourceVtxStripGroup().read(reader, self.extra_8, read_other=False)
                         lod.first_strip_end = reader.tell()
 
                         return
@@ -163,78 +160,75 @@ class SourceVtxMesh:
                     SourceVtxStripGroup().read(reader, self.extra_8, read_other=False)
                     lod.second_strip_end = reader.tell()
                     with reader.save_current_pos():
-                        if lod.first_strip_end == entry + self.stripGroupOffset:
+                        if lod.first_strip_end == entry + self.strip_group_offset:
                             pass
                         else:
                             if not self.final:
                                 self.set_extra_8(not self.extra_8)
-                                #self.set_final(not self.extra_8)
-                        reader.seek(entry+self.stripGroupOffset)
-
+                                # self.set_final(not self.extra_8)
+                        reader.seek(entry + self.strip_group_offset)
 
         if not analyze:
-            #print('extra 8', self.extra_8)
+            # print('extra 8', self.extra_8)
             with reader.save_current_pos():
-                if self.stripGroupOffset>0:
-                    reader.seek(entry + self.stripGroupOffset)
-                    for _ in range(self.stripGroupCount):
-                        self.theVtxStripGroups.append(SourceVtxStripGroup().read(reader,self.extra_8,read_other=True))
+                if self.strip_group_offset > 0:
+                    reader.seek(entry + self.strip_group_offset)
+                    for _ in range(self.strip_group_count):
+                        self.vtx_strip_groups.append(SourceVtxStripGroup().read(reader, self.extra_8, read_other=True))
         return self
 
     def __repr__(self):
-        return "\n<Mesh strip group count:{} stripgroup offset:{} stripgroups:{}>".format(self.stripGroupCount,
-                                                                                          self.stripGroupOffset,
-                                                                                          self.theVtxStripGroups)
-
+        return "<Mesh strip group count:{} stripgroup offset:{} stripgroups:{}>".format(self.strip_group_count,
+                                                                                          self.strip_group_offset,
+                                                                                          self.vtx_strip_groups)
 
 
 class SourceVtxStripGroup:
 
     def __init__(self):
-        self.vertexCount = 0
-        self.vertexOffset = 0
-        self.indexCount = 0
-        self.indexOffset = 0
-        self.stripCount = 0
-        self.stripOffset = 0
+        self.vertex_count = 0
+        self.vertex_offset = 0
+        self.index_count = 0
+        self.index_offset = 0
+        self.strip_count = 0
+        self.strip_offset = 0
         self.flags = 0
-        self.topologyIndexCount = 0
-        self.topologyIndexOffset = 0
-        self.theVtxVertexes = []
-        self.theVtxIndexes = []
-        self.theVtxStrips = []
+        self.topology_index_count = 0
+        self.topology_index_offset = 0
+        self.vtx_vertexes = []
+        self.vtx_indexes = []
+        self.vtx_strips = []
         self.retry = 0
 
-    def read(self, reader: ByteIO,extra_8 = True,read_other = True):
+    def read(self, reader: ByteIO, extra_8=True, read_other=True):
 
         entry = reader.tell()
-        self.vertexCount = reader.read_uint32()
-        self.vertexOffset = reader.read_uint32()
-        self.indexCount = reader.read_uint32()
-        self.indexOffset = reader.read_uint32()
-        self.stripCount = reader.read_uint32()
-        self.stripOffset = reader.read_uint32()
+        self.vertex_count = reader.read_uint32()
+        self.vertex_offset = reader.read_uint32()
+        self.index_count = reader.read_uint32()
+        self.index_offset = reader.read_uint32()
+        self.strip_count = reader.read_uint32()
+        self.strip_offset = reader.read_uint32()
         self.flags = reader.read_uint8()
         if extra_8:
             reader.skip(8)
         if read_other:
             with reader.save_current_pos():
-                reader.seek(entry + self.indexOffset)
-                for _ in range(self.indexCount):
-                    self.theVtxIndexes.append(reader.read_uint16())
-                reader.seek(entry+self.vertexOffset)
-                for _ in range(self.vertexCount):
-                    SourceVtxVertex().read(reader,self)
-                reader.seek(entry+self.stripOffset)
-                for _ in range(self.stripCount):
-                    SourceVtxStrip().read(reader,self)
-
+                reader.seek(entry + self.index_offset)
+                for _ in range(self.index_count):
+                    self.vtx_indexes.append(reader.read_uint16())
+                reader.seek(entry + self.vertex_offset)
+                for _ in range(self.vertex_count):
+                    SourceVtxVertex().read(reader, self)
+                reader.seek(entry + self.strip_offset)
+                for _ in range(self.strip_count):
+                    SourceVtxStrip().read(reader, self)
 
         return self
 
     def __repr__(self):
-        return "<StripGroup Vertex count:{} Index count:{} Strip count:{}>".format(self.vertexCount, self.indexCount,
-                                                                                   self.stripCount)
+        return "<StripGroup Vertex count:{} Index count:{} Strip count:{}>".format(self.vertex_count, self.index_count,
+                                                                                   self.strip_count)
 
     def ___repr__(self):
         return pformat(self.__dict__)
@@ -242,45 +236,45 @@ class SourceVtxStripGroup:
 
 class SourceVtxVertex:
     def __init__(self):
-        self.boneWeightIndex = []
-        self.boneCount = b'\x00'
-        self.originalMeshVertexIndex = 0
-        self.boneId = []
+        self.bone_weight_index = []
+        self.bone_count = 0
+        self.original_mesh_vertex_index = 0
+        self.bone_id = []
 
     def read(self, reader: ByteIO, stripgroup: SourceVtxStripGroup):
-        global maxBonesPerVertex
-        self.boneWeightIndex = [reader.read_uint8() for _ in range(maxBonesPerVertex)]
-        self.boneCount = reader.read_uint8()
-        self.originalMeshVertexIndex = reader.read_uint16()
-        self.boneId = [reader.read_uint8() for _ in range(maxBonesPerVertex)]
-        stripgroup.theVtxVertexes.append(self)
+        global max_bones_per_vertex
+        self.bone_weight_index = [reader.read_uint8() for _ in range(max_bones_per_vertex)]
+        self.bone_count = reader.read_uint8()
+        self.original_mesh_vertex_index = reader.read_uint16()
+        self.bone_id = [reader.read_uint8() for _ in range(max_bones_per_vertex)]
+        stripgroup.vtx_vertexes.append(self)
 
     def __repr__(self):
-        return "<Vertex bone:{} total bone count:{}>".format(self.boneId, self.boneCount)
+        return "<Vertex bone:{} total bone count:{}>".format(self.bone_id, self.bone_count)
 
 
 class SourceVtxStrip:
     def __init__(self):
-        self.indexCount = 0
-        self.indexOffset = 0
-        self.indexMeshIndex = 0
-        self.vertexCount = 0
-        self.vertexMeshIndex = 0
+        self.index_count = 0
+        self.index_offset = 0
+        self.index_mesh_index = 0
+        self.vertex_count = 0
+        self.vertex_mesh_index = 0
 
-        self.boneCount = 0
-        self.flags = b'\x00'
-        self.boneStateChangeCount = 0
-        self.boneStateChangeOffset = 0
-        self.theVtxIndexes = []
-        self.theVtxBoneStateChanges = []
+        self.bone_count = 0
+        self.flags = 0
+        self.bone_state_change_count = 0
+        self.bone_state_change_offset = 0
+        self.vtx_indexes = []
+        self.vtx_bone_state_changes = []
 
     def read(self, reader: ByteIO, stripgroup: SourceVtxStripGroup):
-        self.indexCount = reader.read_uint32()
-        self.indexMeshIndex = reader.read_uint32()
-        self.vertexCount = reader.read_uint32()
-        self.vertexMeshIndex = reader.read_uint32()
-        self.boneCount = reader.read_uint16()
+        self.index_count = reader.read_uint32()
+        self.index_mesh_index = reader.read_uint32()
+        self.vertex_count = reader.read_uint32()
+        self.vertex_mesh_index = reader.read_uint32()
+        self.bone_count = reader.read_uint16()
         self.flags = reader.read_uint8()
-        self.boneStateChangeCount = reader.read_uint32()
-        self.boneStateChangeOffset = reader.read_uint32()
-        stripgroup.theVtxStrips.append(self)
+        self.bone_state_change_count = reader.read_uint32()
+        self.bone_state_change_offset = reader.read_uint32()
+        stripgroup.vtx_strips.append(self)
