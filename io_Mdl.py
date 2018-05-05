@@ -4,7 +4,6 @@ import random
 import struct
 import time
 from contextlib import redirect_stdout
-from pprint import pprint
 
 try:
     from . import VVD, VVD_DATA, VTX, MDL, MDL_DATA, VTX_DATA, GLOBALS, progressBar
@@ -91,10 +90,10 @@ class IOMdl:
 
         self.armature_obj = bpy.context.object
         self.armature_obj.show_x_ray = True
-        self.armature_obj.name = self.name
+        self.armature_obj.name = self.name + '_ARM'
 
         self.armature = self.armature_obj.data
-        self.armature.name = self.name + "_ARM"
+        self.armature.name = self.name + "_ARM_DATA"
         self.armature.edit_bones.remove(self.armature.edit_bones[0])
 
         bpy.ops.object.mode_set(mode='EDIT')
@@ -204,10 +203,8 @@ class IOMdl:
                      material_indexes):
         vtx_lod = vtx_model.vtx_model_lods[lod_index]  # type: VTX_DATA.SourceVtxModelLod
         indexes = []
-        vertex_indexes = []
         vertex_normals = []
         # small speedup
-        v_ex = vertex_indexes.extend
         i_ex = indexes.extend
         m_ex = material_indexes.extend
         vn_ex = vertex_normals.extend
@@ -219,19 +216,16 @@ class IOMdl:
 
                 for group_index, strip_group in enumerate(
                         vtx_mesh.vtx_strip_groups):  # type: VTX_DATA.SourceVtxStripGroup
-                    # optimisation, because bigger list - slower append operation
-                    strip_vertex_indexes = []
+                    # optimisation, because big list - slow append operation
                     strip_indexes = []
                     strip_material = []
                     strip_vertex_normals = []
                     # small speedup
-                    sv_app = strip_vertex_indexes.append
                     sm_app = strip_material.append
                     si_app = strip_indexes.append
                     svn_app = strip_vertex_normals.extend
                     if strip_group.vtx_strips and strip_group.vtx_indexes and strip_group.vtx_vertexes:
                         field = progressBar.Progress_bar('Converting mesh', len(strip_group.vtx_indexes), 20)
-
                         for vtxIndexIndex in range(0, len(strip_group.vtx_indexes), 3):
                             field.increment(3)
                             if not vtxIndexIndex % 500:
@@ -241,24 +235,17 @@ class IOMdl:
                             si_app(f)
                             svn_app(vn)
                             sm_app(material_index)
-                            if vtxIndexIndex not in vertex_indexes:
-                                sv_app(vtxIndexIndex)
-                            if vtxIndexIndex + 2 not in vertex_indexes:
-                                sv_app(vtxIndexIndex + 2)
-                            if vtxIndexIndex + 1 not in vertex_indexes:
-                                sv_app(vtxIndexIndex + 1)
                         field.is_done = True
                         field.draw()
                     else:
                         print('Strip group is empty')
 
-                    v_ex(strip_vertex_indexes)
                     i_ex(strip_indexes)
                     m_ex(strip_material)
                     vn_ex(strip_vertex_normals)
             else:
                 print('VTX mesh is empty')
-        return indexes, material_indexes, vertex_indexes, vertex_normals
+        return indexes, material_indexes, vertex_normals
 
     @staticmethod
     def convert_vertex(vertex: GLOBALS.SourceVertex):
@@ -283,8 +270,8 @@ class IOMdl:
         print('Converting {} mesh'.format(name))
         if vtx_model_lod.meshCount > 0:
             t = time.time()
-            polygons, polygon_material_indexes, vertex_indexes, normals = self.convert_mesh(vtx_model, 0, model,
-                                                                                            material_indexes)
+            polygons, polygon_material_indexes, normals = self.convert_mesh(vtx_model, 0, model,
+                                                                            material_indexes)
             print('Mesh generation took {} sec'.format(round(time.time() - t), 2))
         else:
             return
