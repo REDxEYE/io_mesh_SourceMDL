@@ -334,14 +334,19 @@ class IOMdl:
                     vtx_model = self.VTX.vtx.vtx_body_parts[bodypart_index].vtx_models[model_index]
                     to_join.append(self.create_model(model, vtx_model))
             # print(self.join_clamped,to_join)
+            bpy.ops.object.mode_set(mode='OBJECT')
             if self.join_clamped:
                 for ob in to_join:
+                    if not ob:
+                        continue
                     if ob.type == 'MESH':
                         ob.select = True
                         bpy.context.scene.objects.active = ob
                     else:
                         ob.select = False
                 bpy.context.scene.objects.active = to_join[0]
+                if len(bpy.context.selected_objects)<2:
+                    continue
                 with redirect_stdout(stdout):
                     bpy.ops.object.join()
                     bpy.ops.object.mode_set(mode='EDIT')
@@ -400,6 +405,6 @@ class IOMdl:
 
 
 if __name__ == '__main__':
-    a = IOMdl(r'test_data\nick_hwm.mdl', normal_bones=False,join_clamped=True)
+    a = IOMdl(r'test_data\undyne_bigger_nude.mdl', normal_bones=False,join_clamped=True)
     # a = IOMdl(r'test_data\titan_buddy.mdl', normal_bones=False)
     # a = IO_MDL(r'E:\PYTHON\MDL_reader\test_data\nick_hwm.mdl', normal_bones=True)

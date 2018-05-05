@@ -290,19 +290,24 @@ class SourceMdlFile49:
                 self.file_data.bodypart_frames.append([(n, body_part)])
                 continue
             model = body_part.models[0]
+            print('Scanning,',model.name)
             if 'clamped' not in model.name:
+                print('Skipping',model.name,'cuz it\'s not a clamped mesh')
                 self.file_data.bodypart_frames.append([(n, body_part)])
                 continue
             added = False
-            for bodyparts in self.file_data.bodypart_frames:
-                for _, _model in bodyparts:
+            for body_part_frames in self.file_data.bodypart_frames:
+                for _, _model in body_part_frames:
+                    print('Comparing',model.name,'to',_model)
                     if self.comp_flex_frames(model.flex_frames, _model.models[0].flex_frames):
-                        bodyparts.append((n, body_part))
+                        print('Adding',model.name,'to',body_part_frames)
+                        body_part_frames.append((n, body_part))
                         added = True
                         break
             if not added:
                 self.file_data.bodypart_frames.append([(n, body_part)])
-        print(self.file_data.bodypart_frames)
+
+        pprint(self.file_data.bodypart_frames)
 
 
 class SourceMdlFile53(SourceMdlFile49):
@@ -343,7 +348,8 @@ if __name__ == '__main__':
     # with open('log.log', "w",encoding='utf8') as f:  # replace filepath & filename
     #     with f as sys.stdout:
     # model_path = r'G:\SteamLibrary\SteamApps\common\SourceFilmmaker\game\tf_movies\models\player\hwm\medic'
-    model_path = r'.\test_data\nick_hwm'
+    model_path = r'.\test_data\undyne_bigger_nude'
+    # model_path = r'.\test_data\nick_hwm'
     # model_path = r'.\test_data\reimu_v2'
     # model_path = r'G:\SteamLibrary\SteamApps\common\SourceFilmmaker\game\usermod\models\bge\narry\zach_water_v3'
     # model_path = r'.\test_data\l_pistol_noenv'
