@@ -24,9 +24,11 @@ class Progress_bar:
         self.max = max_
         self.desc = desc
         self.curr = 0
+        self.draw()
 
     def increment(self, val):
         self.curr += val
+        self.draw()
 
     @property
     def state(self):
@@ -46,6 +48,8 @@ class Progress_bar:
 
     @property
     def as_float(self):
+        if self.max == 0:
+            return 1
         return self.curr / self.max
 
     def draw(self):

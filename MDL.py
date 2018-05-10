@@ -4,10 +4,12 @@ try:
     from .MDL_DATA import *
     from .ByteIO import *
     from .MDL_DATA_ANIMATIONS import *
+    from .progressBar import Progress_bar
 except ImportError:
     from MDL_DATA import *
     from ByteIO import *
     from MDL_DATA_ANIMATIONS import *
+    from progressBar import Progress_bar
 
 
 class SourceMdlFile49:
@@ -19,78 +21,109 @@ class SourceMdlFile49:
         self.file_data.read(self.reader)
         self.read_bones()
         self.read_bone_controllers()
-
+        self.read_skin_families()
         self.read_flex_descs()
         self.read_flex_controllers()
         self.read_flex_rules()
 
         self.read_attachments()
-        self.read_bone_table_by_name()
-
+        self.read_mouths()
+        self.read_bone_flex_drivers()
+        self.read_flex_controllers_ui()
         self.read_body_parts()
         self.read_textures()
         self.read_texture_paths()
         self.build_flex_frames()
         self.prepare_models()
         # self.read_local_animation_descs()
-        # self.read_sequences()
+        self.read_sequences()
         # print(self.mdl)
 
     def read_bones(self):
-        print('Reading bones')
+        # print('Reading bones')
         if self.file_data.bone_count > 0:
+            pb = Progress_bar(desc='Reading bones', max_=self.file_data.bone_count, len_=20)
             self.reader.seek(self.file_data.bone_offset, 0)
             for i in range(self.file_data.bone_count):
+                pb.draw()
                 SourceMdlBone().read(self.reader, self.file_data)
+                pb.increment(1)
+                pb.draw()
 
     def read_bone_controllers(self):
-        print('Reading Bone Controllers')
         if self.file_data.bone_controller_count > 0:
+            pb = Progress_bar(desc='Reading Bone Controllers', max_=self.file_data.bone_controller_count, len_=20)
             for _ in range(self.file_data.bone_controller_count):
+                pb.draw()
                 SourceMdlBoneController().read(self.reader, self.file_data)
+                pb.increment(1)
+
+    def read_skin_families(self):
+        if self.file_data.skin_family_count and self.file_data.skin_reference_count:
+            self.reader.seek(self.file_data.skin_family_offset)
+            for _ in range(self.file_data.skin_family_count):
+                skin_ref = []
+                for _ in range(self.file_data.skin_reference_count):
+                    skin_ref.append(self.reader.read_int16())
+                self.file_data.skin_families.append(skin_ref)
 
     def read_flex_descs(self):
-        print('Reading flex descs')
+        # print('Reading flex descs')
         if self.file_data.flex_desc_count > 0:
             self.reader.seek(self.file_data.flex_desc_offset, 0)
+            pb = Progress_bar(desc='Reading flex descriptions', max_=self.file_data.flex_desc_count, len_=20)
             for _ in range(self.file_data.flex_desc_count):
+                pb.draw()
                 flex_desc = SourceMdlFlexDesc()
                 flex_desc.read(self.reader)
+                pb.increment(1)
                 self.file_data.flex_descs.append(flex_desc)
 
     def read_flex_controllers(self):
-        print("Reading flex controllers")
+        # print("Reading flex controllers")
         if self.file_data.flex_controller_count > 0:
             self.reader.seek(self.file_data.flex_controller_offset, 0)
+            pb = Progress_bar(desc='Reading flex Controllers', max_=self.file_data.flex_controller_count, len_=20)
             for i in range(self.file_data.flex_controller_count):
+                pb.draw()
                 SourceMdlFlexController().read(self.reader, self.file_data)
+                pb.increment(1)
 
     def read_flex_rules(self):
-        print('Reading flex rules')
+        # print('Reading flex rules')
         self.reader.seek(self.file_data.flex_rule_offset, 0)
+        pb = Progress_bar(desc='Reading flex rules', max_=self.file_data.flex_rule_count, len_=20)
         for i in range(self.file_data.flex_rule_count):
+            pb.draw()
             SourceMdlFlexRule().read(self.reader, self.file_data)
+            pb.increment(1)
 
     def read_attachments(self):
-        print('Reading attachments')
+        # print('Reading attachments')
         if self.file_data.local_attachment_count > 0:
             self.reader.seek(self.file_data.local_attachment_offset, 0)
+            pb = Progress_bar(desc='Reading flex rules', max_=self.file_data.local_attachment_count, len_=20)
             for _ in range(self.file_data.local_attachment_count):
+                pb.draw()
                 SourceMdlAttachment().read(self.reader, self.file_data)
-
-    def read_bone_table_by_name(self):
-        self.reader.seek(self.file_data.bone_table_by_name_offset)
-        if self.file_data.bone_table_by_name_offset != 0:
-            for i in range(self.file_data.bone_count):
-                index = self.reader.read_uint8()
-                self.file_data.bone_table_by_name.append(index)
+                pb.increment(1)
+    #
+    # def read_bone_table_by_name(self):
+    #     self.reader.seek(self.file_data.bone_table_by_name_offset)
+    #     if self.file_data.bone_table_by_name_offset != 0:
+    #         for i in range(self.file_data.bone_count):
+    #             index = self.reader.read_uint8()
+    #             self.file_data.bone_table_by_name.append(index)
 
     def read_body_parts(self):
-        print('Reading body parts')
+        # print('Reading body parts')
         if self.file_data.body_part_count > 0:
             self.reader.seek(self.file_data.body_part_offset)
+            pb = Progress_bar(desc='Reading body parts', max_=self.file_data.body_part_count, len_=20)
             for _ in range(self.file_data.body_part_count):
+                pb.draw()
                 SourceMdlBodyPart().read(self.reader, self.file_data)
+                pb.increment(1)
 
     def read_textures(self):
         if self.file_data.texture_count < 1:
@@ -122,8 +155,34 @@ class SourceMdlFile49:
     def read_sequences(self):
         with self.reader.save_current_pos():
             self.reader.seek(self.file_data.local_sequence_offset)
+            pb = Progress_bar(desc='Reading sequences', max_=self.file_data.local_sequence_count, len_=20)
             for _ in range(self.file_data.local_sequence_count):
                 self.file_data.sequence_descs.append(SourceMdlSequenceDesc().read(self.reader, self.file_data))
+                pb.increment(1)
+
+    def read_mouths(self):
+        if self.file_data.mouth_count and self.file_data.mouth_offset:
+            self.reader.seek(self.file_data.mouth_offset)
+            for _ in range(self.file_data.mouth_count):
+                mouth = SourceMdlMouth()
+                mouth.read(self.reader)
+                self.file_data.mouths.append(mouth)
+
+    def read_flex_controllers_ui(self):
+        if self.file_data.flex_controller_ui_count and self.file_data.flex_controller_ui_offset:
+            self.reader.seek(self.file_data.flex_controller_ui_offset)
+            for _ in range(self.file_data.flex_controller_ui_count):
+                flex_controller_ui = SourceFlexControllerUI()
+                flex_controller_ui.read(self.reader)
+                self.file_data.flex_controllers_ui.append(flex_controller_ui)
+
+    def read_bone_flex_drivers(self):
+        if self.file_data.bone_flex_driver_count and self.file_data.bone_flex_driver_offset:
+            self.reader.seek(self.file_data.bone_flex_driver_count)
+            for _ in range(self.file_data.bone_flex_driver_count):
+                mouth = SourceMdlMouth()
+                mouth.read(self.reader)
+                self.file_data.mouths.append(mouth)
 
     def read_animations(self):
         for i in range(self.file_data.local_animation_count):
@@ -184,39 +243,8 @@ class SourceMdlFile49:
 
             # pprint(anim_desc.__dict__)
 
-    def test(self):
-        pass
-        # for n,model_path in enumerate(self.mdl.bodyparts):
-        #     print(n,' ',end = '')
-        #     pprint(model_path)
-        # GenericUInt.set_reader(self.reader)
-        # GenericString.set_reader(self.reader)
-        # self.mdl.bone_count.value = 1
-        # self.mdl.name.value = r'red_eye\nick_HW2.mdl'
-        # print(repr(self.mdl.bone_count))
-        # print(repr(self.mdl.name))
-        # for bone in self.mdl.theBones:
-        #     print(bone)
-        # for attachment in self.mdl.theAttachments:
-        #     print(attachment)
-        # print(self.mdl.theAnimationDescs)
-        # for part in self.mdl.theBodyParts:  # type: SourceMdlBodyPart
-        #     print("list of models in \"{}\" bodygroup".format(part.name))
-        #     for model_path in part.models:  # type: SourceMdlModel
-        #         print('\tmodel_path:', model_path.name)
-        #         # print('\teyeball count:',model_path.eyeball_count)
-        #         # pprint(model_path.flex_frames)
-        #         for flex_frame in model_path.flex_frames:
-        #             print('\t', flex_frame)
-        # print('\t', model_path.name, 'list of flexes in this mesh:')
-        # for mesh in model_path.meshes:  # type: SourceMdlMesh
-        #     for flex in mesh.flexes:  # type: SourceMdlFlex
-        #         print('\t\t', flex, self.mdl.theFlexDescs[flex.flexDescIndex])
-        # for m in self.mdl.theTextures: #type: SourceMdlTexture
-        #     print(m)
-
     def build_flex_frames(self):
-        print('Building flex frames')
+        # print('Building flex frames')
 
         # flexDescToFlexFrames = New List(Of List(Of FlexFrame))(Me.theMdlFileData.theFlexDescs.Count)
         # For x As Integer = 0 To Me.theMdlFileData.theFlexDescs.Count - 1
@@ -234,17 +262,15 @@ class SourceMdlFile49:
             # No need to create defaultflex here.
 
             for model in body_part.models:
-                print('\tProcessing model_path {}'.format(model.name))
+                print('\tProcessing model {} with {} flexes'.format(model.name,model.flex_count))
 
                 for mesh in model.meshes:
                     vertex_offset = mesh.vertex_index_start
 
                     for flex_index, flex in enumerate(mesh.flexes):
-                        # print('\t\tParsing {} flex from {}'.format(self.mdl.theFlexDescs[flex.flexDescIndex].name,
-                        #                                          model_path.name))
                         flex_frame = None
-                        if flex_dest_flex_frame[flex.flexDescIndex]:
-                            for s_flex in flex_dest_flex_frame[flex.flexDescIndex]:
+                        if flex_dest_flex_frame[flex.flex_desc_index]:
+                            for s_flex in flex_dest_flex_frame[flex.flex_desc_index]:
                                 if s_flex.flexes[0].target0 == flex.target0 and \
                                         s_flex.flexes[0].target1 == flex.target1 and \
                                         s_flex.flexes[0].target2 == flex.target2 and \
@@ -253,8 +279,8 @@ class SourceMdlFile49:
 
                         if not flex_frame:
                             flex_frame = FlexFrame()
-                            flex_frame.flex_name = self.file_data.flex_descs[flex.flexDescIndex].name
-                            flex_desc_partner_index = mesh.flexes[flex_index].flexDescPartnerIndex
+                            flex_frame.flex_name = self.file_data.flex_descs[flex.flex_desc_index].name
+                            flex_desc_partner_index = mesh.flexes[flex_index].flex_desc_partner_index
 
                             if flex_desc_partner_index > 0:
                                 # aFlexFrame.flexDescription is skipped, because addon don't need this
@@ -263,7 +289,7 @@ class SourceMdlFile49:
                                 flex_frame.has_partner = True
                                 flex_frame.partner = flex_desc_partner_index
 
-                            flex_dest_flex_frame[flex.flexDescIndex].append(flex_frame)
+                            flex_dest_flex_frame[flex.flex_desc_index].append(flex_frame)
 
                         # aFlexFrame.bodyAndMeshVertexIndexStarts.Add(meshVertexIndexStart +
                         # + cumulativebodyPartVertexIndexStart)
@@ -290,24 +316,38 @@ class SourceMdlFile49:
                 self.file_data.bodypart_frames.append([(n, body_part)])
                 continue
             model = body_part.models[0]
-            print('Scanning,',model.name)
+            # print('Scanning,', model.name)
             if 'clamped' not in model.name:
-                print('Skipping',model.name,'cuz it\'s not a clamped mesh')
+                # print('Skipping', model.name, 'cuz it\'s not a clamped mesh_data')
                 self.file_data.bodypart_frames.append([(n, body_part)])
                 continue
             added = False
             for body_part_frames in self.file_data.bodypart_frames:
                 for _, _model in body_part_frames:
-                    print('Comparing',model.name,'to',_model)
+                    # print('Comparing', model.name, 'to', _model)
                     if self.comp_flex_frames(model.flex_frames, _model.models[0].flex_frames):
-                        print('Adding',model.name,'to',body_part_frames)
+                        # print('Adding', model.name, 'to', body_part_frames)
                         body_part_frames.append((n, body_part))
                         added = True
                         break
             if not added:
                 self.file_data.bodypart_frames.append([(n, body_part)])
 
-        pprint(self.file_data.bodypart_frames)
+        # pprint(self.file_data.bodypart_frames)
+
+    def test(self):
+        # pprint(self.__dict__)
+        # for flex_rule in self.file_data.flex_rules:
+        #     print(flex_rule)
+        #     for op in flex_rule.flex_ops:
+        #         print('\t', op)
+        for m in self.file_data.bone_flex_drivers:
+            print(m)
+        for m in self.file_data.mouths:
+            print(m)
+        # for m in self.file_data.flex_controllers_ui:
+        #     print(m)
+        # pprint(self.file_data.__dict__)
 
 
 class SourceMdlFile53(SourceMdlFile49):
@@ -328,7 +368,7 @@ class SourceMdlFile53(SourceMdlFile49):
         self.read_flex_rules()
 
         self.read_attachments()
-        self.read_bone_table_by_name()
+        # self.read_bone_table_by_name()
 
         self.read_body_parts()
         self.read_textures()
@@ -348,15 +388,16 @@ if __name__ == '__main__':
     # with open('log.log', "w",encoding='utf8') as f:  # replace filepath & filename
     #     with f as sys.stdout:
     # model_path = r'G:\SteamLibrary\SteamApps\common\SourceFilmmaker\game\tf_movies\models\player\hwm\medic'
-    model_path = r'.\test_data\undyne_bigger_nude'
-    # model_path = r'.\test_data\nick_hwm'
+    # model_path = r'.\test_data\bonnie'
+    model_path = r'.\test_data\nick_hwm'
     # model_path = r'.\test_data\reimu_v2'
     # model_path = r'G:\SteamLibrary\SteamApps\common\SourceFilmmaker\game\usermod\models\bge\narry\zach_water_v3'
     # model_path = r'.\test_data\l_pistol_noenv'
     # model_path = r'.\test_data\hard_suit'
     # model_path = r'H:\games\Titanfall 2\extr\models\weapons\titan_sniper_rifle\w_titan_sniper_rifle'
     # model_path = r'G:\SteamLibrary\SteamApps\common\SourceFilmmaker\game\workshop\models\player\asrielflex'
-    # model_path = r'G:\SteamLibrary\SteamApps\common\SourceFilmmaker\game\tf_movies\models\player\hwm\spy'
+    # model_path = r'G:\SteamLibrary\SteamApps\common\SourceFilmmaker\game\workshop\models\doom\demons\imp'
+    # model_path = r'G:\SteamLibrary\SteamApps\common\SourceFilmmaker\game\tf\models\player\heavy'
     # model_path = r'.\test_data\test_case-2models-with-flexes'
     # a = SourceMdlFile53(model_path)
     a = SourceMdlFile49(model_path)

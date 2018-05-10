@@ -104,9 +104,9 @@ class VmdlImporter(bpy.types.Operator):
 
 
 def menu_import(self, context):
-    self.layout.operator(MDLImporter.bl_idname, text="MDL mesh (.mdl)")
-    self.layout.operator(VmeshImporter.bl_idname, text="Vmesh mesh (.vmesh_c)")
-    self.layout.operator(VmdlImporter.bl_idname, text="Vmesh mesh (.vmdl_c)")
+    self.layout.operator(MDLImporter.bl_idname, text="MDL mesh_data (.mdl)")
+    self.layout.operator(VmeshImporter.bl_idname, text="Vmesh mesh_data (.vmesh_c)")
+    self.layout.operator(VmdlImporter.bl_idname, text="Vmesh mesh_data (.vmdl_c)")
 
 
 def register():

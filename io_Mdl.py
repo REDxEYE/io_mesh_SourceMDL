@@ -4,7 +4,6 @@ import random
 import struct
 import time
 from contextlib import redirect_stdout
-
 try:
     from . import VVD, VVD_DATA, VTX, MDL, MDL_DATA, VTX_DATA, GLOBALS, progressBar
     from . import math_utilities
@@ -34,7 +33,6 @@ except ImportError:
 
 stdout = io.StringIO()
 
-
 def split(array, n=3):
     return [array[i:i + n] for i in range(0, len(array), n)]
 
@@ -42,7 +40,7 @@ def split(array, n=3):
 class IOMdl:
     def __init__(self, path: str = None, import_textures=False, working_directory=None, co=None, rot=False,
                  internal_files=None,
-                 custom_name=None, normal_bones=False,join_clamped = False):
+                 custom_name=None, normal_bones=False, join_clamped=False):
         # TODO: make import_textures to do stuff
         self.import_textures = import_textures
         # TODO: make working_directory to do something useful
@@ -82,7 +80,7 @@ class IOMdl:
         if custom_name:
             self.armature_obj.name = custom_name
         self.mesh_obj = None
-        self.mesh = None
+        self.mesh_data = None
         self.create_models()
         self.create_attachments()
 
@@ -162,12 +160,12 @@ class IOMdl:
             if candidate.name == mat_name:
                 mat = candidate
         if mat:
-            if md.materials.get(mat.name):  # Look for it on this mesh
+            if md.materials.get(mat.name):  # Look for it on this mesh_data
                 for i in range(len(md.materials)):
                     if md.materials[i].name == mat.name:
                         mat_ind = i
                         break
-            else:  # material exists, but not on this mesh
+            else:  # material exists, but not on this mesh_data
                 md.materials.append(mat)
                 mat_ind = len(md.materials) - 1
         else:  # material does not exist
@@ -192,11 +190,15 @@ class IOMdl:
             vtx_vertex_index = strip_group.vtx_indexes[vtx_index_index + i]  # type: int
             vtx_vertex = strip_group.vtx_vertexes[vtx_vertex_index]  # type: VTX_DATA.SourceVtxVertex
             vertex_index = vtx_vertex.original_mesh_vertex_index + body_part_vertex_offset + mesh_vertex_offset
+            if vertex_index > self.VVD.file_data.lod_vertex_count[0]:
+                print('vertex index out of bounds, skipping this mesh_data')
+                return False, False
             try:
                 vn = self.VVD.file_data.vertexes[vertex_index]  # type: GLOBALS.SourceVertex
                 vn = vn.normal.as_list
             except IndexError:
                 vn = [0, 1, 0]
+
             vertex_indices.append(vertex_index)
             vn_s.append(vn)
         return vertex_indices, vn_s
@@ -215,7 +217,6 @@ class IOMdl:
             material_index = model.meshes[mesh_index].material_index
             mesh_vertex_start = model.meshes[mesh_index].vertex_index_start
             if vtx_mesh.vtx_strip_groups:
-
                 for group_index, strip_group in enumerate(
                         vtx_mesh.vtx_strip_groups):  # type: VTX_DATA.SourceVtxStripGroup
                     # optimisation, because big list - slow append operation
@@ -227,49 +228,58 @@ class IOMdl:
                     si_app = strip_indexes.append
                     svn_app = strip_vertex_normals.extend
                     if strip_group.vtx_strips and strip_group.vtx_indexes and strip_group.vtx_vertexes:
-                        field = progressBar.Progress_bar('Converting mesh', len(strip_group.vtx_indexes), 20)
-                        for vtxIndexIndex in range(0, len(strip_group.vtx_indexes), 3):
+                        field = progressBar.Progress_bar('Converting mesh_data', len(strip_group.vtx_indexes), 20)
+                        for vtx_index in range(0, len(strip_group.vtx_indexes), 3):
                             field.increment(3)
-                            if not vtxIndexIndex % 500:
+                            if not vtx_index % 500:
                                 field.draw()
-                            f, vn = self.get_polygon(strip_group, vtxIndexIndex, lod_index, mesh_vertex_start,
+                            f, vn = self.get_polygon(strip_group, vtx_index, lod_index, mesh_vertex_start,
                                                      self.vertex_offset)
+                            if not f and not vn:
+                                break
+                            # print(f)
                             si_app(f)
                             svn_app(vn)
                             sm_app(material_index)
                         field.is_done = True
                         field.draw()
                     else:
-                        print('Strip group is empty')
+                        pass
+                        # print('Strip group is empty')
 
                     i_ex(strip_indexes)
                     m_ex(strip_material)
                     vn_ex(strip_vertex_normals)
             else:
-                print('VTX mesh is empty')
+                pass
+                # print('VTX mesh_data is empty')
         return indexes, material_indexes, vertex_normals
 
     @staticmethod
     def convert_vertex(vertex: GLOBALS.SourceVertex):
-        return vertex.position.as_list, (vertex.texCoordX, 1 - vertex.texCoordY), vertex.normal.as_list
+        return vertex.position.as_list, (vertex.texCoordX, 1 - vertex.texCoordY)
 
     def create_model(self, model: MDL_DATA.SourceMdlModel, vtx_model: VTX_DATA.SourceVtxModel):
         name = model.name.replace('.smd', '').replace('.dmx', '')
+        if '/' in name or '\\' in name:
+            name = os.path.basename(name)
         if len(vtx_model.vtx_model_lods[0].vtx_meshes) < 1:
             print('No meshes in vtx model_path')
             return
         self.mesh_obj = bpy.data.objects.new(name, bpy.data.meshes.new(name))
         self.mesh_obj.parent = self.armature_obj
         bpy.context.scene.objects.link(self.mesh_obj)
+
         modifier = self.mesh_obj.modifiers.new(type="ARMATURE", name="Armature")
         modifier.object = self.armature_obj
-        self.mesh = self.mesh_obj.data
-        [self.get_material(mat.thePathFileName, self.mesh_obj) for mat in self.MDL.file_data.textures]
+
+        self.mesh_data = self.mesh_obj.data
+        [self.get_material(mat.path_file_name, self.mesh_obj) for mat in self.MDL.file_data.textures]
         material_indexes = []
         weight_groups = {bone.name: self.mesh_obj.vertex_groups.new(bone.name) for bone in
                          self.MDL.file_data.bones}
         vtx_model_lod = vtx_model.vtx_model_lods[0]  # type: VTX_DATA.SourceVtxModelLod
-        print('Converting {} mesh'.format(name))
+        print('Converting {} mesh_data'.format(name))
         if vtx_model_lod.meshCount > 0:
             t = time.time()
             polygons, polygon_material_indexes, normals = self.convert_mesh(vtx_model, 0, model,
@@ -282,11 +292,12 @@ class IOMdl:
         uvs = []
         print('Preparing vertexes')
         for n, vertex in enumerate(self.VVD.file_data.vertexes):
-            vert_co, uv, norm = IOMdl.convert_vertex(vertex)
+            vert_co, uv = IOMdl.convert_vertex(vertex)
             vertexes.append(vert_co)
             uvs.append(uv)
-        self.mesh.from_pydata(vertexes, [], polygons)
-        self.mesh.update()
+
+        self.mesh_data.from_pydata(vertexes, [], polygons)
+        self.mesh_data.update()
         if self.MDL.file_data.flex_descs:
             print('Adding flexes')
         self.add_flexes(model)
@@ -295,13 +306,13 @@ class IOMdl:
                 if weight == 0.0:
                     continue
                 weight_groups[self.MDL.file_data.bones[bone_index].name].add([n], weight, 'REPLACE')
-        self.mesh.uv_textures.new()
-        uv_data = self.mesh.uv_layers[0].data
+        self.mesh_data.uv_textures.new()
+        uv_data = self.mesh_data.uv_layers[0].data
         print('Applying UV')
         for i in range(len(uv_data)):
-            u = uvs[self.mesh.loops[i].vertex_index]
+            u = uvs[self.mesh_data.loops[i].vertex_index]
             uv_data[i].uv = u
-        for polygon, mat_index in zip(self.mesh.polygons, polygon_material_indexes):
+        for polygon, mat_index in zip(self.mesh_data.polygons, polygon_material_indexes):
             polygon.material_index = mat_index
         bpy.ops.object.select_all(action="DESELECT")
         self.mesh_obj.select = True
@@ -310,14 +321,14 @@ class IOMdl:
 
         with redirect_stdout(stdout):
             bpy.ops.object.mode_set(mode='EDIT')
-            self.mesh.validate()
-            self.mesh.validate()
+            self.mesh_data.validate()
+            self.mesh_data.validate()
             bpy.ops.object.mode_set(mode='OBJECT')
-            # self.mesh.validate()
-            # self.mesh.validate()
+            # self.mesh_data.validate()
+            # self.mesh_data.validate()
             bpy.ops.object.shade_smooth()
-        self.mesh.normals_split_custom_set(normals)
-        self.mesh.use_auto_smooth = True
+        self.mesh_data.normals_split_custom_set(normals)
+        self.mesh_data.use_auto_smooth = True
         with redirect_stdout(stdout):
             bpy.ops.object.mode_set(mode='EDIT')
             bpy.ops.mesh.delete_loose()
@@ -345,7 +356,7 @@ class IOMdl:
                     else:
                         ob.select = False
                 bpy.context.scene.objects.active = to_join[0]
-                if len(bpy.context.selected_objects)<2:
+                if len(bpy.context.selected_objects) < 2:
                     continue
                 with redirect_stdout(stdout):
                     bpy.ops.object.join()
@@ -363,20 +374,20 @@ class IOMdl:
             # Now for every flex and vertex_offset(bodyAndMeshVertexIndexStarts)
             for flex, vertex_offset in zip(flex_frame.flexes, flex_frame.vertex_offsets):
 
-                flex_desc = self.MDL.file_data.flex_descs[flex.flexDescIndex]
+                flex_desc = self.MDL.file_data.flex_descs[flex.flex_desc_index]
                 flex_name = flex_desc.name
-                # if blender mesh does not have FLEX_NAME - create it,
+                # if blender mesh_data does not have FLEX_NAME - create it,
                 # otherwise work with existing
                 if not self.mesh_obj.data.shape_keys.key_blocks.get(flex_name):
                     self.mesh_obj.shape_key_add(name=flex_name)
 
                 # iterating over all VertAnims
-                for flex_vert in flex.theVertAnims:  # type: MDL_DATA.SourceMdlVertAnim
+                for flex_vert in flex.the_vert_anims:  # type: MDL_DATA.SourceMdlVertAnim
                     vertex_index = flex_vert.index + vertex_offset  # <- bodyAndMeshVertexIndexStarts
                     vx = self.mesh_obj.data.vertices[vertex_index].co.x
                     vy = self.mesh_obj.data.vertices[vertex_index].co.y
                     vz = self.mesh_obj.data.vertices[vertex_index].co.z
-                    fx, fy, fz = flex_vert.theDelta
+                    fx, fy, fz = flex_vert.the_delta
                     self.mesh_obj.data.shape_keys.key_blocks[flex_name].data[vertex_index].co = (
                         fx + vx, fy + vy, fz + vz)
 
@@ -395,6 +406,7 @@ class IOMdl:
             empty.parent_bone = bone.name
             empty.location = pos
             empty.rotation_euler = rot
+
         # illumination_position
         empty = bpy.data.objects.new("empty", None)
         bpy.context.scene.objects.link(empty)
@@ -405,6 +417,9 @@ class IOMdl:
 
 
 if __name__ == '__main__':
-    a = IOMdl(r'test_data\undyne_bigger_nude.mdl', normal_bones=False,join_clamped=True)
+    model_path = r'G:\SteamLibrary\SteamApps\common\SourceFilmmaker\game\tf_movies\models\player\hwm\spy'
+
+    a = IOMdl(r'G:\SteamLibrary\SteamApps\common\SourceFilmmaker\game\tf_movies\models\player\hwm\spy.mdl',
+              normal_bones=False, join_clamped=True)
     # a = IOMdl(r'test_data\titan_buddy.mdl', normal_bones=False)
     # a = IO_MDL(r'E:\PYTHON\MDL_reader\test_data\nick_hwm.mdl', normal_bones=True)

@@ -56,8 +56,8 @@ class SourceVtxBodyPart:
 
     def read(self, reader: ByteIO):
         entry = reader.tell()
-        self.model_count = reader.read_uint32()
-        self.model_offset = reader.read_uint32()
+        self.model_count, self.model_offset = reader.read_fmt('II')
+
         with reader.save_current_pos():
             reader.seek(entry + self.model_offset)
             for _ in range(self.model_count):
@@ -76,8 +76,7 @@ class SourceVtxModel:
 
     def read(self, reader: ByteIO):
         entry = reader.tell()
-        self.lodCount = reader.read_uint32()
-        self.lodOffset = reader.read_uint32()
+        self.lodCount, self.lodOffset = reader.read_fmt('ii')
         with reader.save_current_pos():
             if self.lodCount > 0 and self.lodOffset != 0:
                 reader.seek(entry + self.lodOffset)
@@ -120,7 +119,7 @@ class SourceVtxModelLod:
         return self
 
     def __repr__(self):
-        return "<ModelLod mesh count:{} meshes:{}>".format(self.meshCount, self.vtx_meshes)
+        return "<ModelLod mesh_data count:{} meshes:{}>".format(self.meshCount, self.vtx_meshes)
 
 
 class SourceVtxMesh:
@@ -179,8 +178,8 @@ class SourceVtxMesh:
 
     def __repr__(self):
         return "<Mesh strip group count:{} stripgroup offset:{} stripgroups:{}>".format(self.strip_group_count,
-                                                                                          self.strip_group_offset,
-                                                                                          self.vtx_strip_groups)
+                                                                                        self.strip_group_offset,
+                                                                                        self.vtx_strip_groups)
 
 
 class SourceVtxStripGroup:

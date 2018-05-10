@@ -15,7 +15,7 @@ class SourceVtxFile49:
             self.reader = ByteIO(path=path + ".dx90.vtx")
         elif file:
             self.reader = file
-        print('Reading VTX file')
+        # print('Reading VTX file')
         self.retry = 0
         self.first_strip_group_end = 0
         self.second_strip_group_offset = 0
@@ -161,6 +161,7 @@ if __name__ == '__main__':
     with open('log.log', "w") as f:  # replace filepath & filename
         with f as sys.stdout:
             # MDL_edit('E:\\MDL_reader\\sexy_bonniev2')
-            a = SourceVtxFile49(r'test_data\kali')
+            a = SourceVtxFile49(r'test_data\Horse')
+            # a = SourceVtxFile49(r'test_data\kali')
             # a = SourceVtxFile49(r'test_data\kali')
             print(a.vtx)
