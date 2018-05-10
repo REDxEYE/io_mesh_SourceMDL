@@ -284,13 +284,13 @@ class IOMdl:
             t = time.time()
             polygons, polygon_material_indexes, normals = self.convert_mesh(vtx_model, 0, model,
                                                                             material_indexes)
-            print('Mesh generation took {} sec'.format(round(time.time() - t), 2))
+            print('Mesh convertation took {} sec'.format(round(time.time() - t), 3))
         else:
             return
         self.vertex_offset += model.vertex_count
         vertexes = []
         uvs = []
-        print('Preparing vertexes')
+        # print('Preparing vertexes')
         for n, vertex in enumerate(self.VVD.file_data.vertexes):
             vert_co, uv = IOMdl.convert_vertex(vertex)
             vertexes.append(vert_co)
@@ -299,8 +299,8 @@ class IOMdl:
         self.mesh_data.from_pydata(vertexes, [], polygons)
         self.mesh_data.update()
         if self.MDL.file_data.flex_descs:
-            print('Adding flexes')
-        self.add_flexes(model)
+            # print('Adding flexes')
+            self.add_flexes(model)
         for n, vertex in enumerate(self.VVD.file_data.vertexes):
             for bone_index, weight in zip(vertex.boneWeight.bone, vertex.boneWeight.weight):
                 if weight == 0.0:
@@ -308,7 +308,7 @@ class IOMdl:
                 weight_groups[self.MDL.file_data.bones[bone_index].name].add([n], weight, 'REPLACE')
         self.mesh_data.uv_textures.new()
         uv_data = self.mesh_data.uv_layers[0].data
-        print('Applying UV')
+        # print('Applying UV')
         for i in range(len(uv_data)):
             u = uvs[self.mesh_data.loops[i].vertex_index]
             uv_data[i].uv = u
@@ -317,7 +317,6 @@ class IOMdl:
         bpy.ops.object.select_all(action="DESELECT")
         self.mesh_obj.select = True
         bpy.context.scene.objects.active = self.mesh_obj
-        # print(normals)
 
         with redirect_stdout(stdout):
             bpy.ops.object.mode_set(mode='EDIT')

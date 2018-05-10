@@ -40,7 +40,6 @@ class SourceMdlFile49:
         # print(self.mdl)
 
     def read_bones(self):
-        # print('Reading bones')
         if self.file_data.bone_count > 0:
             pb = Progress_bar(desc='Reading bones', max_=self.file_data.bone_count, len_=20)
             self.reader.seek(self.file_data.bone_offset, 0)
@@ -68,7 +67,6 @@ class SourceMdlFile49:
                 self.file_data.skin_families.append(skin_ref)
 
     def read_flex_descs(self):
-        # print('Reading flex descs')
         if self.file_data.flex_desc_count > 0:
             self.reader.seek(self.file_data.flex_desc_offset, 0)
             pb = Progress_bar(desc='Reading flex descriptions', max_=self.file_data.flex_desc_count, len_=20)
@@ -80,7 +78,6 @@ class SourceMdlFile49:
                 self.file_data.flex_descs.append(flex_desc)
 
     def read_flex_controllers(self):
-        # print("Reading flex controllers")
         if self.file_data.flex_controller_count > 0:
             self.reader.seek(self.file_data.flex_controller_offset, 0)
             pb = Progress_bar(desc='Reading flex Controllers', max_=self.file_data.flex_controller_count, len_=20)
@@ -90,7 +87,6 @@ class SourceMdlFile49:
                 pb.increment(1)
 
     def read_flex_rules(self):
-        # print('Reading flex rules')
         self.reader.seek(self.file_data.flex_rule_offset, 0)
         pb = Progress_bar(desc='Reading flex rules', max_=self.file_data.flex_rule_count, len_=20)
         for i in range(self.file_data.flex_rule_count):
@@ -99,14 +95,14 @@ class SourceMdlFile49:
             pb.increment(1)
 
     def read_attachments(self):
-        # print('Reading attachments')
         if self.file_data.local_attachment_count > 0:
             self.reader.seek(self.file_data.local_attachment_offset, 0)
-            pb = Progress_bar(desc='Reading flex rules', max_=self.file_data.local_attachment_count, len_=20)
+            pb = Progress_bar(desc='Reading attachments', max_=self.file_data.local_attachment_count, len_=20)
             for _ in range(self.file_data.local_attachment_count):
                 pb.draw()
                 SourceMdlAttachment().read(self.reader, self.file_data)
                 pb.increment(1)
+
     #
     # def read_bone_table_by_name(self):
     #     self.reader.seek(self.file_data.bone_table_by_name_offset)
@@ -116,7 +112,6 @@ class SourceMdlFile49:
     #             self.file_data.bone_table_by_name.append(index)
 
     def read_body_parts(self):
-        # print('Reading body parts')
         if self.file_data.body_part_count > 0:
             self.reader.seek(self.file_data.body_part_offset)
             pb = Progress_bar(desc='Reading body parts', max_=self.file_data.body_part_count, len_=20)
@@ -262,7 +257,7 @@ class SourceMdlFile49:
             # No need to create defaultflex here.
 
             for model in body_part.models:
-                print('\tProcessing model {} with {} flexes'.format(model.name,model.flex_count))
+                print('\tProcessing model {} with {} flexes'.format(model.name, model.flex_count))
 
                 for mesh in model.meshes:
                     vertex_offset = mesh.vertex_index_start
