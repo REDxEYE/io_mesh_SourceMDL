@@ -41,7 +41,7 @@ class MDLImporter(bpy.types.Operator):
         self.Import_textures = False
         io_Mdl.IOMdl(self.filepath, working_directory=self.WorkDir,
                      import_textures=import_textues and self.Import_textures,
-                     normal_bones=self.normal_bones,join_clamped = self.join_clamped)
+                     join_bones=self.normal_bones, join_clamped = self.join_clamped)
         return {'FINISHED'}
 
     def invoke(self, context, event):

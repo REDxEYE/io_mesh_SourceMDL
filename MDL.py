@@ -336,10 +336,21 @@ class SourceMdlFile49:
         #     print(flex_rule)
         #     for op in flex_rule.flex_ops:
         #         print('\t', op)
-        for m in self.file_data.bone_flex_drivers:
-            print(m)
-        for m in self.file_data.mouths:
-            print(m)
+        # for m in self.file_data.bone_flex_drivers:
+        #     print(m)
+        # for m in self.file_data.mouths:
+        #     print(m)
+        print(self.file_data.flags)
+        for bg in self.file_data.body_parts:
+            print(bg)
+            for model in bg.models:
+                print('\t'*1, model)
+                for mesh in model.meshes:
+                    print('\t'*2,mesh)
+        for bone in self.file_data.bones:
+            print(bone)
+            if bone.jiggle_bone:
+                print('\t', bone.jiggle_bone)
         # for m in self.file_data.flex_controllers_ui:
         #     print(m)
         # pprint(self.file_data.__dict__)
@@ -384,7 +395,8 @@ if __name__ == '__main__':
     #     with f as sys.stdout:
     # model_path = r'G:\SteamLibrary\SteamApps\common\SourceFilmmaker\game\tf_movies\models\player\hwm\medic'
     # model_path = r'.\test_data\bonnie'
-    model_path = r'.\test_data\nick_hwm'
+    # model_path = r'G:\SteamLibrary\SteamApps\common\SourceFilmmaker\game\usermod\models\red_eye\tyranno\raptor'
+    # model_path = r'.\test_data\nick_hwm'
     # model_path = r'.\test_data\reimu_v2'
     # model_path = r'G:\SteamLibrary\SteamApps\common\SourceFilmmaker\game\usermod\models\bge\narry\zach_water_v3'
     # model_path = r'.\test_data\l_pistol_noenv'
@@ -393,6 +405,8 @@ if __name__ == '__main__':
     # model_path = r'G:\SteamLibrary\SteamApps\common\SourceFilmmaker\game\workshop\models\player\asrielflex'
     # model_path = r'G:\SteamLibrary\SteamApps\common\SourceFilmmaker\game\workshop\models\doom\demons\imp'
     # model_path = r'G:\SteamLibrary\SteamApps\common\SourceFilmmaker\game\tf\models\player\heavy'
+    model_path = r'./test_data/hl/box01a'
+    # model_path = r'G:\SteamLibrary\SteamApps\common\SourceFilmmaker\game\usermod\models\red_eye\rick-and-morty\pink_raptor'
     # model_path = r'.\test_data\test_case-2models-with-flexes'
     # a = SourceMdlFile53(model_path)
     a = SourceMdlFile49(model_path)
