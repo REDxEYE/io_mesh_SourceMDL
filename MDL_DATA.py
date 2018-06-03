@@ -1,3 +1,4 @@
+import inspect
 import random
 import time
 from enum import Enum, IntEnum
@@ -24,6 +25,13 @@ except ImportError:
 class SourceMdlAnimationDesc:
     def __init__(self):
         self.theName = ''
+
+
+def get_class_var_name(class_, var):
+    a = class_.__dict__  # type: dict
+    for k, v in a.items():
+        if id(getattr(class_, k)) == id(var) and v == var:
+            return k
 
 
 class StudioHDRFlags(Flags):
@@ -260,7 +268,7 @@ class SourceMdlFileData:
     def read_header00(self, reader: ByteIO):
         self.id = ''.join(list([chr(reader.read_uint8()) for _ in range(4)]))
         self.version = reader.read_uint32()
-        print('Found MDL version',self.version)
+        print('Found MDL version', self.version)
         self.checksum = reader.read_uint32()
         self.name = reader.read_ascii_string(64)
         self.file_size = reader.read_uint32()
@@ -409,17 +417,38 @@ class SourceMdlFileData:
         self.linear_bone_offset = reader.read_uint32()
 
         self.name_offset = reader.read_uint32()
-        if self.version>47:
+        if self.version > 47:
             self.bone_flex_driver_count = reader.read_uint32()
             self.bone_flex_driver_offset = reader.read_uint32()
         self.reserved = [reader.read_uint32() for _ in range(56)]
         # self.reserved = list([reader.read_uint32() for _ in range(56)])
 
-    def __str__(self):
-        return pformat(self.__dict__)
+    def print_info(self, indent=0):
+        def iprint(indent2, arg, fname=''):
+            if indent + indent2:
+                print('\t' * (indent + indent2),
+                      *(get_class_var_name(self,arg).title().replace('_', ' '), ':', arg) if not fname else (
+                          fname, ':', arg))
+            else:
+                print(*(get_class_var_name(self, arg).title(), ':', arg) if not fname else (fname, ':', arg))
 
-    def __repr__(self):
-        return pformat(self.__dict__)
+        print('SourceMdlFileData:')
+        iprint(1, self.id)
+        iprint(1, self.version)
+        iprint(1, self.checksum)
+        iprint(1, self.name)
+        iprint(1, self.file_size)
+        iprint(1, self.flags.to_simple_str(), 'Flags')
+        iprint(1, self.bone_count)
+        iprint(1, self.texture_count)
+        iprint(1, self.body_part_count, 'Body part count')
+        iprint(1,self.flex_desc_count,'Flex count')
+        iprint(1,self.mass)
+        pass
+
+
+def __repr__(self):
+    return pformat(self.__dict__)
 
 
 class SourceMdlFileDataV53(SourceMdlFileData):

@@ -22,10 +22,6 @@ class SourceVtxFile49:
         elif file:
             self.reader = file
         # print('Reading VTX file')
-        self.retry = 0
-        self.first_strip_group_end = 0
-        self.second_strip_group_offset = 0
-        self.StripGroupUsesExtra8Bytes = True
         self.vtx = SourceVtxFileData()
         self.read_source_vtx_header()
         # self.read_source_vtx_body_parts()
@@ -51,7 +47,7 @@ class SourceVtxFile49:
                             t_acc += strip_group.topology_indices_count
                             print('\t' * 4, strip_group)
                             # pprint(split(strip_group.vtx_indexes))
-                            # pprint(split(strip_group.topology, 4))
+                            pprint(split(strip_group.topology, 4))
                             for strip in strip_group.vtx_strips:
                                 print('\t' * 5, strip)
                                 # strip.vertex_count
@@ -68,11 +64,11 @@ if __name__ == '__main__':
     with open('log.log', "w") as f:  # replace filepath & filename
         with f as sys.stdout:
             # model_path = r'G:\SteamLibrary\SteamApps\common\SourceFilmmaker\game\usermod\models\red_eye\tyranno\raptor_subD'
-            # model_path = r'G:\SteamLibrary\SteamApps\common\SourceFilmmaker\game\usermod\models\red_eye\test\tesselation'
+            model_path = r'G:\SteamLibrary\SteamApps\common\SourceFilmmaker\game\usermod\models\red_eye\test\tesselation'
             # model_path = r'.\test_data\l_pistol_noenv'
             # model_path = r'test_data\geavy'
             # model_path = r'G:\SteamLibrary\SteamApps\common\SourceFilmmaker\game\tf\models\player\heavy'
-            model_path = r'G:\SteamLibrary\SteamApps\common\SourceFilmmaker\game\usermod\models\red_eye\rick-and-morty\pink_raptor'
+            # model_path = r'G:\SteamLibrary\SteamApps\common\SourceFilmmaker\game\usermod\models\red_eye\rick-and-morty\pink_raptor'
             # MDL_edit('E:\\MDL_reader\\sexy_bonniev2')
             a = SourceVtxFile49(model_path)
             # a = SourceVtxFile49(r'test_data\kali')

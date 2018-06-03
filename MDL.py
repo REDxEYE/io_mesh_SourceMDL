@@ -393,7 +393,7 @@ class SourceMdlFile53(SourceMdlFile49):
 if __name__ == '__main__':
     # with open('log.log', "w",encoding='utf8') as f:  # replace filepath & filename
     #     with f as sys.stdout:
-    # model_path = r'G:\SteamLibrary\SteamApps\common\SourceFilmmaker\game\tf_movies\models\player\hwm\medic'
+    model_path = r'G:\SteamLibrary\SteamApps\common\SourceFilmmaker\game\tf_movies\models\player\hwm\medic'
     # model_path = r'.\test_data\bonnie'
     # model_path = r'G:\SteamLibrary\SteamApps\common\SourceFilmmaker\game\usermod\models\red_eye\tyranno\raptor'
     # model_path = r'.\test_data\nick_hwm'
@@ -405,13 +405,13 @@ if __name__ == '__main__':
     # model_path = r'G:\SteamLibrary\SteamApps\common\SourceFilmmaker\game\workshop\models\player\asrielflex'
     # model_path = r'G:\SteamLibrary\SteamApps\common\SourceFilmmaker\game\workshop\models\doom\demons\imp'
     # model_path = r'G:\SteamLibrary\SteamApps\common\SourceFilmmaker\game\tf\models\player\heavy'
-    model_path = r'./test_data/hl/box01a'
+    # model_path = r'./test_data/portal2/player'
     # model_path = r'G:\SteamLibrary\SteamApps\common\SourceFilmmaker\game\usermod\models\red_eye\rick-and-morty\pink_raptor'
     # model_path = r'.\test_data\test_case-2models-with-flexes'
     # a = SourceMdlFile53(model_path)
     a = SourceMdlFile49(model_path)
-    a.test()
-
+    # a.test()
+    a.file_data.print_info()
     # mdl2 = SourceMdlFile53(model_path)
     # mdl2.test()
     # print(a.mdl)
