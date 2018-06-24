@@ -1,7 +1,6 @@
 import sys
 from pprint import pprint
 
-
 def split(array, n=3):
     return [array[i:i + n] for i in range(0, len(array), n)]
 
@@ -53,7 +52,7 @@ class SourceVtxFile49:
                                 # strip.vertex_count
                                 if StripHeaderFlags.STRIP_IS_QUADLIST_EXTRA in strip.flags or StripHeaderFlags.STRIP_IS_QUADLIST_REG in strip.flags:
                                     pass
-                                    # print(strip.topology)
+
                                 # return
         print('total_verts', v_acc)
         print('total_inds', i_acc)
@@ -64,7 +63,7 @@ if __name__ == '__main__':
     with open('log.log', "w") as f:  # replace filepath & filename
         with f as sys.stdout:
             # model_path = r'G:\SteamLibrary\SteamApps\common\SourceFilmmaker\game\usermod\models\red_eye\tyranno\raptor_subD'
-            model_path = r'G:\SteamLibrary\SteamApps\common\SourceFilmmaker\game\usermod\models\red_eye\test\tesselation'
+            model_path = r'G:\SteamLibrary\SteamApps\common\SourceFilmmaker\game\usermod\models\red_eye\test\subd'
             # model_path = r'.\test_data\l_pistol_noenv'
             # model_path = r'test_data\geavy'
             # model_path = r'G:\SteamLibrary\SteamApps\common\SourceFilmmaker\game\tf\models\player\heavy'

@@ -71,7 +71,7 @@ class NTROStruct(Dummy):
         self.fields = []  # type: List[NTROStructField]
 
     def __repr__(self):
-        return '<Struct name:"{}"{} SID:{} sizeof: {} id:{}>'.format(self.name," inhernited {}".format(self.ntro_block.get_struct_by_id(self.base_struct_id)) if self.base_struct_id else"", self.s_id, self.disc_size,
+        return '<Struct name:"{}"{} SID:{} sizeof: {} id:{}>'.format(self.name,' inhernited {}'.format(self.ntro_block.get_struct_by_id(self.base_struct_id)) if self.base_struct_id else"", self.s_id, self.disc_size,
                                                                    self.base_struct_id)
 
     def read(self, reader: ByteIO):
@@ -137,7 +137,7 @@ class NTROStructField(Dummy):
         if self.type == 1 and self.struct.ntro_block.get_struct_by_id(self.data_type):
             c_type = self.struct.ntro_block.get_struct_by_id(self.data_type).name
         return '<Field name:"{}" {} type:{} level:{}>'.format(self.name, "" if not self.indirection_level else (
-            "array of" if self.indirection_bytes[0] == 0x04 else (
+                "array of" if self.indirection_bytes[0] == 0x04 else (
                 "pointer to" if self.indirection_bytes[0] == 0x03 else "")), c_type, self.indirection_level)
 
     def read(self, reader: ByteIO,block_info:InfoBlock = None):

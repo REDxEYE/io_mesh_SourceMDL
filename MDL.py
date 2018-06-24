@@ -393,13 +393,15 @@ class SourceMdlFile53(SourceMdlFile49):
 if __name__ == '__main__':
     # with open('log.log', "w",encoding='utf8') as f:  # replace filepath & filename
     #     with f as sys.stdout:
-    model_path = r'G:\SteamLibrary\SteamApps\common\SourceFilmmaker\game\tf_movies\models\player\hwm\medic'
+    # model_path = r'G:\SteamLibrary\steamapps\common\SourceFilmmaker\game\usermod\models\Red_eye\SmashingRenders\Byun_slug'
+    # model_path = r'G:\SteamLibrary\SteamApps\common\SourceFilmmaker\game\tf_movies\models\player\hwm\medic'
     # model_path = r'.\test_data\bonnie'
     # model_path = r'G:\SteamLibrary\SteamApps\common\SourceFilmmaker\game\usermod\models\red_eye\tyranno\raptor'
     # model_path = r'.\test_data\nick_hwm'
     # model_path = r'.\test_data\reimu_v2'
     # model_path = r'G:\SteamLibrary\SteamApps\common\SourceFilmmaker\game\usermod\models\bge\narry\zach_water_v3'
     # model_path = r'.\test_data\l_pistol_noenv'
+    model_path = r'.\test_data\hl\combine_strider'
     # model_path = r'.\test_data\hard_suit'
     # model_path = r'H:\games\Titanfall 2\extr\models\weapons\titan_sniper_rifle\w_titan_sniper_rifle'
     # model_path = r'G:\SteamLibrary\SteamApps\common\SourceFilmmaker\game\workshop\models\player\asrielflex'
