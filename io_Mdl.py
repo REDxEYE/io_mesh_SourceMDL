@@ -184,7 +184,7 @@ class IOMdl:
 
         return mat_ind
 
-    def get_polygon(self, strip_group: VTX_DATA.SourceVtxStripGroup, vtx_index_index: int, _, mesh_vertex_offset):
+    def get_polygon(self, strip_group: VTX_DATA.SourceVtxStripGroup, vtx_index_index: int, lod_index, mesh_vertex_offset):
         vertex_indices = []
         vn_s = []
         for i in [0, 2, 1]:
@@ -208,23 +208,15 @@ class IOMdl:
         indexes = []
         vertex_normals = []
         # small speedup
-        i_ex = indexes.extend
-        m_ex = material_indexes.extend
+        i_ex = indexes.append
+        m_ex = material_indexes.append
         vn_ex = vertex_normals.extend
 
         for mesh_index, vtx_mesh in enumerate(vtx_meshes):  # type: int,VTX_DATA.SourceVtxMesh
             material_index = model.meshes[mesh_index].material_index
             mesh_vertex_start = model.meshes[mesh_index].vertex_index_start
             if vtx_mesh.vtx_strip_groups:
-                for group_index, strip_group in enumerate(
-                        vtx_mesh.vtx_strip_groups):  # type: VTX_DATA.SourceVtxStripGroup
-                    strip_indexes = []
-                    strip_material = []
-                    strip_vertex_normals = []
-                    # small speedup
-                    sm_app = strip_material.append
-                    si_app = strip_indexes.append
-                    svn_app = strip_vertex_normals.extend
+                for group_index, strip_group in enumerate(vtx_mesh.vtx_strip_groups):  # type: VTX_DATA.SourceVtxStripGroup
                     if strip_group.vtx_strips and strip_group.vtx_indexes and strip_group.vtx_vertexes:
                         field = progressBar.Progress_bar('Converting mesh_data', len(strip_group.vtx_indexes), 20)
                         for vtx_index in range(0, len(strip_group.vtx_indexes), 3):
@@ -233,17 +225,14 @@ class IOMdl:
                             f, vn = self.get_polygon(strip_group, vtx_index, lod_index, mesh_vertex_start)
                             if not f and not vn:
                                 break
-                            si_app(f)
-                            svn_app(vn)
-                            sm_app(material_index)
+                            i_ex(f)
+                            vn_ex(vn)
+                            m_ex(material_index)
                         field.is_done = True
                         field.draw()
                     else:
                         pass
 
-                    i_ex(strip_indexes)
-                    m_ex(strip_material)
-                    vn_ex(strip_vertex_normals)
             else:
                 pass
         return indexes, material_indexes, vertex_normals
@@ -273,8 +262,8 @@ class IOMdl:
 
         self.mesh_data = self.mesh_obj.data
         [self.get_material(mat.path_file_name, self.mesh_obj) for mat in self.MDL.file_data.textures]
-        weight_groups = {bone.name: self.mesh_obj.vertex_groups.new(bone.name) for bone in
-                         self.MDL.file_data.bones}
+        weight_groups = {bone.name: self.mesh_obj.vertex_groups.new(bone.name) for bone in self.MDL.file_data.bones}
+
         vtx_model_lod = vtx_model.vtx_model_lods[0]
         vvd_verts = self.VVD.file_data.vertexes
         indices = []
@@ -348,6 +337,7 @@ class IOMdl:
 
         self.mesh_data = self.mesh_obj.data
         [self.get_material(mat.path_file_name, self.mesh_obj) for mat in self.MDL.file_data.textures]
+        used_materials = {m_id: False for m_id in range(len(self.MDL.file_data.textures))}
         material_indexes = []
         weight_groups = {bone.name: self.mesh_obj.vertex_groups.new(bone.name) for bone in
                          self.MDL.file_data.bones}
@@ -386,7 +376,17 @@ class IOMdl:
             u = uvs[self.mesh_data.loops[i].vertex_index]
             uv_data[i].uv = u
         for polygon, mat_index in zip(self.mesh_data.polygons, polygon_material_indexes):
+            used_materials[mat_index] = True
             polygon.material_index = mat_index
+        to_remove = []
+        for mat_id,is_used in used_materials.items():
+            if not is_used:
+                print('Removing',self.mesh_data.materials[mat_id].name, ' cuz it\'s not used')
+                to_remove.append(self.mesh_data.materials[mat_id])
+
+        for mat in to_remove:
+            mat_id = self.mesh_data.materials.find(mat.name)
+            self.mesh_data.materials.pop(mat_id)
         bpy.ops.object.select_all(action="DESELECT")
         self.mesh_obj.select = True
         bpy.context.scene.objects.active = self.mesh_obj
@@ -490,8 +490,8 @@ class IOMdl:
 
 if __name__ == '__main__':
     # model_path = r'G:\SteamLibrary\SteamApps\common\SourceFilmmaker\game\tf_movies\models\player\hwm\spy'
-    # model_path = r'G:\SteamLibrary\SteamApps\common\SourceFilmmaker\game\usermod\models\red_eye\tyranno\raptor'
-    model_path = r'./test_data/hl/box01a.mdl'
+    model_path = r'G:\SteamLibrary\SteamApps\common\SourceFilmmaker\game\usermod\models\red_eye\tyranno\raptor.mdl'
+    # model_path = r'./test_data/hl/box01a.mdl'
     # model_path = r'G:\SteamLibrary\SteamApps\common\SourceFilmmaker\game\usermod\models\red_eye\rick-and-morty\pink_raptor.mdl'
     a = IOMdl(model_path, join_bones=False, join_clamped=True)
     # a = IOMdl(r'test_data\titan_buddy.mdl', normal_bones=False)

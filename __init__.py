@@ -1,7 +1,7 @@
 bl_info = {
     "name": "Source Engine model_path import + textures (.mdl, .file_data, .vtx)",
     "author": "RED_EYE",
-    "version": (1, 1),
+    "version": (1, 5),
     "blender": (2, 78, 0),
     "location": "File > Import-Export > SourceEngine MDL (.mdl, .file_data, .vtx) ",
     "description": "Addon allows to import Source Engine models",
@@ -18,7 +18,7 @@ from bpy.props import StringProperty, BoolProperty
 class MDLImporter(bpy.types.Operator):
     """Load Source Engine MDL models"""
     bl_idname = "import_mesh.mdl"
-    bl_label = "Import Mdl"
+    bl_label = "Import Source mdl model"
     bl_options = {'UNDO'}
 
     filepath = StringProperty(
@@ -104,9 +104,9 @@ class VmdlImporter(bpy.types.Operator):
 
 
 def menu_import(self, context):
-    self.layout.operator(MDLImporter.bl_idname, text="MDL mesh_data (.mdl)")
-    self.layout.operator(VmeshImporter.bl_idname, text="Vmesh mesh_data (.vmesh_c)")
-    self.layout.operator(VmdlImporter.bl_idname, text="Vmesh mesh_data (.vmdl_c)")
+    self.layout.operator(MDLImporter.bl_idname, text="Source model (.mdl)")
+    self.layout.operator(VmeshImporter.bl_idname, text="Source2 mesh (.vmesh_c)")
+    self.layout.operator(VmdlImporter.bl_idname, text="Source2 model (.vmdl_c)")
 
 
 def register():
