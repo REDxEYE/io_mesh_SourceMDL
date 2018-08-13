@@ -6,6 +6,8 @@ from pprint import pformat
 
 from typing import List, Tuple
 
+from Utils import get_class_var_name
+
 try:
     from .ByteIO import ByteIO,OffsetOutOfBounds
     from .GLOBALS import SourceVector, SourceQuaternion, SourceFloat16bits
@@ -27,11 +29,7 @@ class SourceMdlAnimationDesc:
         self.theName = ''
 
 
-def get_class_var_name(class_, var):
-    a = class_.__dict__  # type: dict
-    for k, v in a.items():
-        if id(getattr(class_, k)) == id(var) and v == var:
-            return k
+
 
 
 class StudioHDRFlags(Flags):
