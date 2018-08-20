@@ -1,9 +1,15 @@
+from __future__ import absolute_import
 from pprint import pformat
-
-from ByteIO import ByteIO
-from GLOBALS import SourceVector
-# from MDL_DATA import StudioHDRFlags
-from Utils import get_class_var_name
+try:
+    from .ByteIO import ByteIO
+    from .GLOBALS import SourceVector
+    # from MDL_DATA import StudioHDRFlags
+    from .Utils import get_class_var_name
+except:
+    from ByteIO import ByteIO
+    from GLOBALS import SourceVector
+    # from MDL_DATA import StudioHDRFlags
+    from Utils import get_class_var_name
 
 
 class SourceMdlFileDataV10:
@@ -133,10 +139,10 @@ class SourceMdlFileDataV10:
         self.hitbox_set_count = reader.read_uint32()
         self.hitbox_set_offset = reader.read_uint32()
 
-
         self.local_sequence_count = reader.read_uint32()
         self.local_sequence_offset = reader.read_uint32()
-
+        self.sequence_group_count = reader.read_uint32()
+        self.sequence_group_offset = reader.read_uint32()
 
         self.texture_count = reader.read_uint32()
         self.texture_offset = reader.read_uint32()
@@ -217,6 +223,33 @@ class SourceMdlBone:
         return '<Bone "{}" pos:{} rot: {}>'.format(self.name,self.position.as_rounded(2),
                                                                  self.rotation.as_rounded(2),)
 
+class SourceMdlBoneController:
+    def __init__(self):
+        self.boneIndex = 0
+        self.type = 0
+        self.startBlah = 0
+        self.endBlah = 0
+        self.restIndex = 0
+        self.inputField = 0
+        self.unused = []
+
+    def read(self, reader: ByteIO, mdl: SourceMdlFileDataV10):
+        self.boneIndex = reader.read_uint32()
+        self.type = reader.read_uint32()
+        self.startBlah = reader.read_uint32()
+        self.endBlah = reader.read_uint32()
+        self.restIndex = reader.read_uint32()
+        self.inputField = reader.read_uint32()
+        if mdl.version > 10:
+            self.unused = [reader.read_uint32() for _ in range(8)]
+        mdl.bone_controllers.append(self)
+        return self
+
+    def __str__(self):
+        return '<BoneController bone index:{}>'.format(self.boneIndex)
+
+    def __repr__(self):
+        return '<BoneController bone index:{}>'.format(self.boneIndex)
 
 
 if __name__ == '__main__':

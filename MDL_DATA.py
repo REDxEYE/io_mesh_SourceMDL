@@ -6,7 +6,7 @@ from pprint import pformat
 
 from typing import List, Tuple
 
-from Utils import get_class_var_name
+
 
 try:
     from .ByteIO import ByteIO,OffsetOutOfBounds
@@ -14,6 +14,7 @@ try:
     from . import VTX, VVD
     from . import math_utilities
     from .flags import Flags
+    from .Utils import get_class_var_name
 
 except ImportError:
     from ByteIO import ByteIO,OffsetOutOfBounds
@@ -22,6 +23,7 @@ except ImportError:
     import VVD
     import math_utilities
     from flags import Flags
+    from Utils import get_class_var_name
 
 
 class SourceMdlAnimationDesc:
