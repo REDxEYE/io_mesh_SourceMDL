@@ -1,8 +1,12 @@
+import bpy
+is_28 = bpy.app.version[1]==80
+b_version = bpy.app.version[1]
+print('is 2.8',is_28,b_version)
 bl_info = {
     "name": "Source Engine model_path import + textures (.mdl, .file_data, .vtx)",
     "author": "RED_EYE",
     "version": (1, 5),
-    "blender": (2, 78, 0),
+    "blender": (2, 80, 0),
     "location": "File > Import-Export > SourceEngine MDL (.mdl, .file_data, .vtx) ",
     "description": "Addon allows to import Source Engine models",
     'warning': 'May crash blender',
@@ -10,12 +14,12 @@ bl_info = {
     # "tracker_url": "http://www.barneyparker.com/blender-json-import-export-plugin",
     "category": "Import-Export"}
 
-import bpy
+
 
 from bpy.props import StringProperty, BoolProperty
 
 
-class MDLImporter(bpy.types.Operator):
+class MDLImporter_OT_operator(bpy.types.Operator):
     """Load Source Engine MDL models"""
     bl_idname = "import_mesh.mdl"
     bl_label = "Import Source mdl model"
@@ -50,7 +54,7 @@ class MDLImporter(bpy.types.Operator):
         return {'RUNNING_MODAL'}
 
 
-class VmeshImporter(bpy.types.Operator):
+class VmeshImporter_OT_operator(bpy.types.Operator):
     """Load Source2 Engine VMESH models"""
     bl_idname = "import_mesh.vmesh"
     bl_label = "Import vmehs_c"
@@ -77,7 +81,7 @@ class VmeshImporter(bpy.types.Operator):
         return {'RUNNING_MODAL'}
 
 
-class VmdlImporter(bpy.types.Operator):
+class VmdlImporter_OT_operator(bpy.types.Operator):
     """Load Source2 Engine VMESH models"""
     bl_idname = "import_mesh.vmdl"
     bl_label = "Import vmdl_c"
@@ -103,20 +107,32 @@ class VmdlImporter(bpy.types.Operator):
         return {'RUNNING_MODAL'}
 
 
+
 def menu_import(self, context):
-    self.layout.operator(MDLImporter.bl_idname, text="Source model (.mdl)")
-    self.layout.operator(VmeshImporter.bl_idname, text="Source2 mesh (.vmesh_c)")
-    self.layout.operator(VmdlImporter.bl_idname, text="Source2 model (.vmdl_c)")
-
-
-def register():
-    bpy.utils.register_module(__name__)
+    self.layout.operator(MDLImporter_OT_operator.bl_idname, text="Source model (.mdl)")
+    self.layout.operator(VmeshImporter_OT_operator.bl_idname, text="Source2 mesh (.vmesh_c)")
+    self.layout.operator(VmdlImporter_OT_operator.bl_idname, text="Source2 model (.vmdl_c)")
+if is_28:
+    classes = (
+        VmdlImporter_OT_operator,
+        VmeshImporter_OT_operator,
+        MDLImporter_OT_operator,
+    )
+    register, unregister = bpy.utils.register_classes_factory(classes)
     bpy.types.INFO_MT_file_import.append(menu_import)
 
+else:
 
-def unregister():
-    bpy.utils.unregister_module(__name__)
-    bpy.types.INFO_MT_file_import.remove(menu_import)
+
+
+    def register():
+        bpy.utils.register_module(__name__)
+        bpy.types.INFO_MT_file_import.append(menu_import)
+
+
+    def unregister():
+        bpy.utils.unregister_module(__name__)
+        bpy.types.INFO_MT_file_import.remove(menu_import)
 
 
 if __name__ == "__main__":

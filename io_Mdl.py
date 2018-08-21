@@ -184,7 +184,8 @@ class IOMdl:
 
         return mat_ind
 
-    def get_polygon(self, strip_group: VTX_DATA.SourceVtxStripGroup, vtx_index_index: int, lod_index, mesh_vertex_offset):
+    def get_polygon(self, strip_group: VTX_DATA.SourceVtxStripGroup, vtx_index_index: int, lod_index,
+                    mesh_vertex_offset):
         vertex_indices = []
         vn_s = []
         for i in [0, 2, 1]:
@@ -216,7 +217,8 @@ class IOMdl:
             material_index = model.meshes[mesh_index].material_index
             mesh_vertex_start = model.meshes[mesh_index].vertex_index_start
             if vtx_mesh.vtx_strip_groups:
-                for group_index, strip_group in enumerate(vtx_mesh.vtx_strip_groups):  # type: VTX_DATA.SourceVtxStripGroup
+                for group_index, strip_group in enumerate(
+                        vtx_mesh.vtx_strip_groups):  # type: VTX_DATA.SourceVtxStripGroup
                     if strip_group.vtx_strips and strip_group.vtx_indexes and strip_group.vtx_vertexes:
                         field = progressBar.Progress_bar('Converting mesh_data', len(strip_group.vtx_indexes), 20)
                         for vtx_index in range(0, len(strip_group.vtx_indexes), 3):
@@ -321,6 +323,13 @@ class IOMdl:
                     continue
                 weight_groups[self.MDL.file_data.bones[bone_index].name].add([n], weight, 'REPLACE')
 
+    def remap_materials(self, used_materials, all_materials):
+        remap = {}
+        for n, used_material in enumerate(used_materials):
+            remap[all_materials.index(used_material)] = n
+
+        return remap
+
     def create_model(self, model: MDL_DATA.SourceMdlModel, vtx_model: VTX_DATA.SourceVtxModel):
         name = model.name.replace('.smd', '').replace('.dmx', '')
         if '/' in name or '\\' in name:
@@ -336,7 +345,8 @@ class IOMdl:
         modifier.object = self.armature_obj
 
         self.mesh_data = self.mesh_obj.data
-        [self.get_material(mat.path_file_name, self.mesh_obj) for mat in self.MDL.file_data.textures]
+
+        # [self.get_material(mat.path_file_name, self.mesh_obj) for mat in self.MDL.file_data.textures]
         used_materials = {m_id: False for m_id in range(len(self.MDL.file_data.textures))}
         material_indexes = []
         weight_groups = {bone.name: self.mesh_obj.vertex_groups.new(bone.name) for bone in
@@ -353,6 +363,15 @@ class IOMdl:
         self.vertex_offset += model.vertex_count
         vertexes = []
         uvs = []
+        for mat_index in polygon_material_indexes:
+            used_materials[mat_index] = True
+
+        mat_remap = self.remap_materials(
+            [self.MDL.file_data.textures[mat_id] for mat_id, used in used_materials.items() if used],
+            self.MDL.file_data.textures)
+        for old_mat_id, new_mat_id in mat_remap.items():
+            mat_name = self.MDL.file_data.textures[old_mat_id].path_file_name
+            self.get_material(mat_name, self.mesh_obj)
         # print('Preparing vertexes')
         for n, vertex in enumerate(self.VVD.file_data.vertexes):
             vert_co, uv = self.convert_vertex(vertex)
@@ -376,17 +395,8 @@ class IOMdl:
             u = uvs[self.mesh_data.loops[i].vertex_index]
             uv_data[i].uv = u
         for polygon, mat_index in zip(self.mesh_data.polygons, polygon_material_indexes):
-            used_materials[mat_index] = True
-            polygon.material_index = mat_index
-        to_remove = []
-        for mat_id,is_used in used_materials.items():
-            if not is_used:
-                print('Removing',self.mesh_data.materials[mat_id].name, ' cuz it\'s not used')
-                to_remove.append(self.mesh_data.materials[mat_id])
+            polygon.material_index = mat_remap[mat_index]
 
-        for mat in to_remove:
-            mat_id = self.mesh_data.materials.find(mat.name)
-            self.mesh_data.materials.pop(mat_id)
         bpy.ops.object.select_all(action="DESELECT")
         self.mesh_obj.select = True
         bpy.context.scene.objects.active = self.mesh_obj
@@ -399,12 +409,12 @@ class IOMdl:
             # self.mesh_data.validate()
             # self.mesh_data.validate()
             bpy.ops.object.shade_smooth()
-        self.mesh_data.normals_split_custom_set(normals)
-        self.mesh_data.use_auto_smooth = True
-        with redirect_stdout(stdout):
+            self.mesh_data.normals_split_custom_set(normals)
+            self.mesh_data.use_auto_smooth = True
             bpy.ops.object.mode_set(mode='EDIT')
             bpy.ops.mesh.delete_loose()
             bpy.ops.object.mode_set(mode='OBJECT')
+        bpy.ops.object.mode_set(mode='OBJECT')
         return self.mesh_obj
 
     def create_models(self):
@@ -490,7 +500,8 @@ class IOMdl:
 
 if __name__ == '__main__':
     # model_path = r'G:\SteamLibrary\SteamApps\common\SourceFilmmaker\game\tf_movies\models\player\hwm\spy'
-    model_path = r'G:\SteamLibrary\SteamApps\common\SourceFilmmaker\game\usermod\models\red_eye\tyranno\raptor.mdl'
+    model_path = r"G:\SteamLibrary\SteamApps\common\SourceFilmmaker\game\workshop\models\jawsfm\quake champions\characters\sorlag.mdl"
+    # model_path = r'G:\SteamLibrary\SteamApps\common\SourceFilmmaker\game\usermod\models\red_eye\tyranno\raptor.mdl'
     # model_path = r'./test_data/hl/box01a.mdl'
     # model_path = r'G:\SteamLibrary\SteamApps\common\SourceFilmmaker\game\usermod\models\red_eye\rick-and-morty\pink_raptor.mdl'
     a = IOMdl(model_path, join_bones=False, join_clamped=True)

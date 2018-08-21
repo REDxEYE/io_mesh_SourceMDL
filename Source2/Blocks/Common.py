@@ -190,7 +190,7 @@ class SourceVector4D:
         return self
 
     @property
-    def asList(self):
+    def as_list(self):
         return [self.x, self.y, self.z, self.w]
 
     def __repr__(self):
