@@ -1,22 +1,20 @@
 import bpy
-is_28 = bpy.app.version[1]==80
-b_version = bpy.app.version[1]
-print('is 2.8',is_28,b_version)
+import os
+
 bl_info = {
     "name": "Source Engine model_path import + textures (.mdl, .file_data, .vtx)",
     "author": "RED_EYE",
     "version": (1, 5),
-    "blender": (2, 80, 0),
+    "blender": (2, 29, 0),
     "location": "File > Import-Export > SourceEngine MDL (.mdl, .file_data, .vtx) ",
     "description": "Addon allows to import Source Engine models",
     'warning': 'May crash blender',
     # "wiki_url": "http://www.barneyparker.com/blender-json-import-export-plugin",
     # "tracker_url": "http://www.barneyparker.com/blender-json-import-export-plugin",
-    "category": "Import-Export"}
+    "category": "Import-Export"
+}
 
-
-
-from bpy.props import StringProperty, BoolProperty
+from bpy.props import StringProperty, BoolProperty,CollectionProperty
 
 
 class MDLImporter_OT_operator(bpy.types.Operator):
@@ -28,6 +26,7 @@ class MDLImporter_OT_operator(bpy.types.Operator):
     filepath = StringProperty(
         subtype='FILE_PATH',
     )
+    files = CollectionProperty(name='File paths', type=bpy.types.OperatorFileListElement)
     # WorkDir = StringProperty(name="path to folder with gameinfo.txt", maxlen=1024, default="", subtype='FILE_PATH')
     # Import_textures = BoolProperty(name="Import textures?\nLARGE TEXTURES MAY CAUSE OUT OF MEMORY AND CRASH",
     #                                default=False, subtype='UNSIGNED')
@@ -37,15 +36,14 @@ class MDLImporter_OT_operator(bpy.types.Operator):
 
     def execute(self, context):
         from . import io_Mdl
-        # import_textues = True
-        # if self.properties.WorkDir == '':
-        #     import_textues = False
         self.WorkDir = ''
         import_textues = False
         self.Import_textures = False
-        io_Mdl.IOMdl(self.filepath, working_directory=self.WorkDir,
-                     import_textures=import_textues and self.Import_textures,
-                     join_bones=self.normal_bones, join_clamped = self.join_clamped)
+        dirname = os.path.dirname(self.filepath)
+        for file in self.files:
+            io_Mdl.IOMdl(os.path.join(dirname, file.name), working_directory=self.WorkDir,
+                         import_textures=import_textues and self.Import_textures,
+                         join_bones=self.normal_bones, join_clamped=self.join_clamped)
         return {'FINISHED'}
 
     def invoke(self, context, event):
@@ -90,6 +88,7 @@ class VmdlImporter_OT_operator(bpy.types.Operator):
     filepath = StringProperty(
         subtype='FILE_PATH',
     )
+
     # WorkDir = StringProperty(name="path to folder with gameinfo.txt", maxlen=1024, default="", subtype='FILE_PATH')
     # Import_textures = BoolProperty(name="Import textures?\nLARGE TEXTURES MAY CAUSE OUT OF MEMORY AND CRASH",
     #                                default=False, subtype='UNSIGNED')
@@ -107,32 +106,20 @@ class VmdlImporter_OT_operator(bpy.types.Operator):
         return {'RUNNING_MODAL'}
 
 
-
 def menu_import(self, context):
     self.layout.operator(MDLImporter_OT_operator.bl_idname, text="Source model (.mdl)")
     self.layout.operator(VmeshImporter_OT_operator.bl_idname, text="Source2 mesh (.vmesh_c)")
     self.layout.operator(VmdlImporter_OT_operator.bl_idname, text="Source2 model (.vmdl_c)")
-if is_28:
-    classes = (
-        VmdlImporter_OT_operator,
-        VmeshImporter_OT_operator,
-        MDLImporter_OT_operator,
-    )
-    register, unregister = bpy.utils.register_classes_factory(classes)
+
+
+def register():
+    bpy.utils.register_module(__name__)
     bpy.types.INFO_MT_file_import.append(menu_import)
 
-else:
 
-
-
-    def register():
-        bpy.utils.register_module(__name__)
-        bpy.types.INFO_MT_file_import.append(menu_import)
-
-
-    def unregister():
-        bpy.utils.unregister_module(__name__)
-        bpy.types.INFO_MT_file_import.remove(menu_import)
+def unregister():
+    bpy.utils.unregister_module(__name__)
+    bpy.types.INFO_MT_file_import.remove(menu_import)
 
 
 if __name__ == "__main__":
