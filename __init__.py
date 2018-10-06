@@ -1,6 +1,6 @@
 import bpy
 import os
-
+from pathlib import Path
 bl_info = {
     "name": "Source Engine model_path import + textures (.mdl, .file_data, .vtx)",
     "author": "RED_EYE",
@@ -32,18 +32,28 @@ class MDLImporter_OT_operator(bpy.types.Operator):
     #                                default=False, subtype='UNSIGNED')
     normal_bones = BoolProperty(name="Make normal skeleton or original from source?", default=False, subtype='UNSIGNED')
     join_clamped = BoolProperty(name="Join clamped meshes?", default=False, subtype='UNSIGNED')
+    write_qc = BoolProperty(name="Write QC file", default=False, subtype='UNSIGNED')
     filter_glob = StringProperty(default="*.mdl", options={'HIDDEN'})
 
     def execute(self, context):
         from . import io_Mdl
-        self.WorkDir = ''
+        self.work_dir = ''
         import_textues = False
-        self.Import_textures = False
-        dirname = os.path.dirname(self.filepath)
+        self.import_textures = False
+        dirrectory = Path(self.filepath).absolute()
         for file in self.files:
-            io_Mdl.IOMdl(os.path.join(dirname, file.name), working_directory=self.WorkDir,
-                         import_textures=import_textues and self.Import_textures,
+            importer = io_Mdl.IOMdl(dirrectory / file.name, working_directory=self.work_dir,
+                         import_textures=import_textues and self.import_textures,
                          join_bones=self.normal_bones, join_clamped=self.join_clamped)
+            if self.write_qc:
+                from . import QC
+                qc = QC.QC(importer.MDL)
+                qc_file = bpy.data.texts.new('{}.qc'.format(Path(file).stem))
+                qc.write_header(qc_file)
+                qc.write_models(qc_file)
+                qc.write_skins(qc_file)
+                qc.write_misc(qc_file)
+                qc.write_sequences(qc_file)
         return {'FINISHED'}
 
     def invoke(self, context, event):
