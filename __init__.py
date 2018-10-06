@@ -1,6 +1,6 @@
 import bpy
-import os
 from pathlib import Path
+
 bl_info = {
     "name": "Source Engine model_path import + textures (.mdl, .file_data, .vtx)",
     "author": "RED_EYE",
@@ -14,7 +14,7 @@ bl_info = {
     "category": "Import-Export"
 }
 
-from bpy.props import StringProperty, BoolProperty,CollectionProperty
+from bpy.props import StringProperty, BoolProperty, CollectionProperty
 
 
 class MDLImporter_OT_operator(bpy.types.Operator):
@@ -40,11 +40,11 @@ class MDLImporter_OT_operator(bpy.types.Operator):
         self.work_dir = ''
         import_textues = False
         self.import_textures = False
-        dirrectory = Path(self.filepath).absolute()
+        directory = Path(self.filepath).parent.absolute()
         for file in self.files:
-            importer = io_Mdl.IOMdl(dirrectory / file.name, working_directory=self.work_dir,
-                         import_textures=import_textues and self.import_textures,
-                         join_bones=self.normal_bones, join_clamped=self.join_clamped)
+            importer = io_Mdl.IOMdl(str(directory / file.name), working_directory=self.work_dir,
+                                    import_textures=import_textues and self.import_textures,
+                                    join_bones=self.normal_bones, join_clamped=self.join_clamped)
             if self.write_qc:
                 from . import QC
                 qc = QC.QC(importer.MDL)
