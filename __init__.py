@@ -48,7 +48,7 @@ class MDLImporter_OT_operator(bpy.types.Operator):
             if self.write_qc:
                 from . import QC
                 qc = QC.QC(importer.MDL)
-                qc_file = bpy.data.texts.new('{}.qc'.format(Path(file).stem))
+                qc_file = bpy.data.texts.new('{}.qc'.format(Path(file.name).stem))
                 qc.write_header(qc_file)
                 qc.write_models(qc_file)
                 qc.write_skins(qc_file)
