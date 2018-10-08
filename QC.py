@@ -91,7 +91,7 @@ class QC:
                     self.fst_model = model.name
                 model_name = str(Path(model.name).with_suffix('').with_suffix(''))
                 fileh.write('\tstudio "{}"\n'.format(model_name))
-                if model.flex_frames:
+                if model.flex_frames and self.vvd:
                     fileh.write(
                         "//WARNING: this {} have flexes! Additional VTA will be written, you can import them manually\n"
                         "//If you want to compile it back correctly - export as DMX\n".format(model.name)
