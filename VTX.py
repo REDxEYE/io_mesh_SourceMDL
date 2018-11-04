@@ -46,7 +46,13 @@ class SourceVtxFile49:
                             t_acc += strip_group.topology_indices_count
                             print('\t' * 4, strip_group)
                             # pprint(split(strip_group.vtx_indexes))
-                            pprint(split(strip_group.topology, 4))
+                            topo_shit = split(list(strip_group.topology),176)
+                            print(len(topo_shit))
+                            for topo in topo_shit:
+                                print(topo)
+                            # print(split(topo_shit, 176))
+                            # with open('topology.bin', 'wb+') as fp:
+                            #     fp.write(strip_group.topology)
                             for strip in strip_group.vtx_strips:
                                 print('\t' * 5, strip)
                                 # strip.vertex_count
@@ -63,7 +69,7 @@ if __name__ == '__main__':
     with open('log.log', "w") as f:  # replace filepath & filename
         with f as sys.stdout:
             # model_path = r'G:\SteamLibrary\SteamApps\common\SourceFilmmaker\game\usermod\models\red_eye\tyranno\raptor_subD'
-            model_path = r'G:\SteamLibrary\SteamApps\common\SourceFilmmaker\game\usermod\models\red_eye\test\subd'
+            model_path = r'./test_data\subd'
             # model_path = r'.\test_data\l_pistol_noenv'
             # model_path = r'test_data\geavy'
             # model_path = r'G:\SteamLibrary\SteamApps\common\SourceFilmmaker\game\tf\models\player\heavy'
@@ -72,4 +78,5 @@ if __name__ == '__main__':
             a = SourceVtxFile49(model_path)
             # a = SourceVtxFile49(r'test_data\kali')
             # a = SourceVtxFile49(r'test_data\kali')
+
             a.test()

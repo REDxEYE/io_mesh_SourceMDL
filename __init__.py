@@ -27,9 +27,6 @@ class MDLImporter_OT_operator(bpy.types.Operator):
         subtype='FILE_PATH',
     )
     files = CollectionProperty(name='File paths', type=bpy.types.OperatorFileListElement)
-    # WorkDir = StringProperty(name="path to folder with gameinfo.txt", maxlen=1024, default="", subtype='FILE_PATH')
-    # Import_textures = BoolProperty(name="Import textures?\nLARGE TEXTURES MAY CAUSE OUT OF MEMORY AND CRASH",
-    #                                default=False, subtype='UNSIGNED')
     normal_bones = BoolProperty(name="Make normal skeleton or original from source?", default=False, subtype='UNSIGNED')
     join_clamped = BoolProperty(name="Join clamped meshes?", default=False, subtype='UNSIGNED')
     write_qc = BoolProperty(name="Write QC file", default=False, subtype='UNSIGNED')
@@ -37,13 +34,9 @@ class MDLImporter_OT_operator(bpy.types.Operator):
 
     def execute(self, context):
         from . import io_Mdl
-        self.work_dir = ''
-        import_textues = False
-        self.import_textures = False
         directory = Path(self.filepath).parent.absolute()
         for file in self.files:
-            importer = io_Mdl.IOMdl(str(directory / file.name), working_directory=self.work_dir,
-                                    import_textures=import_textues and self.import_textures,
+            importer = io_Mdl.IOMdl(str(directory / file.name),
                                     join_bones=self.normal_bones, join_clamped=self.join_clamped)
             if self.write_qc:
                 from . import QC

@@ -340,20 +340,23 @@ class SourceMdlFile49:
         #     print(m)
         # for m in self.file_data.mouths:
         #     print(m)
-        print(self.file_data.flags)
-        for bg in self.file_data.body_parts:
-            print(bg)
-            for model in bg.models:
-                print('\t'*1, model)
-                for mesh in model.meshes:
-                    print('\t'*2,mesh)
-        for bone in self.file_data.bones:
-            print(bone)
-            if bone.jiggle_bone:
-                print('\t', bone.jiggle_bone)
+        # print(self.file_data.flags)
+        # for bg in self.file_data.body_parts:
+        #     print(bg)
+        #     for model in bg.models:
+        #         print('\t'*1, model)
+        #         for mesh in model.meshes:
+        #             print('\t'*2,mesh)
+        # for bone in self.file_data.bones:
+        #     print(bone)
+        #     if bone.jiggle_bone:
+        #         print('\t', bone.jiggle_bone)
         # for m in self.file_data.flex_controllers_ui:
         #     print(m)
         # pprint(self.file_data.__dict__)
+        with open(r'.\test_data\nick_hwm_bac.mdl','wb') as fp:
+            writer = ByteIO(file=fp)
+            self.file_data.write(writer)
 
 
 class SourceMdlFile53(SourceMdlFile49):
@@ -384,10 +387,9 @@ class SourceMdlFile53(SourceMdlFile49):
         # self.read_sequences()
 
     def test(self):
-        for sq in self.file_data.sequence_descs:
-            print(sq.__dict__)
-        for bone in self.file_data.bones:
-            print(bone)
+        with open(r'.\test_data\nick_hwm','wb') as fp:
+            writer = ByteIO(file=fp)
+            self.file_data.write(writer)
 
 
 if __name__ == '__main__':
@@ -397,11 +399,11 @@ if __name__ == '__main__':
     # model_path = r'G:\SteamLibrary\SteamApps\common\SourceFilmmaker\game\tf_movies\models\player\hwm\medic'
     # model_path = r'.\test_data\bonnie'
     # model_path = r'G:\SteamLibrary\SteamApps\common\SourceFilmmaker\game\usermod\models\red_eye\tyranno\raptor'
-    # model_path = r'.\test_data\nick_hwm'
+    model_path = r'.\test_data\nick_hwm'
     # model_path = r'.\test_data\reimu_v2'
     # model_path = r'G:\SteamLibrary\SteamApps\common\SourceFilmmaker\game\usermod\models\bge\narry\zach_water_v3'
     # model_path = r'.\test_data\l_pistol_noenv'
-    model_path = r'.\test_data\hl\combine_strider'
+    # model_path = r'.\test_data\hl\combine_strider'
     # model_path = r'.\test_data\hard_suit'
     # model_path = r'H:\games\Titanfall 2\extr\models\weapons\titan_sniper_rifle\w_titan_sniper_rifle'
     # model_path = r'G:\SteamLibrary\SteamApps\common\SourceFilmmaker\game\workshop\models\player\asrielflex'
@@ -412,8 +414,8 @@ if __name__ == '__main__':
     # model_path = r'.\test_data\test_case-2models-with-flexes'
     # a = SourceMdlFile53(model_path)
     a = SourceMdlFile49(model_path)
-    # a.test()
-    a.file_data.print_info()
+    a.test()
+    # a.file_data.print_info()
     # mdl2 = SourceMdlFile53(model_path)
     # mdl2.test()
     # print(a.mdl)

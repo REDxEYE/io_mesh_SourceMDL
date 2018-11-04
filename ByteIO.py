@@ -1,6 +1,6 @@
-import struct
-import io
 import contextlib
+import io
+import struct
 import typing
 from io import BytesIO
 
@@ -228,11 +228,17 @@ class ByteIO:
     def write_double(self, value):
         self.write('d', value)
 
-    def write_ascii_string(self, string, zero_terminated=False):
+    def write_ascii_string(self, string, zero_terminated=False, length=-1):
+        pos = self.tell()
         for c in string:
             self._write(c.encode('ascii'))
         if zero_terminated:
             self._write(b'\x00')
+        elif length != -1:
+            to_fill = length - (self.tell() - pos)
+            if to_fill > 0:
+                for _ in range(to_fill):
+                    self.write_uint8(0)
 
     def write_fourcc(self, fourcc):
         self.write_ascii_string(fourcc)

@@ -1,4 +1,3 @@
-import inspect
 import random
 import time
 from enum import Enum, IntEnum
@@ -6,10 +5,8 @@ from pprint import pformat
 
 from typing import List, Tuple
 
-
-
 try:
-    from .ByteIO import ByteIO,OffsetOutOfBounds
+    from .ByteIO import ByteIO, OffsetOutOfBounds
     from .GLOBALS import SourceVector, SourceQuaternion, SourceFloat16bits
     from . import VTX, VVD
     from . import math_utilities
@@ -17,7 +14,7 @@ try:
     from .Utils import get_class_var_name
 
 except ImportError:
-    from ByteIO import ByteIO,OffsetOutOfBounds
+    from ByteIO import ByteIO, OffsetOutOfBounds
     from GLOBALS import SourceVector, SourceQuaternion, SourceFloat16bits
     import VTX
     import VVD
@@ -26,12 +23,16 @@ except ImportError:
     from Utils import get_class_var_name
 
 
+class SourceBase:
+    parent = None
+
+    def register(self, child: 'SourceBase'):
+        child.parent = self
+
+
 class SourceMdlAnimationDesc:
     def __init__(self):
         self.theName = ''
-
-
-
 
 
 class StudioHDRFlags(Flags):
@@ -103,12 +104,12 @@ class StudioHDRFlags(Flags):
     STUDIOHDR_FLAGS_CAST_TEXTURE_SHADOWS = (1 << 18)
 
     STUDIOHDR_FLAGS_SUBDIVISION_SURFACE = (1 << 19)
-    
+
     #  flagged on load to indicate no animation events on this model
     STUDIOHDR_FLAGS_VERT_ANIM_FIXED_POINT_SCALE = (1 << 21)
 
 
-class SourceMdlFileData:
+class SourceMdlFileData(SourceBase):
     def __init__(self):
         self.id = ''
         self.version = 0
@@ -203,7 +204,11 @@ class SourceMdlFileData:
         self.illum_position_attachment_index = 0
         self.max_eye_deflection = 0
         self.linear_bone_offset = 0
+        self.section_frame_count = 0
+        self.section_frame_min_frame_count = 0
+        self.actual_file_size = 0
         self.reserved = []
+
         self.animation_descs = []
         self.anim_blocks = []
         self.anim_block_relative_path_file_name = ""
@@ -227,9 +232,7 @@ class SourceMdlFileData:
         self.surface_prop_name = ""
         self.texture_paths = []  # type: List[str]
         self.textures = []  # type: List[SourceMdlTexture]
-        self.section_frame_count = 0
-        self.section_frame_min_frame_count = 0
-        self.actual_file_size = 0
+
         self.flex_frames = []  # type: List[FlexFrame]
         self.bone_flex_drivers = []  # type: List[SourceBoneFlexDriver]
         self.flex_controllers_ui = []  # type: List[SourceFlexControllerUI]
@@ -407,11 +410,22 @@ class SourceMdlFileData:
             self.bone_flex_driver_offset = reader.read_uint32()
         self.reserved = [reader.read_uint32() for _ in range(56)]
 
+    def write(self, writer: ByteIO):
+        writer.write_bytes(self.id.encode('ascii'))
+        writer.write_uint32(self.version)
+        writer.write_uint32(self.checksum)
+        writer.write_ascii_string(self.name,False,64)
+        writer.write_uint32(0)
+
+    # @property
+    # def total_size(self):
+
+
     def print_info(self, indent=0):
         def iprint(indent2, arg, fname=''):
             if indent + indent2:
                 print('\t' * (indent + indent2),
-                      *(get_class_var_name(self,arg).title().replace('_', ' '), ':', arg) if not fname else (
+                      *(get_class_var_name(self, arg).title().replace('_', ' '), ':', arg) if not fname else (
                           fname, ':', arg))
             else:
                 print(*(get_class_var_name(self, arg).title(), ':', arg) if not fname else (fname, ':', arg))
@@ -426,10 +440,9 @@ class SourceMdlFileData:
         iprint(1, self.bone_count)
         iprint(1, self.texture_count)
         iprint(1, self.body_part_count, 'Body part count')
-        iprint(1,self.flex_desc_count,'Flex desc count')
-        iprint(1,self.mass)
+        iprint(1, self.flex_desc_count, 'Flex desc count')
+        iprint(1, self.mass)
         pass
-
 
     def __repr__(self):
         return pformat(self.__dict__)
@@ -717,7 +730,8 @@ class SourceContents(Flags):
     SURF_HITBOX = 0x8000  # surface is part of a hitbox
 
 
-class SourceMdlBone:
+class SourceMdlBone(SourceBase):
+    parent: SourceMdlFileData
 
     def __init__(self):
 
@@ -754,6 +768,13 @@ class SourceMdlBone:
         self.STUDIO_PROC_AIMATBONE = 3
         self.STUDIO_PROC_AIMATATTACH = 4
         self.STUDIO_PROC_JIGGLE = 5
+
+    @property
+    def size(self):
+        if self.parent.version >= 53:
+            return 4 + 4 + (4 * 6) + 12 + (4 * 4) + (3 * 4) + (3 * 6) + \
+                   (4 * 3 * 4) + 4 * 4 + 4 + 4 + 4 + 4 + 4 + 4 + 4 * 7
+        return 4 + 4 + (4 * 6) + 12 + (4 * 4) + (3 * 4) + (3 * 6) + (4 * 3 * 4) + 4 * 4 + 4 + 4 + 4 + 4 + 4 + 4 + 4 * 8
 
     def read(self, reader: ByteIO, mdl: SourceMdlFileData):
         self.boneOffset = reader.tell()
@@ -826,7 +847,7 @@ class JiggleBoneFlags(Flags):
     HAS_BASE_SPRING = 0x40
 
 
-class SourceMdlJiggleBone:
+class SourceMdlJiggleBone(SourceBase):
 
     def __init__(self):
         self.flags = JiggleBoneFlags()
@@ -895,7 +916,7 @@ class SourceMdlJiggleBone:
         return '<JiggleBone flags:{0} mass:{1.tipMass} length:{1.length}>'.format(self.flags.to_simple_str(), self)
 
 
-class SourceMdlAxisInterpBone:
+class SourceMdlAxisInterpBone(SourceBase):
     def __init__(self):
         self.control = 0
         self.axis = 0
@@ -915,7 +936,7 @@ class SourceMdlAxisInterpBone:
         return '<AxisInterpBone control:{}>'.format(self.control)
 
 
-class SourceMdlQuatInterpBone:
+class SourceMdlQuatInterpBone(SourceBase):
     def __init__(self):
         self.controlBoneIndex = 0
         self.triggerCount = 0
@@ -937,7 +958,7 @@ class SourceMdlQuatInterpBone:
         return '<QuatInterpBone control index:{}>'.format(self.controlBoneIndex)
 
 
-class SourceMdlQuatInterpBoneInfo:
+class SourceMdlQuatInterpBoneInfo(SourceBase):
     def __init__(self):
         self.inverseToleranceAngle = 0
         self.trigger = SourceQuaternion()
@@ -952,7 +973,7 @@ class SourceMdlQuatInterpBoneInfo:
         return self
 
 
-class SourceMdlBoneController:
+class SourceMdlBoneController(SourceBase):
     def __init__(self):
         self.boneIndex = 0
         self.type = 0
@@ -981,7 +1002,7 @@ class SourceMdlBoneController:
         return '<BoneController bone index:{}>'.format(self.boneIndex)
 
 
-class SourceMdlFlexDesc:
+class SourceMdlFlexDesc(SourceBase):
     def __init__(self):
         self.name_offset = 0
         self.name = ''
@@ -1000,7 +1021,7 @@ class SourceMdlFlexDesc:
         return '<FlexDesc name:"{}">'.format(self.name)
 
 
-class SourceMdlFlexController:
+class SourceMdlFlexController(SourceBase):
     def __init__(self):
         self.typeOffset = 0
         self.nameOffset = 0
@@ -1036,7 +1057,7 @@ class SourceMdlFlexController:
                                                                                           self.localToGlobal)
 
 
-class SourceMdlFlexRule:
+class SourceMdlFlexRule(SourceBase):
     def __init__(self):
         self.flex_index = 0
         self.op_count = 0
@@ -1088,7 +1109,7 @@ class FlexOpType(Enum):
     STUDIO_DME_UPPER_EYELID = 21
 
 
-class SourceMdlFlexOp:
+class SourceMdlFlexOp(SourceBase):
 
     def __init__(self):
         self.op = FlexOpType
@@ -1114,7 +1135,7 @@ class SourceMdlFlexOp:
             return '<FlexOp op:{} for "{}">'.format(self.op.name, self.mdl.flex_descs[self.index].name)
 
 
-class SourceMdlAttachment:
+class SourceMdlAttachment(SourceBase):
     def __init__(self):
         self.name = ""
         self.type = 0
@@ -1185,7 +1206,7 @@ class SourceMdlAttachment:
                                                                              self.rot.to_degrees().as_string)
 
 
-class SourceMdlBodyPart:
+class SourceMdlBodyPart(SourceBase):
     def __init__(self):
         self.name_offset = 0
         self.model_count = 0
@@ -1218,7 +1239,7 @@ class SourceMdlBodyPart:
         return '<BodyPart name:"{}" model_path count:{} >'.format(self.name, self.model_count)
 
 
-class SourceMdlModel:
+class SourceMdlModel(SourceBase):
     def __init__(self):
         self.name = ''
         self.type = 0
@@ -1284,7 +1305,7 @@ class SourceMdlModel:
                                                                      self.eyeballs)
 
 
-class SourceMdlModelVertexData:
+class SourceMdlModelVertexData(SourceBase):
     def __init__(self):
         self.vertex_data_pointer = 0
         self.tangent_data_pointer = 0
@@ -1302,7 +1323,7 @@ class SourceMdlModelVertexData:
                                                                                self.tangent_data_pointer)
 
 
-class SourceMdlEyeball:
+class SourceMdlEyeball(SourceBase):
     def __init__(self):
         self.name_offset = 0
         self.bone_index = 0
@@ -1338,16 +1359,12 @@ class SourceMdlEyeball:
         self.bone_index = reader.read_uint32()
         self.org.read(reader)
         self.z_offset = reader.read_float()
-        print(reader, 'EYEBALL radius')
         self.radius = reader.read_float()
-        print(self.radius, 'EYEBALL radius')
         self.up.read(reader)
         self.forward.read(reader)
         self.texture = reader.read_int32()
         self.unused1 = reader.read_uint32()
-        print(reader,'EYEBALL')
         self.iris_scale = reader.read_float()
-        print(self.iris_scale,'IRIS SCALE')
         self.unused2 = reader.read_uint32()
         self.upper_flex_desc = [reader.read_uint32() for _ in range(3)]
         self.lower_flex_desc = [reader.read_uint32() for _ in range(3)]
@@ -1368,7 +1385,7 @@ class SourceMdlEyeball:
         return '<Eyeball name:"{}" bone:{} xyz:{}>'.format(self.name, self.bone_index, self.org.as_string)
 
 
-class SourceMdlMesh:
+class SourceMdlMesh(SourceBase):
     def __init__(self):
         self.material_index = 0
         self.model_offset = 0
@@ -1403,8 +1420,6 @@ class SourceMdlMesh:
             for _ in range(self.flex_count):
                 t = time.time()
                 temp = SourceMdlFlex().read(reader, self)
-                # print('Reading of "{}" flex took'.format(model.body_part.mdl.flex_descs[temp.flex_desc_index].name),
-                #       time.time() - t, 'sec')
         reader.seek(entry2, 0)
         model.meshes.append(self)
 
@@ -1415,7 +1430,7 @@ class SourceMdlMesh:
                                                                                self.flexes)
 
 
-class SourceMdlMeshVertexData:
+class SourceMdlMeshVertexData(SourceBase):
     def __init__(self):
         self.model_vertex_data_pointer = 0
         self.lod_vertex_count = []
@@ -1433,7 +1448,7 @@ class SourceMdlMeshVertexData:
                                                                                  self.lod_vertex_count)
 
 
-class SourceMdlFlex:
+class SourceMdlFlex(SourceBase):
     def __init__(self):
         self.flex_desc_index = 0
         self.target0 = 0.0
@@ -1479,7 +1494,7 @@ class SourceMdlFlex:
                                                                                             self.vert_offset)
 
 
-class SourceMdlVertAnim:
+class SourceMdlVertAnim(SourceBase):
     vert_anim_fixed_point_scale = 1 / 4096
 
     def __init__(self):
@@ -1511,7 +1526,7 @@ class SourceMdlVertAnimWrinkle(SourceMdlVertAnim):
         return self
 
 
-class SourceMdlTexture:
+class SourceMdlTexture(SourceBase):
     def __init__(self):
         self.name_offset = 0
         self.flags = 0
@@ -1540,7 +1555,7 @@ class SourceMdlTexture:
         return '<Texture name:"{}">'.format(self.path_file_name)
 
 
-class SourceMdlAnimBlock:
+class SourceMdlAnimBlock(SourceBase):
     """FROM: SourceEngineXXXX_source\public\studio.h
     #  used for piecewise loading of animation data
     struct mstudioanimblock_t
@@ -1565,7 +1580,7 @@ class SourceMdlAnimBlock:
         return pformat(self.__dict__)
 
 
-class SourceMdlMouth:
+class SourceMdlMouth(SourceBase):
 
     def __init__(self):
         self.bone = 0
@@ -1582,7 +1597,7 @@ class SourceMdlMouth:
         return '<SourceMdlMouth bone:{} flex:{}  {}>'.format(self.bone, self.flex_desc_index, self.forward)
 
 
-class SourceBoneFlexDriver:
+class SourceBoneFlexDriver(SourceBase):
 
     def __init__(self):
         self.bone_index = 0
@@ -1609,7 +1624,7 @@ class SourceBoneFlexDriver:
                                                                        self.controller_count)
 
 
-class SourceBoneFlexController:
+class SourceBoneFlexController(SourceBase):
 
     def __init__(self):
         self.bone_component = 0
@@ -1638,14 +1653,14 @@ class FlexControllerRemapType(IntEnum):
     FLEXCONTROLLER_REMAP_EYELID = 2
 
 
-class SourceFlexControllerUI:
+class SourceFlexControllerUI(SourceBase):
     def __init__(self):
         self.name_offset = 0
         self.name = 0
         self.index1 = 0
         self.index2 = 0
         self.index3 = 0
-        self.remap_type = 0
+        self.remap_type = FlexControllerRemapType(0)
         self.stereo = False
         self.unused = []
 

@@ -1,5 +1,4 @@
 import struct
-from pprint import pformat
 from typing import List
 
 try:
@@ -11,6 +10,7 @@ except ImportError:
 
 max_bones_per_vertex = 3
 extra_8 = True
+
 
 class SourceVtxFileData:
     def __init__(self):
@@ -252,16 +252,16 @@ class SourceVtxStripGroup:
                 SourceVtxStrip().read(reader, self)
             if extra_8:
                 reader.seek(entry + self.topology_offset)
-                for _ in range(self.topology_indices_count):
-                    self.topology.append(reader.read_uint16())
+                # for _ in range(self.topology_indices_count):
+                self.topology = (reader.read_bytes(self.topology_indices_count * 2))
 
         return self
 
     def __repr__(self):
-        return "<StripGroup Vertex count:{} Index count:{} Strip count:{} flags:{} topolygy:{}-{}>".format(
+        return "<StripGroup Vertex count:{} Index count:{} Strip count:{} flags:{} topolygy:{} topo offset: {}-{}>".format(
             self.vertex_count, self.index_count,
-            self.strip_count, self.flags, self.topology_indices_count, self.topology_offset)
-
+            self.strip_count, self.flags, self.topology_indices_count, self.topology_offset,
+            self.topology_offset + self.topology_indices_count * 2)
 
 
 class SourceVtxVertex:
@@ -321,6 +321,7 @@ class SourceVtxStrip:
         stripgroup.vtx_strips.append(self)
 
     def __repr__(self):
-        return '<SourceVtxStrip index count:{} vertex count:{} flags:{} topology:{}-{} offset into indices list:{}>'.format(
+        return '<SourceVtxStrip index count:{} vertex count:{} flags:{} topology:{} topo offset: {}-{} offset into indices list:{}>'.format(
             self.index_count, self.vertex_count, self.flags, self.topology_indices_count, self.topology_offset,
+            self.topology_offset + self.topology_indices_count * 2,
         self.index_mesh_index)
