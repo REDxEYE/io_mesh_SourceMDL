@@ -28,8 +28,9 @@ class SourceVvdFileData:
         self.id = reader.read_fourcc()
         if self.id != 'IDSV':
             if self.id[:-1] == 'DSV':
+                reader.insert_begin(b'I')
+                self.id = reader.read_fourcc()
                 print('VVD FILE WAS "PROTECTED", but screew it :P')
-                reader.rewind(1)
             else:
                 raise NotImplementedError('VVD format {} is not supported!'.format(self.id))
         self.version = reader.read_uint32()

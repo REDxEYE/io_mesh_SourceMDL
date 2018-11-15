@@ -75,6 +75,16 @@ class ByteIO:
         for _ in range(amount):
             self._write(b'\x00')
 
+    def insert_begin(self,to_insert):
+        self.seek(0)
+        buffer = self._read(-1)
+
+        del self.file
+        self.file = BytesIO()
+        self.file.write(to_insert)
+        self.file.write(buffer)
+        self.file.seek(0)
+
     # ------------ PEEK SECTION ------------ #
 
     def _peek(self, size=1):
