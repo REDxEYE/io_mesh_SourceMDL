@@ -737,7 +737,7 @@ class SourceContents(Flags):
 
 
 class SourceMdlBone(SourceBase):
-    parent = None  # type:SourceMdlFileData
+    # parent = None  # type:# SourceMdlFileData
 
     def __init__(self):
 
