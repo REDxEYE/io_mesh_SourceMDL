@@ -54,8 +54,15 @@ class IOMdl:
         self.co = co
         self.rot = rot
         self.vertex_offset = 0
+
         with open(path, 'rb') as fp:
-            fp.read(4)
+            temp = fp.read(4)
+            if temp != b'IDST':
+                if temp[:-1] == b'DST':
+                    fp.seek(3)
+                    print('MDL FILE WAS "PROTECTED", but screew it :P')
+                else:
+                    raise NotImplementedError('MDL format {} is not supported!'.format(temp))
             version = struct.unpack('i', fp.read(4))[0]
 
         file_path = path.replace('.dx90', "")[:-4]
@@ -500,7 +507,8 @@ class IOMdl:
 
 if __name__ == '__main__':
     # model_path = r'G:\SteamLibrary\SteamApps\common\SourceFilmmaker\game\tf_movies\models\player\hwm\spy'
-    model_path = r"G:\SteamLibrary\SteamApps\common\SourceFilmmaker\game\workshop\models\jawsfm\quake champions\characters\sorlag.mdl"
+    # model_path = r"G:\SteamLibrary\SteamApps\common\SourceFilmmaker\game\workshop\models\jawsfm\quake champions\characters\sorlag.mdl"
+    model_path = r"C:\Users\RED_EYE\Downloads\kateryne.mdl"
     # model_path = r'G:\SteamLibrary\SteamApps\common\SourceFilmmaker\game\usermod\models\red_eye\tyranno\raptor.mdl'
     # model_path = r'./test_data/hl/box01a.mdl'
     # model_path = r'G:\SteamLibrary\SteamApps\common\SourceFilmmaker\game\usermod\models\red_eye\rick-and-morty\pink_raptor.mdl'
