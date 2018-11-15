@@ -420,12 +420,11 @@ class SourceMdlFileData(SourceBase):
         writer.write_bytes(self.id.encode('ascii'))
         writer.write_uint32(self.version)
         writer.write_uint32(self.checksum)
-        writer.write_ascii_string(self.name,False,64)
+        writer.write_ascii_string(self.name, False, 64)
         writer.write_uint32(0)
 
     # @property
     # def total_size(self):
-
 
     def print_info(self, indent=0):
         def iprint(indent2, arg, fname=''):
@@ -737,7 +736,7 @@ class SourceContents(Flags):
 
 
 class SourceMdlBone(SourceBase):
-    parent: SourceMdlFileData
+    parent = None  # type:SourceMdlFileData
 
     def __init__(self):
 
