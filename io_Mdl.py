@@ -81,6 +81,9 @@ class IOMdl:
                 self.VTX = VTX.SourceVtxFile49(file_path)
                 self.MDL = MDL.SourceMdlFile49(file_path)
 
+        else:
+            raise NotImplementedError('WTF? HOW THIS HAPPENED')
+
         self.armature_obj = None
         self.armature = None
         self.create_skeleton(join_bones)
