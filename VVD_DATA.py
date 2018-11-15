@@ -26,6 +26,12 @@ class SourceVvdFileData:
 
     def read(self, reader: ByteIO):
         self.id = reader.read_fourcc()
+        if self.id != 'IDSV':
+            if self.id[:-1] == 'DSV':
+                print('VVD FILE WAS "PROTECTED", but screew it :P')
+                reader.rewind(1)
+            else:
+                raise NotImplementedError('VVD format {} is not supported!'.format(self.id))
         self.version = reader.read_uint32()
         self.checksum = reader.read_uint32()
         self.lod_count = reader.read_uint32()

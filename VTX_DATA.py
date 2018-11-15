@@ -30,6 +30,12 @@ class SourceVtxFileData:
 
     def read(self, reader: ByteIO):
         self.version = reader.read_uint32()
+        if self.version!=7:
+            if self.version == 402653184:
+                print('VTX FILE WAS "PROTECTED", but screew it :P')
+                reader.rewind(1)
+            else:
+                raise NotImplementedError('VTX version {} is not supported!'.format(self.version))
         self.vertex_cache_size = reader.read_uint32()
         self.max_bones_per_strip = reader.read_uint16()
         self.max_bones_per_tri = reader.read_uint16()

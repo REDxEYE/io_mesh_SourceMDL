@@ -251,7 +251,13 @@ class SourceMdlFileData(SourceBase):
         self.read_header02(reader)
 
     def read_header00(self, reader: ByteIO):
-        self.id = ''.join(list([chr(reader.read_uint8()) for _ in range(4)]))
+        self.id = reader.read_fourcc()
+        if self.id != 'IDST':
+            if self.id[:-1] == 'DST':
+                print('MDL FILE WAS "PROTECTED", but screew it :P')
+                reader.rewind(1)
+            else:
+                raise NotImplementedError('MDL format {} is not supported!'.format(self.id))
         self.version = reader.read_uint32()
         print('Found MDL version', self.version)
         self.checksum = reader.read_uint32()
