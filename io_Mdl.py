@@ -54,7 +54,7 @@ class IOMdl:
         self.co = co
         self.rot = rot
         self.vertex_offset = 0
-
+        version = -1
         with open(path, 'rb') as fp:
             temp = fp.read(4)
             if temp != b'IDST':

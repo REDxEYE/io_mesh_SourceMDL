@@ -14,29 +14,30 @@ except ImportError:
 
 class SourceMdlFile49:
 
-    def __init__(self, filepath):
+    def __init__(self, filepath,read = True):
         self.reader = ByteIO(path=filepath + '.mdl', copy_data_from_handle=False, )
         self.filename = os.path.basename(filepath + '.mdl')[:-4]
         self.file_data = SourceMdlFileData()
         self.file_data.read(self.reader)
-        self.read_bones()
-        self.read_bone_controllers()
-        self.read_skin_families()
-        self.read_flex_descs()
-        self.read_flex_controllers()
-        self.read_flex_rules()
+        if read:
+            self.read_bones()
+            self.read_bone_controllers()
+            self.read_skin_families()
+            self.read_flex_descs()
+            self.read_flex_controllers()
+            self.read_flex_rules()
 
-        self.read_attachments()
-        self.read_mouths()
-        self.read_bone_flex_drivers()
-        self.read_flex_controllers_ui()
-        self.read_body_parts()
-        self.read_textures()
-        self.read_texture_paths()
-        self.build_flex_frames()
-        self.prepare_models()
-        # self.read_local_animation_descs()
-        self.read_sequences()
+            self.read_attachments()
+            self.read_mouths()
+            self.read_bone_flex_drivers()
+            self.read_flex_controllers_ui()
+            self.read_body_parts()
+            self.read_textures()
+            self.read_texture_paths()
+            self.build_flex_frames()
+            self.prepare_models()
+            # self.read_local_animation_descs()
+            self.read_sequences()
         # print(self.mdl)
 
     def read_bones(self):
