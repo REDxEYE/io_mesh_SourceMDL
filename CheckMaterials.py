@@ -22,7 +22,7 @@ if __name__ == '__main__':
     if not model.exists():
         print('\033[91mMODEL NOT FOUND\033[0m')
         exit()
-    print('\033[94mReading \033[94m{}\033[0m'.format(model))
+    print('\033[94mReading \033[95m{}\033[0m'.format(model))
     mod_path = ValveUtils.get_mod_path(model)
     game_info_path = mod_path / 'gameinfo.txt'
     if not game_info_path.exists():
