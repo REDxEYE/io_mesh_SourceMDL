@@ -34,7 +34,7 @@ if __name__ == '__main__':
     other_files = []
     print('Searching in:')
     for path in gi.get_search_paths_recursive():
-        print('\x1b[92m{}\x1b[0m'.format(path))
+        print('\x1b[95m{}\x1b[0m'.format(path))
     if model.exists():
         other_files.append(model)
         mdl = MDL.SourceMdlFile49(filepath=str(model.with_name(model.stem)), read=False)
