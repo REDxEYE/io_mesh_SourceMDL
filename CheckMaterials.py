@@ -26,19 +26,33 @@ sandwich = r'''                   _.---._
          ~-._\.        _.-~_/
              \`--...--~_.-~
               `--...--~'''
-
+hamburger = r'''                _....----"""----...._
+             .-'  o    o    o    o   '-.
+            /  o    o    o         o    \
+           /     o      o   o     o    o \
+         _|   o   o    o      o  o     o  |_
+        / `''-----.................-----''` \
+        \___________________________________/
+          \~`-`.__.`-~`._.~`-`~.-~.__.~`-`/
+           \                             /
+            `-._______________________.-' '''
 
 import MDL
 import ValveUtils
 from ValveUtils import GameInfoFile, KeyValueFile
 
 if __name__ == '__main__':
-    if sys.argv[1] == 'make':
-        temp = ' '.join(sys.argv[1:])
+    temp = (' '.join(sys.argv[1:])).lower()
+    if 'make' in temp:
+
         if 'me' in temp and 'sandwich' in temp:
             print('Here is your sandwich')
             print(sandwich)
             exit()
+    elif 'i' in temp and 'want' in temp and 'hamburger':
+        print('here is your hamburger')
+        print(hamburger)
+        exit()
     # model = Path(r"G:\SteamLibrary\SteamApps\common\half-life 2\hl2\models\shadertest\envballs.mdl")
     model = Path(sys.argv[1])
     # if len(sys.argv) > 2:
