@@ -30,11 +30,13 @@ if __name__ == '__main__':
     gi = GameInfoFile(game_info_path)
     # mod_paths = gi.get_search_paths_recursive()
     textures = []
+    used_textures = []
     materials = []
     other_files = []
+    print('Trying to find used textures and materials')
     print('Searching in:')
     for path in gi.get_search_paths_recursive():
-        print('\x1b[95m{}\x1b[0m'.format(path))
+        print('\t\x1b[95m{}\x1b[0m'.format(path))
     if model.exists():
         other_files.append(model)
         mdl = MDL.SourceMdlFile49(filepath=str(model.with_name(model.stem)), read=False)
@@ -54,26 +56,43 @@ if __name__ == '__main__':
             kv = KeyValueFile(mat[0])
             for v in list(kv.as_dict.values())[0].values():
                 if '/' in v or '\\' in v:
+                    used_textures.append(Path(v))
                     tex = gi.find_texture(v, True)
                     if tex:
                         temp = ValveUtils.get_mod_path(tex).parent
                         textures.append((Path(tex), Path(tex).relative_to(temp)))
             # print(kv.as_dict)
+        print('\033[94m','*'*10,'MATERIALS','*'*10,'\033[0m')
         for texture in mdl.file_data.textures:
             exist = False
             found_path = None
             for mat in materials:
-                mat = mat[1]
-                if mat.stem == texture.path_file_name:
+                if mat[1].stem == texture.path_file_name:
                     exist = True
-                    found_path = mat
+                    found_path = mat[0]
                     break
             if exist:
                 print('>>>\033[94m', texture.path_file_name, '-> \033[92mFound here \033[0m>', '\033[95m', found_path,
                       '\033[0m')
             else:
                 print('>>>\033[94m', texture.path_file_name, '-> \033[91mNot found!', '\033[0m')
+            print()
 
+        print('\033[94m','*'*10,'TEXTURES','*'*10,'\033[0m')
+        for used_texture in used_textures:
+            exist = False
+            found_path = None
+            for tex in textures:
+                if tex[1].stem == used_texture.stem:
+                    exist = True
+                    found_path = tex[0]
+                    break
+            if exist:
+                print('>>>\033[94m', used_texture, '-> \033[92mFound here \033[0m>', '\033[95m', found_path,
+                      '\033[0m')
+            else:
+                print('>>>\033[94m', used_texture, '-> \033[91mNot found!', '\033[0m')
+            print()
     textures = list(set(textures))
     input('Press Enter to exit')
     # print('*'*10,'MATERIALS','*'*10)
