@@ -13,7 +13,7 @@ try:
     from .flags import Flags
     from .Utils import get_class_var_name
 
-except ImportError:
+except Exception:
     from ByteIO import ByteIO, OffsetOutOfBounds
     from GLOBALS import SourceVector, SourceQuaternion, SourceFloat16bits
     import VTX

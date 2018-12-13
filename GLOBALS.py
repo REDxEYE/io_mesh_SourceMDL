@@ -4,7 +4,7 @@ import struct
 
 try:
     from .ByteIO import ByteIO
-except ImportError:
+except Exception:
     from ByteIO import ByteIO
 
 

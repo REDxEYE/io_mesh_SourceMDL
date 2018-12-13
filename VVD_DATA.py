@@ -3,7 +3,7 @@ from typing import List
 try:
     from .ByteIO import ByteIO
     from .GLOBALS import SourceVertex
-except ImportError:
+except Exception:
     from ByteIO import ByteIO
     from GLOBALS import SourceVertex
 

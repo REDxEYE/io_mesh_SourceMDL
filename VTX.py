@@ -8,7 +8,7 @@ def split(array, n=3):
 try:
     from .ByteIO import ByteIO
     from .VTX_DATA import *
-except ImportError:
+except Exception:
     from ByteIO import ByteIO
     from VTX_DATA import *
 

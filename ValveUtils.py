@@ -629,7 +629,7 @@ class GameInfoFile(KeyValueFile):
         else:
             self.filename = None
         self.project = self.filepath.parent.parent
-
+        self.path_cache = []
         super().__init__(filepath, parse_line, chunk_class, read_callback, True)
 
     def __getattr__(self, attr):
@@ -655,6 +655,7 @@ class GameInfoFile(KeyValueFile):
                     for p in new_paths:
                         if p not in paths:
                             paths.append(p)
+
         return list(paths)
 
     def get_search_paths(self):
@@ -722,7 +723,12 @@ class GameInfoFile(KeyValueFile):
 
     def find_file(self, filepath: str, additional_dir=None, extention=None,use_recursive = False):
         if use_recursive:
-            paths = self.get_search_paths_recursive()
+            if self.path_cache:
+                paths = self.path_cache
+            else:
+                paths = self.get_search_paths_recursive()
+                self.path_cache = paths
+
         else:
             paths = self.get_search_paths()
         for mod_path in paths:

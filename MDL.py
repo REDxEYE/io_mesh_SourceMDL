@@ -5,7 +5,7 @@ try:
     from .ByteIO import *
     from .MDL_DATA_ANIMATIONS import *
     from .progressBar import Progress_bar
-except ImportError:
+except Exception:
     from MDL_DATA import *
     from ByteIO import *
     from MDL_DATA_ANIMATIONS import *

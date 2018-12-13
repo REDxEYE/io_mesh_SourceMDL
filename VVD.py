@@ -3,7 +3,7 @@ import sys
 try:
     from .ByteIO import ByteIO
     from .VVD_DATA import SourceVvdFileData
-except ImportError:
+except Exception:
     from ByteIO import ByteIO
     from VVD_DATA import SourceVvdFileData
 

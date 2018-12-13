@@ -4,7 +4,7 @@ from typing import List
 try:
     from .flags import Flags
     from .ByteIO import ByteIO
-except ImportError:
+except Exception:
     from ByteIO import ByteIO
     from flags import Flags
 
