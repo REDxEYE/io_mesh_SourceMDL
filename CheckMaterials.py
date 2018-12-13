@@ -19,6 +19,9 @@ if __name__ == '__main__':
     #     dump_path = Path(sys.argv[2])
     # else:
     #     dump_path = None
+    if not model.exists():
+        print('\033[91mMODEL NOT FOUND\033[0m')
+        exit()
     mod_path = ValveUtils.get_mod_path(model)
     game_info_path = mod_path / 'gameinfo.txt'
     if not game_info_path.exists():
