@@ -8,11 +8,37 @@ setConsoleModeProc(k32.GetStdHandle(-11), 0x0001 | 0x0002 | 0x0004)
 # import winreg
 #
 # winreg.SetValueEx(winreg.HKEY_CURRENT_USER,r'HKEY_CURRENT_USER\Console\VirtualTerminalLevel',0,winreg.REG_DWORD,1)
+sandwich = r'''                   _.---._
+                _.-~       ~-._
+            _.-~               ~-._
+        _.-~                       ~---._
+    _.-~                                 ~\
+ .-~                                    _.;
+ :-._                               _.-~ ./
+ `-._~-._                   _..__.-~ _.-~
+  /  ~-._~-._              / .__..--~----._
+ \_____(_;-._\.        _.-~_/       ~).. . \
+    /(_____  \`--...--~_.-~______..-+_______)
+  .(_________/`--...--~/    _/nad        /\
+ /-._     \_     (___./_..-~__.....__..-~./
+ `-._~-._   ~\--------~  .-~_..__.-~ _.-~
+     ~-._~-._ ~---------'  / .__..--~
+         ~-._\.        _.-~_/
+             \`--...--~_.-~
+              `--...--~'''
+
+
 import MDL
 import ValveUtils
 from ValveUtils import GameInfoFile, KeyValueFile
 
 if __name__ == '__main__':
+    if sys.argv[1] == 'make':
+        temp = ' '.join(sys.argv[1:])
+        if 'me' in temp and 'sandwich' in temp:
+            print('Here is your sandwich')
+            print(sandwich)
+            exit()
     # model = Path(r"G:\SteamLibrary\SteamApps\common\half-life 2\hl2\models\shadertest\envballs.mdl")
     model = Path(sys.argv[1])
     # if len(sys.argv) > 2:
@@ -62,7 +88,7 @@ if __name__ == '__main__':
                         temp = ValveUtils.get_mod_path(tex).parent
                         textures.append((Path(tex), Path(tex).relative_to(temp)))
             # print(kv.as_dict)
-        print('\033[94m','*'*10,'MATERIALS','*'*10,'\033[0m')
+        print('\033[94m', '*' * 10, 'MATERIALS', '*' * 10, '\033[0m')
         for texture in mdl.file_data.textures:
             exist = False
             found_path = None
@@ -76,9 +102,9 @@ if __name__ == '__main__':
                       '\033[0m')
             else:
                 print('>>>\033[94m', texture.path_file_name, '-> \033[91mNot found!', '\033[0m')
-            print()
+            # print()
 
-        print('\033[94m','*'*10,'TEXTURES','*'*10,'\033[0m')
+        print('\033[94m', '*' * 10, 'TEXTURES', '*' * 10, '\033[0m')
         for used_texture in used_textures:
             exist = False
             found_path = None
@@ -92,10 +118,12 @@ if __name__ == '__main__':
                       '\033[0m')
             else:
                 print('>>>\033[94m', used_texture, '-> \033[91mNot found!', '\033[0m')
-            print()
+            # print()
     textures = list(set(textures))
     input('Press Enter to exit')
     # print('*'*10,'MATERIALS','*'*10)
     # pprint(materials)
     # print('*'*10,'TEXTURES','*'*10)
     # pprint(textures)
+
+
