@@ -86,12 +86,18 @@ def get_mod_path(path: Path):
 
     :rtype: Path
     """
+    org = path
     if 'models' in path.parts or 'materials' in path.parts:
         while len(path.parts) > 1:
             path = path.parent
-            if path.stem == 'models' or path.stem == 'materials':
+            if path.parts[-1] == 'models' and path.parts[-2] == 'materials':
+                return path.parent.parent
+            if path.parts[-1] == 'models':
+                return path.parent
+            if path.parts[-1] == 'materials':
                 return path.parent
             if len(path.parts) == 1:
+                print(org)
                 return None
     return path
 
@@ -638,13 +644,15 @@ class GameInfoFile(KeyValueFile):
         except IndexError:
             raise AttributeError("attribute '%s' not found" % attr)
 
-    def get_search_paths_recursive(self,visited_mods = None):
+    def get_search_paths_recursive(self, visited_mods=None):
         if visited_mods is None:
             visited_mods = []
         if self.modname in visited_mods:
             return
         paths = self.get_search_paths()
         for path in self.get_search_paths():
+            if path.stem == '*':
+                path = path.parent
             gi_path = path / 'gameinfo.txt'
             if gi_path.exists():
                 gi = GameInfoFile(gi_path)
@@ -721,7 +729,7 @@ class GameInfoFile(KeyValueFile):
                     addonNames.append(chunk.value)
         return addonNames
 
-    def find_file(self, filepath: str, additional_dir=None, extention=None,use_recursive = False):
+    def find_file(self, filepath: str, additional_dir=None, extention=None, use_recursive=False):
         if use_recursive:
             if self.path_cache:
                 paths = self.path_cache
@@ -732,6 +740,8 @@ class GameInfoFile(KeyValueFile):
         else:
             paths = self.get_search_paths()
         for mod_path in paths:
+            if mod_path.stem == '*':
+                mod_path = mod_path.parent
             if additional_dir:
                 new_filepath = mod_path / additional_dir / filepath
             else:
@@ -743,10 +753,11 @@ class GameInfoFile(KeyValueFile):
         else:
             return None
 
-    def find_texture(self, filepath,use_recursive = False):
-        return self.find_file(filepath, 'materials', extention='.vtf',use_recursive=use_recursive)
-    def find_material(self, filepath,use_recursive = False):
-        return self.find_file(filepath, 'materials', extention='.vmt',use_recursive=use_recursive)
+    def find_texture(self, filepath, use_recursive=False):
+        return self.find_file(filepath, 'materials', extention='.vtf', use_recursive=use_recursive)
+
+    def find_material(self, filepath, use_recursive=False):
+        return self.find_file(filepath, 'materials', extention='.vmt', use_recursive=use_recursive)
 
     @property
     def title(self):
