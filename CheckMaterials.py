@@ -117,7 +117,8 @@ if __name__ == '__main__':
                     pass
                 copy2(file[0],dump_path/file[1])
                 print('from\033[94m',file[0],'\033[0mto\033[95m',dump_path/file[1],'\033[0m')
-    # input('Press Enter to exit')
+    else:
+        input('Press Enter to exit')
     # print('*'*10,'MATERIALS','*'*10)
     # pprint(materials)
     # print('*'*10,'TEXTURES','*'*10)
