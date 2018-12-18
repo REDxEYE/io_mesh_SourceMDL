@@ -26,6 +26,7 @@ if __name__ == '__main__':
         exit()
     print('\033[94mReading \033[95m{}\033[0m'.format(model))
     mod_path = ValveUtils.get_mod_path(model)
+    print('Current mod path ->',mod_path)
     game_info_path = mod_path / 'gameinfo.txt'
     if not game_info_path.exists():
         raise FileNotFoundError("Failed to find gameinfo file")
@@ -67,6 +68,7 @@ if __name__ == '__main__':
             kv = KeyValueFile(mat[0])
             for v in list(kv.as_dict.values())[0].values():
                 if '/' in v or '\\' in v:
+                    print('Trying to find {}'.format(v))
                     used_textures.append(Path(v))
                     tex = gi.find_texture(v, True)
                     if tex:
