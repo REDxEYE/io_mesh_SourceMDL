@@ -12,15 +12,15 @@ import ValveUtils
 from ValveUtils import GameInfoFile, KeyValueFile
 
 if __name__ == '__main__':
-    # model = Path(
-    #     r"G:\SteamLibrary\SteamApps\common\SourceFilmmaker\game\Furry\models\red_eye\creepychimera\lewdsangheili.mdl")
+    model = Path(
+        r"G:\SteamLibrary\SteamApps\common\SourceFilmmaker\game\usermod\models\overwatch\characters\doomfist\doomfist_formal.mdl")
     # dump_path = Path(r'E:\PACKED_MODELS\LewdSangheili')
-    # dump_path = None
-    model = Path(sys.argv[1])
-    if len(sys.argv) > 2:
-        dump_path = Path(sys.argv[2])
-    else:
-        dump_path = None
+    dump_path = None
+    # model = Path(sys.argv[1])
+    # if len(sys.argv) > 2:
+    #     dump_path = Path(sys.argv[2])
+    # else:
+    #     dump_path = None
     if not model.exists():
         print('\033[91mMODEL NOT FOUND\033[0m')
         exit()
@@ -57,6 +57,8 @@ if __name__ == '__main__':
         # print(mdl.file_data.textures)
         for texture in mdl.file_data.textures:
             for tex_path in mdl.file_data.texture_paths:
+                if tex_path[0]=='/' or tex_path[0]=='\\':
+                    tex_path = tex_path[1:]
                 mat = gi.find_material(Path(tex_path) / texture.path_file_name, use_recursive=True)
                 if mat:
                     temp = ValveUtils.get_mod_path(mat)
