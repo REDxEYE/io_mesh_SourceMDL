@@ -58,6 +58,7 @@ if __name__ == '__main__':
         # print(mdl.file_data.textures)
         for texture in mdl.file_data.textures:
             for tex_path in mdl.file_data.texture_paths:
+                print('Trying to find {}'.format(Path(tex_path) / texture.path_file_name))
                 mat = gi.find_material(Path(tex_path) / texture.path_file_name, use_recursive=True)
                 if mat:
                     temp = ValveUtils.get_mod_path(mat)
