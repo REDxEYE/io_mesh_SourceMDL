@@ -47,7 +47,7 @@ class IOMdl:
         self.import_textures = import_textures
         # TODO: make working_directory to do something useful
         self.working_directory = working_directory
-
+        self.collection = None
         self.join_clamped = join_clamped
 
         self.name = os.path.basename(path)[:-4]
@@ -103,7 +103,7 @@ class IOMdl:
         bpy.ops.object.armature_add(enter_editmode=True)
 
         self.armature_obj = bpy.context.object
-        self.armature_obj.show_x_ray = True
+        # self.armature_obj.show_x_ray = True
         self.armature_obj.name = self.name + '_ARM'
 
         self.armature = self.armature_obj.data
@@ -128,10 +128,10 @@ class IOMdl:
             bl_bone = self.armature_obj.pose.bones.get(se_bone.name)
             pos = Vector([se_bone.position.x, se_bone.position.y, se_bone.position.z])
             rot = Euler([se_bone.rotation.x, se_bone.rotation.y, se_bone.rotation.z])
-            mat = Matrix.Translation(pos) * rot.to_matrix().to_4x4()
+            mat = Matrix.Translation(pos) @ rot.to_matrix().to_4x4()
             bl_bone.matrix_basis.identity()
             if bl_bone.parent:
-                bl_bone.matrix = bl_bone.parent.matrix * mat
+                bl_bone.matrix = bl_bone.parent.matrix @ mat
             else:
                 bl_bone.matrix = mat
         bpy.ops.pose.armature_apply()
@@ -349,7 +349,10 @@ class IOMdl:
             return
         self.mesh_obj = bpy.data.objects.new(name, bpy.data.meshes.new(name))
         self.mesh_obj.parent = self.armature_obj
-        bpy.context.scene.objects.link(self.mesh_obj)
+
+        # bpy.context.scene_collection.objects.link(self.mesh_obj)
+        self.collection.objects.link(self.mesh_obj)
+        # bpy.context.scene.objects.link(self.mesh_obj)
 
         modifier = self.mesh_obj.modifiers.new(type="ARMATURE", name="Armature")
         modifier.object = self.armature_obj
@@ -359,7 +362,7 @@ class IOMdl:
         # [self.get_material(mat.path_file_name, self.mesh_obj) for mat in self.MDL.file_data.textures]
         used_materials = {m_id: False for m_id in range(len(self.MDL.file_data.textures))}
         material_indexes = []
-        weight_groups = {bone.name: self.mesh_obj.vertex_groups.new(bone.name) for bone in
+        weight_groups = {bone.name: self.mesh_obj.vertex_groups.new(name = bone.name) for bone in
                          self.MDL.file_data.bones}
         vtx_model_lod = vtx_model.vtx_model_lods[0]  # type: VTX_DATA.SourceVtxModelLod
         print('Converting {} mesh_data'.format(name))
@@ -398,7 +401,8 @@ class IOMdl:
                 if weight == 0.0:
                     continue
                 weight_groups[self.MDL.file_data.bones[bone_index].name].add([n], weight, 'REPLACE')
-        self.mesh_data.uv_textures.new()
+        # self.mesh_data.uv_textures.new()
+        self.mesh_data.uv_layers.new()
         uv_data = self.mesh_data.uv_layers[0].data
         # print('Applying UV')
         for i in range(len(uv_data)):
@@ -408,8 +412,10 @@ class IOMdl:
             polygon.material_index = mat_remap[mat_index]
 
         bpy.ops.object.select_all(action="DESELECT")
-        self.mesh_obj.select = True
-        bpy.context.scene.objects.active = self.mesh_obj
+        # self.mesh_obj.select = True
+        self.mesh_obj.select_set(True)
+        bpy.context.view_layer.objects.active = self.mesh_obj
+        # bpy.context.scene.objects.active = self.mesh_obj
 
         with redirect_stdout(stdout):
             bpy.ops.object.mode_set(mode='EDIT')
@@ -428,6 +434,8 @@ class IOMdl:
         return self.mesh_obj
 
     def create_models(self):
+        self.collection = bpy.data.collections.new(self.MDL.file_data.name)
+        bpy.context.scene.collection.children.link(self.collection)
         self.MDL.file_data = self.MDL.file_data  # type: MDL_DATA.SourceMdlFileData
         for bodyparts in self.MDL.file_data.bodypart_frames:
             to_join = []
@@ -501,11 +509,11 @@ class IOMdl:
 
         # illumination_position
         empty = bpy.data.objects.new("empty", None)
-        bpy.context.scene.objects.link(empty)
+        self.collection.objects.link(empty)
         empty.name = 'illum position'
         empty.parent = self.armature_obj
         empty.location = Vector(self.MDL.file_data.illumination_position.as_list)
-        empty.empty_draw_type = 'SPHERE'
+        empty.empty_display_type = 'SPHERE'
 
 
 if __name__ == '__main__':

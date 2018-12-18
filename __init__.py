@@ -4,8 +4,8 @@ from pathlib import Path
 bl_info = {
     "name": "Source Engine model_path import + textures (.mdl, .file_data, .vtx)",
     "author": "RED_EYE",
-    "version": (1, 5),
-    "blender": (2, 29, 0),
+    "version": (2, 0),
+    "blender": (2, 80, 0),
     "location": "File > Import-Export > SourceEngine MDL (.mdl, .file_data, .vtx) ",
     "description": "Addon allows to import Source Engine models",
     'warning': 'May crash blender',
@@ -108,6 +108,8 @@ class VmdlImporter_OT_operator(bpy.types.Operator):
         wm.fileselect_add(self)
         return {'RUNNING_MODAL'}
 
+classes = (VmdlImporter_OT_operator, VmeshImporter_OT_operator,MDLImporter_OT_operator)
+register_, unregister_ = bpy.utils.register_classes_factory(classes)
 
 def menu_import(self, context):
     self.layout.operator(MDLImporter_OT_operator.bl_idname, text="Source model (.mdl)")
@@ -116,13 +118,15 @@ def menu_import(self, context):
 
 
 def register():
-    bpy.utils.register_module(__name__)
-    bpy.types.INFO_MT_file_import.append(menu_import)
+    register_()
+    # bpy.utils.register_module(__name__)
+    bpy.types.TOPBAR_MT_file_import.append(menu_import)
 
 
 def unregister():
-    bpy.utils.unregister_module(__name__)
-    bpy.types.INFO_MT_file_import.remove(menu_import)
+    # bpy.utils.unregister_module(__name__)
+    bpy.types.TOPBAR_MT_file_import.remove(menu_import)
+    unregister_()
 
 
 if __name__ == "__main__":
