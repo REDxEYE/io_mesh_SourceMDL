@@ -57,7 +57,7 @@ if __name__ == '__main__':
         # print(mdl.file_data.textures)
         for texture in mdl.file_data.textures:
             for tex_path in mdl.file_data.texture_paths:
-                if tex_path[0]=='/' or tex_path[0]=='\\':
+                if tex_path and (tex_path[0]=='/' or tex_path[0]=='\\'):
                     tex_path = tex_path[1:]
                 mat = gi.find_material(Path(tex_path) / texture.path_file_name, use_recursive=True)
                 if mat:
