@@ -186,13 +186,13 @@ class IOMdl:
             md.materials.append(mat)
             # Give it a random colour
             rand_col = []
+            for i in range(3):
+                rand_col.append(random.uniform(.4, 1))
             try:
-                for i in range(3):
-                    rand_col.append(random.uniform(.4, 1))
+               
                 mat.diffuse_color = rand_col
             except:
-                for i in range(4):
-                    rand_col.append(random.uniform(.4, 1))
+                rand_col.append(1.0)
                 mat.diffuse_color = rand_col
                 
 
