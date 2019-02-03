@@ -4,7 +4,7 @@ from pathlib import Path
 bl_info = {
     "name": "Source Engine model_path import + textures (.mdl, .file_data, .vtx)",
     "author": "RED_EYE",
-    "version": (2, 0),
+    "version": (2, 1),
     "blender": (2, 80, 0),
     "location": "File > Import-Export > SourceEngine MDL (.mdl, .file_data, .vtx) ",
     "description": "Addon allows to import Source Engine models",
