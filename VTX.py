@@ -1,4 +1,5 @@
 import sys
+import os
 from pprint import pprint
 
 def split(array, n=3):
@@ -8,16 +9,24 @@ def split(array, n=3):
 try:
     from .ByteIO import ByteIO
     from .VTX_DATA import *
+    from .Utils import case_insensitive_file_resolution
 except Exception:
     from ByteIO import ByteIO
     from VTX_DATA import *
+    from Utils import case_insensitive_file_resolution
 
 
 class SourceVtxFile49:
     def __init__(self, path=None, file=None):
         self.final = False
         if path:
-            self.reader = ByteIO(path=path + ".dx90.vtx")
+            full_path = path + ".dx90.vtx"
+            if not os.path.isfile(full_path):
+                full_path = case_insensitive_file_resolution(full_path)
+                if full_path is None:
+                    raise NotImplementedError('VTX file could not be found')
+
+            self.reader = ByteIO(path=full_path)
         elif file:
             self.reader = file
         # print('Reading VTX file')
