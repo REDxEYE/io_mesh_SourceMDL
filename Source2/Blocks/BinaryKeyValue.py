@@ -1,8 +1,13 @@
 from enum import IntEnum
 
-from MDLIO_ByteIO import ByteIO
-from Source2.Blocks.Dummy import Dummy
-from Source2.Blocks.Header import InfoBlock
+try:
+    from MDLIO_ByteIO import ByteIO
+    from Source2.Blocks.Dummy import Dummy
+    from Source2.Blocks.Header import InfoBlock
+except:
+    from ...MDLIO_ByteIO import ByteIO
+    from .Dummy import Dummy
+    from .Header import InfoBlock
 
 
 class KVFlag(IntEnum):

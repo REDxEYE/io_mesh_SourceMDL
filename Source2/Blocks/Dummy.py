@@ -1,4 +1,7 @@
-from MDLIO_ByteIO import ByteIO
+try:
+    from MDLIO_ByteIO import ByteIO
+except:
+    from ...MDLIO_ByteIO import ByteIO
 
 
 class Dummy:

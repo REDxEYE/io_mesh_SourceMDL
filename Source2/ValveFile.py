@@ -4,12 +4,14 @@ import sys
 from pprint import pprint
 from typing import List, TextIO
 
-from MDLIO_ByteIO import ByteIO
+
 
 try:
+    from MDLIO_ByteIO import ByteIO
     from Source2.Blocks.Common import SourceVector
     from Source2.Blocks.Header import CompiledHeader, InfoBlock
 except:
+    from ..MDLIO_ByteIO import ByteIO
     from .Blocks.Common import SourceVector
     from .Blocks.Header import CompiledHeader, InfoBlock
 

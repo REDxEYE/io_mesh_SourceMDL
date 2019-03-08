@@ -1,10 +1,14 @@
 from typing import List
-
-from MDLIO_ByteIO import ByteIO
-from Source2.Blocks.Dummy import Dummy
-from Source2.Blocks.Header import InfoBlock
-from Source2.ValveFile import ValveFile
-
+try:
+    from MDLIO_ByteIO import ByteIO
+    from Source2.Blocks.Dummy import Dummy
+    from Source2.Blocks.Header import InfoBlock
+    from Source2.ValveFile import ValveFile
+except:
+    from ...MDLIO_ByteIO import ByteIO
+    from .Dummy import Dummy
+    from .Header import InfoBlock
+    from ..ValveFile import ValveFile
 
 class RERL(Dummy):
     def __init__(self, valve_file:ValveFile):

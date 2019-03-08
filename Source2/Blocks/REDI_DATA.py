@@ -1,7 +1,10 @@
 from typing import List
-
-from MDLIO_ByteIO import ByteIO
-from Source2.Blocks.Dummy import Dummy
+try:
+    from MDLIO_ByteIO import ByteIO
+    from Source2.Blocks.Dummy import Dummy
+except:
+    from ...MDLIO_ByteIO import ByteIO
+    from .Dummy import Dummy
 
 
 class Dependencies(Dummy):

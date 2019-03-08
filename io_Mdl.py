@@ -11,8 +11,6 @@ try:
     from . import math_utilities
 except ImportError:
     import sys
-
-    sys.path.append(r'E:\PYTHON\MDL_reader\rewrite')
     import VVD
     import VVD_DATA
     import VTX
