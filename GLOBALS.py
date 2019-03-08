@@ -3,9 +3,9 @@ import random
 import struct
 
 try:
-    from .ByteIO import ByteIO
+    from .MDLIO_ByteIO import ByteIO
 except Exception:
-    from ByteIO import ByteIO
+    from MDLIO_ByteIO import ByteIO
 
 
 class SourceVector:

@@ -59,10 +59,11 @@ if __name__ == '__main__':
             for tex_path in mdl.file_data.texture_paths:
                 if tex_path and (tex_path[0]=='/' or tex_path[0]=='\\'):
                     tex_path = tex_path[1:]
-                mat = gi.find_material(Path(tex_path) / texture.path_file_name, use_recursive=True)
-                if mat:
-                    temp = ValveUtils.get_mod_path(mat)
-                    materials.append((Path(mat), Path(mat).relative_to(temp)))
+                if tex_path:
+                    mat = gi.find_material(Path(tex_path) / texture.path_file_name, use_recursive=True)
+                    if mat:
+                        temp = ValveUtils.get_mod_path(mat)
+                        materials.append((Path(mat), Path(mat).relative_to(temp)))
             ...
 
         for mat in materials:

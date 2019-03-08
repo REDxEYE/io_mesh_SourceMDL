@@ -1,6 +1,6 @@
 from enum import IntEnum
 
-from ByteIO import ByteIO
+from MDLIO_ByteIO import ByteIO
 from Source2.Blocks.Dummy import Dummy
 from Source2.Blocks.Header import InfoBlock
 

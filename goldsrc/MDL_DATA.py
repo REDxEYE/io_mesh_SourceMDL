@@ -6,7 +6,7 @@ try:
     # from MDL_DATA import StudioHDRFlags
     from .Utils import get_class_var_name
 except:
-    from ByteIO import ByteIO
+    from MDLIO_ByteIO import ByteIO
     from GLOBALS import SourceVector
     # from MDL_DATA import StudioHDRFlags
     from Utils import get_class_var_name

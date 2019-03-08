@@ -1,4 +1,4 @@
-from ByteIO import ByteIO
+from MDLIO_ByteIO import ByteIO
 from Source2.Blocks.Dummy import Dummy
 from Source2.Blocks.Header import InfoBlock
 from Source2.ValveFile import ValveFile

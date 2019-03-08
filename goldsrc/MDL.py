@@ -1,6 +1,6 @@
 import os
 
-from ByteIO import ByteIO
+from MDLIO_ByteIO import ByteIO
 from goldsrc.MDL_DATA import SourceMdlFileDataV10, SourceMdlBone, SourceMdlBoneController
 from progressBar import Progress_bar
 

@@ -7,11 +7,11 @@ import struct
 import math
 
 try:
-    from .ByteIO import ByteIO
+    from .MDLIO_ByteIO import ByteIO
     from .GLOBALS import SourceFloat16bits, SourceVector
     from .MDL_DATA import *
 except:
-    from ByteIO import ByteIO
+    from MDLIO_ByteIO import ByteIO
     from GLOBALS import SourceFloat16bits, SourceVector
     from MDL_DATA import *
 

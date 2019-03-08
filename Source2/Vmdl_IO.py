@@ -1,16 +1,19 @@
 import os.path
-import sys
 
-sys.path.append(r'E:\PYTHON\io_mesh_SourceMDL')
-from Source2.ValveFile import ValveFile
-from Source2.Vmesh_IO import VMESH_IO
-import bpy, mathutils
-from mathutils import Vector, Matrix, Euler, Quaternion
+# sys.path.append(r'E:\PYTHON\io_mesh_SourceMDL')
+try:
+    from .Source2.ValveFile import ValveFile
+    from .Source2.Vmesh_IO import VMESH_IO
+except:
+    from Source2.ValveFile import ValveFile
+    from Source2.Vmesh_IO import VMESH_IO
+import bpy
+from mathutils import Vector
 
 
 class Vmdl_IO:
 
-    def __init__(self, vmdl_path,import_meshes):
+    def __init__(self, vmdl_path, import_meshes):
         self.valve_file = ValveFile(vmdl_path)
         self.valve_file.read_block_info()
         self.valve_file.check_external_resources()
@@ -23,11 +26,12 @@ class Vmdl_IO:
         self.bone_positions = self.model_skeleton['m_bonePosParent']
         self.bone_rotations = self.model_skeleton['m_boneRotParent']
         self.bone_parents = self.model_skeleton['m_nParent']
-        for res,path in self.valve_file.available_resources.items():
+        for res, path in self.valve_file.available_resources.items():
             if 'vmesh' in res and import_meshes:
                 vmesh = VMESH_IO(path)
-                vmesh.build_meshes(self.bone_names,self.remap_table)
-        self.build_armature()
+                vmesh.build_skeleton()
+                vmesh.build_meshes(self.bone_names, self.remap_table)
+        # self.build_armature()
 
     def build_armature(self):
 
@@ -47,6 +51,13 @@ class Vmdl_IO:
 
         for n, (bl_bone, se_bone) in enumerate(bones):
             bone_pos = self.bone_positions[n]
+            # m = bone['m_invBindPose']
+            # inverseBindPose = Matrix([[m[0], m[1], m[2], m[3]],
+            #                           [m[4], m[5], m[6], m[7]],
+            #                           [m[8], m[9], m[10], m[11]],
+            #                           [0, 0, 0, 1]])
+            #
+            # inverseBindPose.invert()
             # y = bone_pos.y
             # bone_pos.y = bone_pos.z
             # bone_pos.z = y
@@ -58,9 +69,9 @@ class Vmdl_IO:
                 bl_bone.tail = bl_bone.head + Vector([0, 0, 1])
             else:
                 pass
-                bl_bone.tail = Vector([0,0,0])+ bl_bone.head
-                bl_bone.head = Vector(bone_pos.as_list) #+ bl_bone.head
-                bl_bone.tail = bl_bone.head + Vector([0,0,1])
+                bl_bone.tail = Vector([0, 0, 0]) + bl_bone.head
+                bl_bone.head = Vector(bone_pos.as_list)  # + bl_bone.head
+                bl_bone.tail = bl_bone.head + Vector([0, 0, 1])
 
         # bpy.ops.object.mode_set(mode='POSE')
         # for bone_name, bone_parent, bone_pos, bone_rot in zip(self.bone_names, self.bone_parents,self.bone_positions,
@@ -114,5 +125,8 @@ class Vmdl_IO:
         #     bpy.ops.armature.calculate_roll(type='GLOBAL_POS_Z')
         bpy.ops.object.mode_set(mode='OBJECT')
 
+
 if __name__ == '__main__':
-    a = Vmdl_IO(r'E:\PYTHON\io_mesh_SourceMDL/test_data/source2/sniper.vmdl_c')
+    a = Vmdl_IO(r'E:\PYTHON\io_mesh_SourceMDL/test_data/source2/sniper.vmdl_c', False)
+    with open('test.h', 'w') as f:
+        a.valve_file.dump_structs(f)

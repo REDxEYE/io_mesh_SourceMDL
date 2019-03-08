@@ -2,7 +2,7 @@ import importlib
 import math
 from enum import IntEnum
 
-from ByteIO import ByteIO
+from MDLIO_ByteIO import ByteIO
 from Source2.Blocks.Dummy import Dummy
 
 
@@ -92,7 +92,7 @@ class SourceVector:
         return SourceVector(*[math.degrees(self.x), math.degrees(self.y), math.degrees(self.z)])
 
     @property
-    def asList(self):
+    def as_list(self):
         return [self.x, self.y, self.z]
 
     @property

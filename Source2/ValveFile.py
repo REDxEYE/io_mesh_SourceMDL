@@ -1,25 +1,34 @@
 import math
+import os.path
 import sys
 from pprint import pprint
 from typing import List, TextIO
 
-from ByteIO import ByteIO
-import os.path
+from MDLIO_ByteIO import ByteIO
 
-from Source2.Blocks.Common import SourceVector
-from Source2.Blocks.Header import CompiledHeader, InfoBlock
-
+try:
+    from Source2.Blocks.Common import SourceVector
+    from Source2.Blocks.Header import CompiledHeader, InfoBlock
+except:
+    from .Blocks.Common import SourceVector
+    from .Blocks.Header import CompiledHeader, InfoBlock
 
 
 class ValveFile:
 
     def __init__(self, filepath):
-
-        from Source2.Blocks.NTRO import NTRO
-        from Source2.Blocks.REDI import REDI
-        from Source2.Blocks.RERP import RERL
-        from Source2.Blocks.VBIB import VBIB
-        from Source2.Blocks.DATA import DATA
+        try:
+            from Source2.Blocks.NTRO import NTRO
+            from Source2.Blocks.REDI import REDI
+            from Source2.Blocks.RERP import RERL
+            from Source2.Blocks.VBIB import VBIB
+            from Source2.Blocks.DATA import DATA
+        except:
+            from .Blocks.NTRO import NTRO
+            from .Blocks.REDI import REDI
+            from .Blocks.RERP import RERL
+            from .Blocks.VBIB import VBIB
+            from .Blocks.DATA import DATA
 
         print('Reading {}'.format(filepath))
         self.reader = ByteIO(path=filepath, copy_data_from_handle=False, )
@@ -44,27 +53,27 @@ class ValveFile:
             if block_info.block_name == 'RERL':
                 with self.reader.save_current_pos():
                     self.reader.seek(block_info.entry + block_info.block_offset)
-                    self.rerl.read(self.reader,block_info)
+                    self.rerl.read(self.reader, block_info)
                     # print(self.rerl)
             if block_info.block_name == 'NTRO':
                 with self.reader.save_current_pos():
                     self.reader.seek(block_info.entry + block_info.block_offset)
-                    self.nrto.read(self.reader,block_info)
+                    self.nrto.read(self.reader, block_info)
 
             if block_info.block_name == 'REDI':
                 with self.reader.save_current_pos():
                     self.reader.seek(block_info.entry + block_info.block_offset)
-                    self.redi.read(self.reader,block_info)
+                    self.redi.read(self.reader, block_info)
                     # print(self.redi)
             if block_info.block_name == 'VBIB':
                 with self.reader.save_current_pos():
                     self.reader.seek(block_info.entry + block_info.block_offset)
-                    self.vbib.read(self.reader,block_info)
+                    self.vbib.read(self.reader, block_info)
                     # print(self.vbib)
             if block_info.block_name == 'DATA':
                 with self.reader.save_current_pos():
                     self.reader.seek(block_info.entry + block_info.block_offset)
-                    self.data.read(self.reader,block_info)
+                    self.data.read(self.reader, block_info)
                     pprint(self.data.data)
 
     def dump_structs(self, file: TextIO):
@@ -105,24 +114,24 @@ struct RGB
     def dump_resources(self):
         for block in self.rerl.resources:
             print(block)
-        # for block in self.redi.blocks:
-        #     print(block)
-        #     for dep in block.container:
-        #         print('\t',dep)
+            # for block in self.redi.blocks:
+            #     print(block)
+            #     for dep in block.container:
+            #         print('\t',dep)
             # print(block)
-        # for block in self.vbib.vertex_buffer:
-        #     for vert in block.vertexes:
-        #         print(vert.boneWeight)
+            # for block in self.vbib.vertex_buffer:
+            #     for vert in block.vertexes:
+            #         print(vert.boneWeight)
             print(block)
 
     def check_external_resources(self):
         for block in self.rerl.resources:
             name = os.path.basename(block.resource_name)
-            if os.path.exists(os.path.join(self.filepath,name+'_c')):
-                self.available_resources[name] = os.path.abspath(os.path.join(self.filepath,name+'_c'))
-                print('Found',name)
+            if os.path.exists(os.path.join(self.filepath, name + '_c')):
+                self.available_resources[name] = os.path.abspath(os.path.join(self.filepath, name + '_c'))
+                print('Found', name)
             else:
-                print('Can\'t find',name)
+                print('Can\'t find', name)
 
 
 def quaternion_to_euler_angle(w, x, y, z):
@@ -141,15 +150,16 @@ def quaternion_to_euler_angle(w, x, y, z):
     t4 = +1.0 - 2.0 * (ysqr + z * z)
     Z = math.degrees(math.atan2(t3, t4))
 
-    return SourceVector(X,Y,Z)
+    return SourceVector(X, Y, Z)
+
 
 if __name__ == '__main__':
     with open('log.log', "w") as f:  # replace filepath & filename
         with f as sys.stdout:
-            model = r'../test_data/source2/sniper.vmdl_c'
+            # model = r'../test_data/source2/sniper.vmdl_c'
             # model_path = r'../test_data/source2/victory.vanim_c'
             # model_path = r'../test_data/source2/sniper_lod1.vmesh_c'
-            # model_path = r'../test_data/source2/sniper_model.vmesh_c'
+            model = r'../test_data/source2/sniper_model.vmesh_c'
             # model_path = r'../test_data/source2/gordon_at_desk.vmdl_c'
             # model_path = r'../test_data/source2/abaddon_body.vmat_c'
 
@@ -169,7 +179,8 @@ if __name__ == '__main__':
             bone_rotations = model_skeleton['m_boneRotParent']
             bone_parents = model_skeleton['m_nParent']
             for n in range(len(bone_names)):
-                print(bone_names[n],'parent -', bone_names[bone_parents[n]], bone_parents[n], bone_positions[n], quaternion_to_euler_angle(*bone_rotations[n].as_list))
+                print(bone_names[n], 'parent -', bone_names[bone_parents[n]], bone_parents[n], bone_positions[n],
+                      quaternion_to_euler_angle(*bone_rotations[n].as_list))
             # print(bone_parents)
             # print(vmdl.available_resources)
             # print(vmdl.header)

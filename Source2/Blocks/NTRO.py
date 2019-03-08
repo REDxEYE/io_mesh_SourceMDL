@@ -1,6 +1,6 @@
 from typing import List
 
-from ByteIO import ByteIO
+from MDLIO_ByteIO import ByteIO
 from Source2.Blocks.Common import KeyValueDataType, kv_type_to_c_type, SourceVector2D, SourceVector, SourceVector4D, \
     Matrix, CTransform
 

@@ -1,4 +1,4 @@
-from ByteIO import ByteIO
+from MDLIO_ByteIO import ByteIO
 from Source2.Blocks.Dummy import Dummy
 
 

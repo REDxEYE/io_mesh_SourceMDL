@@ -3,9 +3,9 @@ from typing import List
 
 try:
     from .flags import Flags
-    from .ByteIO import ByteIO
+    from .MDLIO_ByteIO import ByteIO
 except Exception:
-    from ByteIO import ByteIO
+    from MDLIO_ByteIO import ByteIO
     from flags import Flags
 
 max_bones_per_vertex = 3

@@ -2,12 +2,12 @@ import os.path
 
 try:
     from .MDL_DATA import *
-    from .ByteIO import *
+    from .MDLIO_ByteIO import *
     from .MDL_DATA_ANIMATIONS import *
     from .progressBar import Progress_bar
 except Exception:
     from MDL_DATA import *
-    from ByteIO import *
+    from MDLIO_ByteIO import *
     from MDL_DATA_ANIMATIONS import *
     from progressBar import Progress_bar
 

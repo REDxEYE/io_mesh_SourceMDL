@@ -1,10 +1,10 @@
 import sys
 
 try:
-    from .ByteIO import ByteIO
+    from .MDLIO_ByteIO import ByteIO
     from .VVD_DATA import SourceVvdFileData
 except Exception:
-    from ByteIO import ByteIO
+    from MDLIO_ByteIO import ByteIO
     from VVD_DATA import SourceVvdFileData
 
 

@@ -6,7 +6,7 @@ from pprint import pformat
 from typing import List, Tuple
 
 try:
-    from .ByteIO import ByteIO, OffsetOutOfBounds
+    from .MDLIO_ByteIO import ByteIO, OffsetOutOfBounds
     from .GLOBALS import SourceVector, SourceQuaternion, SourceFloat16bits
     from . import VTX, VVD
     from . import math_utilities
@@ -14,7 +14,7 @@ try:
     from .Utils import get_class_var_name
 
 except Exception:
-    from ByteIO import ByteIO, OffsetOutOfBounds
+    from MDLIO_ByteIO import ByteIO, OffsetOutOfBounds
     from GLOBALS import SourceVector, SourceQuaternion, SourceFloat16bits
     import VTX
     import VVD

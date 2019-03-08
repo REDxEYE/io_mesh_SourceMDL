@@ -6,10 +6,10 @@ def split(array, n=3):
 
 
 try:
-    from .ByteIO import ByteIO
+    from .MDLIO_ByteIO import ByteIO
     from .VTX_DATA import *
 except Exception:
-    from ByteIO import ByteIO
+    from MDLIO_ByteIO import ByteIO
     from VTX_DATA import *
 
 

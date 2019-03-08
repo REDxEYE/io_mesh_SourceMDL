@@ -1,10 +1,10 @@
 from typing import List
 
 try:
-    from .ByteIO import ByteIO
+    from .MDLIO_ByteIO import ByteIO
     from .GLOBALS import SourceVertex
 except Exception:
-    from ByteIO import ByteIO
+    from MDLIO_ByteIO import ByteIO
     from GLOBALS import SourceVertex
 
 

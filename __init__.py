@@ -95,7 +95,7 @@ class VmdlImporter_OT_operator(bpy.types.Operator):
     # WorkDir = StringProperty(name="path to folder with gameinfo.txt", maxlen=1024, default="", subtype='FILE_PATH')
     # Import_textures = BoolProperty(name="Import textures?\nLARGE TEXTURES MAY CAUSE OUT OF MEMORY AND CRASH",
     #                                default=False, subtype='UNSIGNED')
-    import_meshes = BoolProperty(name="Import meshes", default=False, subtype='UNSIGNED')
+    import_meshes = BoolProperty(name="Import meshes", default=True, subtype='UNSIGNED')
     filter_glob = StringProperty(default="*.vmdl_c", options={'HIDDEN'})
 
     def execute(self, context):
