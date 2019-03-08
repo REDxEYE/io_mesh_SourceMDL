@@ -2,8 +2,8 @@ import os.path
 
 # sys.path.append(r'E:\PYTHON\io_mesh_SourceMDL')
 try:
-    from .Source2.ValveFile import ValveFile
-    from .Source2.Vmesh_IO import VMESH_IO
+    from .ValveFile import ValveFile
+    from .Vmesh_IO import VMESH_IO
 except:
     from Source2.ValveFile import ValveFile
     from Source2.Vmesh_IO import VMESH_IO

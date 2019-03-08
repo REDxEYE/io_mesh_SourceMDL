@@ -1,12 +1,13 @@
-import sys
+
 
 try:
-    from .Source2.Blocks.VBIB import *
+    from .Blocks.VBIB import *
 except:
     from Source2.Blocks.VBIB import *
+import bpy
 import os.path
-import bpy, mathutils
-from mathutils import Vector, Matrix, Euler, Quaternion
+
+from mathutils import Vector, Matrix
 
 
 # model_path = r'E:\PYTHON\io_mesh_SourceMDL/test_data/source2/bad_ancient_destruction_pitrim_model.vmesh_c'
@@ -68,8 +69,6 @@ class VMESH_IO:
             name = self.mesh_name + str(n)
             mesh_obj = bpy.data.objects.new(name, bpy.data.meshes.new(name))
             bpy.context.scene.objects.link(mesh_obj)
-
-
 
             # bones = [bone_list[i] for i in remap_list]
             mesh = mesh_obj.data
