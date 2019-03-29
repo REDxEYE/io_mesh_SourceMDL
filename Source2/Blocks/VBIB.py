@@ -1,6 +1,7 @@
 import math
 from enum import IntEnum
 from typing import List
+
 try:
     from MDLIO_ByteIO import ByteIO
     from Source2.Blocks.Common import SourceVertex, SourceVector, short_to_float, SourceVector4D
@@ -13,8 +14,6 @@ except:
     from .Dummy import Dummy
     from .Header import InfoBlock
     from ..ValveFile import ValveFile
-
-
 
 
 class DXGI_FORMAT(IntEnum):
@@ -189,14 +188,14 @@ class VertexBuffer(Dummy):
             for attrib in self.attributes:
                 if attrib.name == 'POSITION':
                     vertex.position = SourceVector(*attrib.read_from_buffer(self.buffer))
-                if attrib.name == 'TEXCOORD':
+                elif attrib.name == 'TEXCOORD':
                     vertex.texCoordX, vertex.texCoordY = attrib.read_from_buffer(self.buffer)
-                if attrib.name == 'NORMAL':
+                elif attrib.name == 'NORMAL':
                     vertex.normal = SourceVector(*attrib.read_from_buffer(self.buffer))
-                if attrib.name == "BLENDINDICES":
+                elif attrib.name == "BLENDINDICES":
                     vertex.boneWeight.bone = attrib.read_from_buffer(self.buffer)
                     vertex.boneWeight.boneCount = len(vertex.boneWeight.bone)
-                if attrib.name == "BLENDWEIGHT":
+                elif attrib.name == "BLENDWEIGHT":
                     vertex.boneWeight.weight = SourceVector4D(*attrib.read_from_buffer(self.buffer)).to_floats.as_list
             self.vertexes.append(vertex)
             self.buffer.seek(entry + self.size)
@@ -223,29 +222,32 @@ class VertexAttribute(Dummy):
     def read_from_buffer(self, reader: ByteIO):
         if self.format == DXGI_FORMAT.R32G32B32_FLOAT:
             return [reader.read_float() for _ in range(self.format.name.count('32'))]
-        if self.format == DXGI_FORMAT.R32G32B32_UINT:
+        elif self.format == DXGI_FORMAT.R32G32B32_UINT:
             return [reader.read_uint32() for _ in range(self.format.name.count('32'))]
-        if self.format == DXGI_FORMAT.R32G32B32_SINT:
+        elif self.format == DXGI_FORMAT.R32G32B32_SINT:
             return [reader.read_int32() for _ in range(self.format.name.count('32'))]
-        if self.format == DXGI_FORMAT.R32G32B32A32_FLOAT:
+        elif self.format == DXGI_FORMAT.R32G32B32A32_FLOAT:
             return [reader.read_float() for _ in range(self.format.name.count('32'))]
-        if self.format == DXGI_FORMAT.R32G32B32A32_UINT:
+        elif self.format == DXGI_FORMAT.R32G32B32A32_UINT:
             return [reader.read_uint32() for _ in range(self.format.name.count('32'))]
-        if self.format == DXGI_FORMAT.R32G32B32A32_SINT:
+        elif self.format == DXGI_FORMAT.R32G32B32A32_SINT:
             return [reader.read_int32() for _ in range(self.format.name.count('32'))]
-        if self.format == DXGI_FORMAT.R16G16_FLOAT:
+        elif self.format == DXGI_FORMAT.R16G16_FLOAT:
             return [short_to_float(reader.read_int16()) for _ in range(self.format.name.count('16'))]
-            # return [reader.read_float16() for _ in range(self.format.name.count('16'))]
-        if self.format == DXGI_FORMAT.R16G16_SINT:
+        elif self.format == DXGI_FORMAT.R32G32_FLOAT:
+            return [short_to_float(reader.read_float()) for _ in range(self.format.name.count('32'))]
+        elif self.format == DXGI_FORMAT.R16G16_SINT:
             return [reader.read_int16() for _ in range(self.format.name.count('16'))]
-        if self.format == DXGI_FORMAT.R16G16_UINT:
+        elif self.format == DXGI_FORMAT.R16G16_UINT:
             return [reader.read_uint16() for _ in range(self.format.name.count('16'))]
-        if self.format == DXGI_FORMAT.R8G8B8A8_SNORM:
+        elif self.format == DXGI_FORMAT.R8G8B8A8_SNORM:
             return [reader.read_int8() for _ in range(self.format.name.count('8'))]
-        if self.format == DXGI_FORMAT.R8G8B8A8_UNORM:
+        elif self.format == DXGI_FORMAT.R8G8B8A8_UNORM:
             return [reader.read_uint8() for _ in range(self.format.name.count('8'))]
-        if self.format == DXGI_FORMAT.R8G8B8A8_UINT:
+        elif self.format == DXGI_FORMAT.R8G8B8A8_UINT:
             return [reader.read_uint8() for _ in range(self.format.name.count('8'))]
+        else:
+            raise NotImplementedError('Unknown buffer format {}'.format(self.format.name))
 
 
 class IndexBuffer(Dummy):
@@ -284,7 +286,7 @@ class IndexBuffer(Dummy):
 
 class VBIB(Dummy):
 
-    def __init__(self, valve_file:ValveFile):
+    def __init__(self, valve_file: ValveFile):
         self.valve_file = valve_file
         self.vertex_offset = 0
         self.vertex_count = 0
@@ -297,7 +299,7 @@ class VBIB(Dummy):
     def __repr__(self):
         return '<VBIB vertex buffers:{} index buffers:{}>'.format(self.vertex_count, self.index_count)
 
-    def read(self, reader: ByteIO,block_info:InfoBlock = None):
+    def read(self, reader: ByteIO, block_info: InfoBlock = None):
         self.info_block = block_info
         entry = reader.tell()
         self.vertex_offset = reader.read_uint32()

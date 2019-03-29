@@ -1,4 +1,4 @@
-
+from pathlib import Path
 
 try:
     from .Blocks.VBIB import *
@@ -18,6 +18,19 @@ class VMESH_IO:
     def __init__(self, vmesh_path):
         self.valve_file = ValveFile(vmesh_path)
         self.valve_file.read_block_info()
+        self.valve_file.check_external_resources()
+
+        morph_set = self.valve_file.data.data[0]['m_morphSet']
+        if morph_set in self.valve_file.available_resources:
+            m_path = Path(self.valve_file.available_resources[morph_set])
+            self.morf_set = ValveFile(m_path)
+            self.morf_set.read_block_info()
+            self.morf_set.check_external_resources()
+            ext_vtex = self.morf_set.rerl.resources[0]
+            m_path = self.morf_set.available_resources[ext_vtex]
+            self.morf_vtex = ValveFile(m_path)
+            self.morf_vtex.read_block_info()
+            self.morf_vtex.check_external_resources()
 
         self.mesh_name = str(os.path.basename(vmesh_path).split('.')[0])
         self.name = self.mesh_name
@@ -110,3 +123,9 @@ class VMESH_IO:
             bpy.ops.object.shade_smooth()
             mesh.normals_split_custom_set(normals)
             mesh.use_auto_smooth = True
+
+
+if __name__ == '__main__':
+    a = VMESH_IO(r'F:\PYTHON\io_mesh_SourceMDL/test_data/source2/sniper_model.vmesh_c')
+    # with open('test.h', 'w') as f:
+    #     a.valve_file.dump_structs(f)

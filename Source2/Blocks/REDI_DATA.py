@@ -72,7 +72,7 @@ class ArgumentDependency(Dummy):
         self.fingerprint_default = 0
 
     def __repr__(self):
-        return '<ArgumentDependencies "{}":{}>'.format(self.parameter_name, self.parameter_type)
+        return '<ArgumentDependencies "{}":{} - value:{}>'.format(self.parameter_name, self.parameter_type,self.fingerprint)
 
     def read(self, reader: ByteIO):
         entry = reader.tell()
