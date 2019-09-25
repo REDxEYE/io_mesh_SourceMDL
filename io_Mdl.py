@@ -186,6 +186,7 @@ class IOMdl:
             rand_col = []
             for i in range(3):
                 rand_col.append(random.uniform(.4, 1))
+            rand_col.append(1)
             mat.diffuse_color = rand_col
 
             mat_ind = len(md.materials) - 1
