@@ -186,6 +186,7 @@ class IOMdl:
             rand_col = []
             for i in range(3):
                 rand_col.append(random.uniform(.4, 1))
+            rand_col.append(1)
             mat.diffuse_color = rand_col
 
             mat_ind = len(md.materials) - 1
@@ -494,7 +495,7 @@ class IOMdl:
             bone = self.armature.bones.get(self.MDL.file_data.bones[attachment.localBoneIndex].name)
 
             empty = bpy.data.objects.new("empty", None)
-            bpy.context.scene.objects.link(empty)
+            bpy.context.scene.collection.objects.link(empty)
             empty.name = attachment.name
             pos = Vector([attachment.pos.x, attachment.pos.y, attachment.pos.z])
             rot = Euler([attachment.rot.x, attachment.rot.y, attachment.rot.z])
