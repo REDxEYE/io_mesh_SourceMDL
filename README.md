@@ -1,3 +1,6 @@
+# ABSOLETE USE SOURCEIO  https://github.com/REDxEYE/SourceIO 
+
+
 # io_mesh_SourceMDL 2.79
 Import-Export > SourceEngine MDL
 I'm not good with descriptions, so i tell you what addon can do and what it cannot do
